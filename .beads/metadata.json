@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "nobleclean",
+  "project_id": "71bebde1-ac4f-4e34-8164-90becd5a6d54"
+}
