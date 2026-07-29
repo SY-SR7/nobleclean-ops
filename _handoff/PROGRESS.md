@@ -546,6 +546,13 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
   - `supabase db advisors --local` found no issues.
   - Edge headless CDP smoke on local production `/de/login` and `/de/employee` found no console warnings/errors, no horizontal overflow, and confirmed protected employee route redirects to `/de/login`.
 
+## Current External Blocker
+
+- All locally implementable Beads work is complete as of 2026-07-29.
+- The only blocked item is `nobleclean-xex`: configure a Git remote and push the project.
+- `git remote -v` is empty, so no GitHub push, Supabase Cloud setup, or Vercel production deployment has been completed from this environment.
+- To continue production handoff, provide the intended Git remote URL and approved access for Supabase/Vercel configuration.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.
