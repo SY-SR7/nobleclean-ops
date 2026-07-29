@@ -12,6 +12,7 @@ const projectRoot = path.resolve(
 const componentFiles = [
   "button",
   "form-input",
+  "form-textarea",
   "metric-card",
   "mobile-bottom-tabs",
   "object-tree-row",
@@ -19,6 +20,7 @@ const componentFiles = [
   "progress-indicator",
   "search-input",
   "task-item-card",
+  "tool-step-card",
 ];
 
 test("shared component library exposes every PRD Section 7.5 primitive", () => {

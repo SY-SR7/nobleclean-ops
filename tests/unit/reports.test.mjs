@@ -31,6 +31,7 @@ test("admin reports UI uses shared reporting primitives", () => {
 
   assert.match(page, /MetricCard/);
   assert.match(page, /TaskItemCard/);
+  assert.match(page, /ToolStepCard/);
   assert.match(page, /PriorityStatusBadge/);
 });
 
@@ -41,9 +42,27 @@ test("admin reports are read-only and scoped through admin authorization", () =>
   assert.match(queries, /daily_plans/);
   assert.match(queries, /daily_plan_items/);
   assert.match(queries, /leaf_item_last_cleaned/);
+  assert.match(queries, /mandatory_cleaning_tool_step_status/);
   assert.doesNotMatch(queries, /\.insert\(/);
   assert.doesNotMatch(queries, /\.update\(/);
   assert.doesNotMatch(queries, /\.delete\(/);
+});
+
+test("admin reports surface mandatory tool-step escalations as advisory status", () => {
+  const page = readProjectFile("src/app/[locale]/admin/reports/page.tsx");
+  const queries = readProjectFile("src/features/admin/reports/queries.ts");
+  const migration = readProjectFile(
+    "supabase/migrations/20260729153000_cleaning_tool_steps.sql",
+  );
+
+  assert.match(page, /mandatoryStepEscalations/);
+  assert.match(page, /MandatoryStepEscalationCard/);
+  assert.match(queries, /is_overdue/);
+  assert.match(queries, /last_performed_at/);
+  assert.match(
+    migration,
+    /Overdue status is an escalation signal, not an employee selection lock/,
+  );
 });
 
 test("admin reports UI copy lives in German and English message catalogs", () => {
@@ -58,8 +77,12 @@ test("admin reports UI copy lives in German and English message catalogs", () =>
     "completePlans",
     "incompletePlans",
     "completionRate",
+    "mandatoryStepEscalations",
     "lastCleaned",
+    "lastPerformed",
+    "mandatory",
     "employee",
+    "emptyMandatoryStepEscalations",
     "actions",
     "feedback",
   ].forEach((key) => {

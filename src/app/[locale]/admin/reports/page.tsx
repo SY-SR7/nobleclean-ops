@@ -5,11 +5,13 @@ import {
   MetricCard,
   PriorityStatusBadge,
   TaskItemCard,
+  ToolStepCard,
 } from "@/components/ui";
 import {
   getReportsData,
   type CompletionPlanSummary,
   type LastCleanedItem,
+  type MandatoryStepEscalation,
 } from "@/features/admin/reports/queries";
 import { getMessages } from "@/i18n/messages";
 import { isLocale, type Locale } from "@/i18n/routing";
@@ -44,10 +46,16 @@ type ReportsCopy = Readonly<{
   inactive: string;
   items: string;
   lastCleaned: string;
+  lastPerformed: string;
   loadError: string;
+  mandatory: string;
+  mandatoryStepEscalations: string;
   minutes: string;
   neverCleaned: string;
+  neverPerformed: string;
+  emptyMandatoryStepEscalations: string;
   planCompletion: string;
+  recurrenceDays: string;
   statusInProgress: string;
   statusSubmitted: string;
   title: string;
@@ -91,16 +99,25 @@ function reportsCopy(messages: ReturnType<typeof getMessages>): ReportsCopy {
     emptyClients: t(messages, "reports.emptyClients"),
     emptyIncomplete: t(messages, "reports.emptyIncomplete"),
     emptyLastCleaned: t(messages, "reports.emptyLastCleaned"),
+    emptyMandatoryStepEscalations: t(
+      messages,
+      "reports.emptyMandatoryStepEscalations",
+    ),
     employee: t(messages, "reports.employee"),
     filter: t(messages, "reports.actions.filter"),
     incompletePlans: t(messages, "reports.incompletePlans"),
     inactive: t(messages, "adminClients.status.inactive"),
     items: t(messages, "reports.items"),
     lastCleaned: t(messages, "reports.lastCleaned"),
+    lastPerformed: t(messages, "reports.lastPerformed"),
     loadError: t(messages, "reports.feedback.loadError"),
+    mandatory: t(messages, "reports.mandatory"),
+    mandatoryStepEscalations: t(messages, "reports.mandatoryStepEscalations"),
     minutes: t(messages, "sectionsItems.minutes"),
     neverCleaned: t(messages, "reports.neverCleaned"),
+    neverPerformed: t(messages, "reports.neverPerformed"),
     planCompletion: t(messages, "reports.planCompletion"),
+    recurrenceDays: t(messages, "sectionsItems.recurrenceDays"),
     statusInProgress: t(messages, "status.inProgress"),
     statusSubmitted: t(messages, "status.submitted"),
     title: t(messages, "navigation.admin.reports"),
@@ -214,6 +231,41 @@ function LastCleanedCard({
   );
 }
 
+function MandatoryStepEscalationCard({
+  copy,
+  escalation,
+  locale,
+}: Readonly<{
+  copy: ReportsCopy;
+  escalation: MandatoryStepEscalation;
+  locale: Locale;
+}>) {
+  return (
+    <ToolStepCard
+      duration={`${escalation.estimatedMinutes} ${copy.minutes}`}
+      isMandatory
+      mandatoryLabel={copy.mandatory}
+      notes={
+        <span>
+          {copy.lastPerformed}:{" "}
+          {formatDate(escalation.lastPerformedAt, locale, copy.neverPerformed)}
+        </span>
+      }
+      optionalLabel=""
+      recurrence={`${copy.recurrenceDays}: ${escalation.recurrenceDays}`}
+      sequenceOrder={escalation.sequenceOrder}
+      title={
+        <span className="grid gap-1">
+          <span>{escalation.toolName}</span>
+          <span className="text-on-surface-variant text-sm font-normal">
+            {escalation.leafItemName}
+          </span>
+        </span>
+      }
+    />
+  );
+}
+
 export default async function AdminReportsPage({
   params,
   searchParams,
@@ -318,7 +370,7 @@ export default async function AdminReportsPage({
             <Button type="submit">{copy.filter}</Button>
           </form>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <MetricCard label={copy.totalPlans} value={data.totalPlans} />
             <MetricCard
               label={copy.completePlans}
@@ -331,6 +383,13 @@ export default async function AdminReportsPage({
               value={data.totalIncompletePlans}
             />
             <MetricCard
+              label={copy.mandatoryStepEscalations}
+              statusTone={
+                data.mandatoryStepEscalations.length > 0 ? "critical" : "recent"
+              }
+              value={data.mandatoryStepEscalations.length}
+            />
+            <MetricCard
               label={copy.completionRate}
               metadata="%"
               statusTone={data.completionRate === 100 ? "success" : "warning"}
@@ -338,7 +397,29 @@ export default async function AdminReportsPage({
             />
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <div className="grid gap-6 xl:grid-cols-3">
+            <section className="grid h-fit gap-3">
+              <h2 className="font-heading text-primary-container text-xl font-bold">
+                {copy.mandatoryStepEscalations}
+              </h2>
+              {data.mandatoryStepEscalations.length > 0 ? (
+                <div className="grid gap-3">
+                  {data.mandatoryStepEscalations.map((escalation) => (
+                    <MandatoryStepEscalationCard
+                      copy={copy}
+                      escalation={escalation}
+                      key={escalation.id}
+                      locale={locale}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
+                  {copy.emptyMandatoryStepEscalations}
+                </p>
+              )}
+            </section>
+
             <section className="grid h-fit gap-3">
               <h2 className="font-heading text-primary-container text-xl font-bold">
                 {copy.incompletePlans}

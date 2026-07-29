@@ -64,7 +64,7 @@ test("all mutation entry points enforce same-origin and role boundaries", () => 
 
 test("employee completion and last-cleaned coverage remain connected", () => {
   const completionMigration = readProjectFile(
-    "supabase/migrations/20260729014000_daily_plan_completion.sql",
+    "supabase/migrations/20260729153000_cleaning_tool_steps.sql",
   );
   const derivedReadModelsTest = readProjectFile(
     "supabase/tests/database/derived_read_models.test.sql",
@@ -74,6 +74,9 @@ test("employee completion and last-cleaned coverage remain connected", () => {
   );
 
   assert.match(completionMigration, /completed_at = case/);
+  assert.match(completionMigration, /daily_plan_item_steps/);
+  assert.match(completionMigration, /completed_cleaning_tool_step_ids/);
+  assert.match(completionMigration, /Missing mandatory steps remain advisory/i);
   assert.match(completionMigration, /status = 'submitted'/);
   assert.match(coreRlsTest, /submit_current_employee_daily_plan_completion/);
   assert.match(derivedReadModelsTest, /leaf_item_last_cleaned/);

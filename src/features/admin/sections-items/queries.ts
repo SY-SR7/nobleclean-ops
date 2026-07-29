@@ -35,10 +35,25 @@ export type LeafItemListItem = Readonly<{
   hasReferenceImage: boolean;
   id: string;
   name: string;
+  notes: string | null;
   quantity: number;
   recurrenceDays: number | null;
   sectionId: string;
+  stepEstimateMinutes: number;
   tag: ItemTag;
+  toolSteps: readonly CleaningToolStepListItem[];
+}>;
+
+export type CleaningToolStepListItem = Readonly<{
+  estimatedMinutes: number;
+  id: string;
+  isMandatory: boolean;
+  leafItemId: string;
+  lastPerformedAt: string | null;
+  notes: string | null;
+  recurrenceDays: number;
+  sequenceOrder: number;
+  toolName: string;
 }>;
 
 export type SectionsItemsData = Readonly<{
@@ -76,11 +91,28 @@ const LeafItemRowSchema = z.object({
   estimated_minutes: z.number().int().min(1),
   id: z.string().uuid(),
   name: z.string(),
+  notes: z.string().nullable(),
   quantity: z.number().int().min(1),
   recurrence_days: z.number().int().min(1).nullable(),
   reference_image_path: z.string().nullable(),
   section_id: z.string().uuid(),
   tag: z.enum(["normal", "complaint", "high_priority"]),
+});
+
+const CleaningToolStepRowSchema = z.object({
+  estimated_minutes: z.number().int().min(1),
+  id: z.string().uuid(),
+  is_mandatory: z.boolean(),
+  leaf_item_id: z.string().uuid(),
+  notes: z.string().nullable(),
+  recurrence_days: z.number().int().min(1),
+  sequence_order: z.number().int().min(1),
+  tool_name: z.string(),
+});
+
+const CleaningToolStepLastPerformedRowSchema = z.object({
+  cleaning_tool_step_id: z.string().uuid(),
+  last_performed_at: z.string().nullable(),
 });
 
 function toClientOption(
@@ -148,16 +180,42 @@ function toSectionOptions(
   }));
 }
 
-function toLeafItem(row: z.infer<typeof LeafItemRowSchema>): LeafItemListItem {
+function toCleaningToolStep(
+  row: z.infer<typeof CleaningToolStepRowSchema>,
+  lastPerformed: Map<string, string | null>,
+): CleaningToolStepListItem {
+  return {
+    estimatedMinutes: row.estimated_minutes,
+    id: row.id,
+    isMandatory: row.is_mandatory,
+    lastPerformedAt: lastPerformed.get(row.id) ?? null,
+    leafItemId: row.leaf_item_id,
+    notes: row.notes,
+    recurrenceDays: row.recurrence_days,
+    sequenceOrder: row.sequence_order,
+    toolName: row.tool_name,
+  };
+}
+
+function toLeafItem(
+  row: z.infer<typeof LeafItemRowSchema>,
+  toolSteps: readonly CleaningToolStepListItem[],
+): LeafItemListItem {
   return {
     estimatedMinutes: row.estimated_minutes,
     hasReferenceImage: Boolean(row.reference_image_path),
     id: row.id,
     name: row.name,
+    notes: row.notes,
     quantity: row.quantity,
     recurrenceDays: row.recurrence_days,
     sectionId: row.section_id,
+    stepEstimateMinutes: toolSteps.reduce(
+      (total, step) => total + step.estimatedMinutes,
+      0,
+    ),
     tag: row.tag,
+    toolSteps,
   };
 }
 
@@ -266,7 +324,7 @@ export async function getSectionsItemsData(
     const { data: leafRows, error: leafError } = await supabase
       .from("leaf_items")
       .select(
-        "id, section_id, name, quantity, estimated_minutes, recurrence_days, tag, reference_image_path",
+        "id, section_id, name, quantity, estimated_minutes, recurrence_days, tag, notes, reference_image_path",
       )
       .eq("section_id", selectedSection.id)
       .order("name", { ascending: true });
@@ -284,13 +342,63 @@ export async function getSectionsItemsData(
     }
 
     const parsedLeafItems = z.array(LeafItemRowSchema).safeParse(leafRows);
+    const leafItemIds = parsedLeafItems.success
+      ? parsedLeafItems.data.map((item) => item.id)
+      : [];
+    const { data: stepRows } =
+      leafItemIds.length > 0
+        ? await supabase
+            .from("cleaning_tool_steps")
+            .select(
+              "id, leaf_item_id, sequence_order, tool_name, estimated_minutes, recurrence_days, is_mandatory, notes",
+            )
+            .in("leaf_item_id", leafItemIds)
+            .order("sequence_order", { ascending: true })
+        : { data: [] };
+    const parsedToolSteps = z
+      .array(CleaningToolStepRowSchema)
+      .safeParse(stepRows);
+    const toolStepIds = parsedToolSteps.success
+      ? parsedToolSteps.data.map((step) => step.id)
+      : [];
+    const { data: lastPerformedRows } =
+      toolStepIds.length > 0
+        ? await supabase
+            .from("cleaning_tool_step_last_performed")
+            .select("cleaning_tool_step_id, last_performed_at")
+            .in("cleaning_tool_step_id", toolStepIds)
+        : { data: [] };
+    const parsedLastPerformed = z
+      .array(CleaningToolStepLastPerformedRowSchema)
+      .safeParse(lastPerformedRows);
+    const lastPerformed = new Map(
+      parsedLastPerformed.success
+        ? parsedLastPerformed.data.map((row) => [
+            row.cleaning_tool_step_id,
+            row.last_performed_at,
+          ])
+        : [],
+    );
+    const stepsByLeafItem = new Map<string, CleaningToolStepListItem[]>();
+
+    if (parsedToolSteps.success) {
+      parsedToolSteps.data.forEach((step) => {
+        const mappedStep = toCleaningToolStep(step, lastPerformed);
+        stepsByLeafItem.set(step.leaf_item_id, [
+          ...(stepsByLeafItem.get(step.leaf_item_id) ?? []),
+          mappedStep,
+        ]);
+      });
+    }
 
     return {
       clients: clientOptions,
       leafItems: parsedLeafItems.success
-        ? parsedLeafItems.data.map(toLeafItem)
+        ? parsedLeafItems.data.map((item) =>
+            toLeafItem(item, stepsByLeafItem.get(item.id) ?? []),
+          )
         : [],
-      ok: parsedLeafItems.success,
+      ok: parsedLeafItems.success && parsedToolSteps.success,
       selectedClientId: selectedClient.id,
       selectedSectionId: selectedSection.id,
       sectionOptions: toSectionOptions(sections),

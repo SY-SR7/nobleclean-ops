@@ -4,6 +4,7 @@ export type MyDaySelectionField =
   | "clientId"
   | "completeAll"
   | "completedLeafItemIds"
+  | "completedToolStepIds"
   | "leafItemIds"
   | "locale"
   | "workDate";
@@ -49,6 +50,11 @@ const CompletedLeafItemIdsSchema = z
   .max(500)
   .refine((ids) => new Set(ids).size === ids.length);
 
+const CompletedToolStepIdsSchema = z
+  .array(UuidSchema)
+  .max(2000)
+  .refine((ids) => new Set(ids).size === ids.length);
+
 export const SaveMyDaySelectionInputSchema = z
   .object({
     clientId: UuidSchema,
@@ -63,6 +69,7 @@ export const SubmitMyDayCompletionInputSchema = z
     clientId: UuidSchema,
     completeAll: z.boolean(),
     completedLeafItemIds: CompletedLeafItemIdsSchema,
+    completedToolStepIds: CompletedToolStepIdsSchema,
     locale: LocaleInputSchema,
     workDate: IsoDateSchema,
   })

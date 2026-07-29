@@ -4,20 +4,24 @@ import { ImageUp, Save, Trash2 } from "lucide-react";
 import type { ReactNode, SelectHTMLAttributes } from "react";
 import { useActionState } from "react";
 
-import { Button, FormInput } from "@/components/ui";
+import { Button, FormInput, FormTextarea } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 
 import {
   attachReferenceImageAction,
+  createCleaningToolStepAction,
   createLeafItemAction,
   createSectionAction,
+  deleteCleaningToolStepAction,
   deleteLeafItemAction,
   deleteSectionAction,
+  updateCleaningToolStepAction,
   updateLeafItemAction,
   updateSectionAction,
 } from "./actions";
 import type {
+  CleaningToolStepListItem,
   LeafItemListItem,
   SectionOption,
   SectionTreeNode,
@@ -35,13 +39,18 @@ export type SectionsItemsFormCopy = Readonly<{
   createSectionTitle: string;
   deleteLeaf: string;
   deleteSection: string;
+  deleteToolStep: string;
   editLeafTitle: string;
   editSectionTitle: string;
+  editToolStepTitle: string;
   estimatedMinutesLabel: string;
   fieldError: string;
   imageAttached: string;
   imageLabel: string;
   leafNameLabel: string;
+  mandatoryLabel: string;
+  notesLabel: string;
+  optionalLabel: string;
   parentSectionLabel: string;
   quantityLabel: string;
   recurrenceDaysLabel: string;
@@ -51,11 +60,17 @@ export type SectionsItemsFormCopy = Readonly<{
   saveError: string;
   sectionLabel: string;
   sectionNameLabel: string;
+  stepEstimatedMinutesLabel: string;
+  stepNotesLabel: string;
+  stepRecurrenceDaysLabel: string;
+  stepSequenceLabel: string;
   sortOrderLabel: string;
   tagComplaint: string;
   tagHighPriority: string;
   tagLabel: string;
   tagNormal: string;
+  toolNameLabel: string;
+  toolStepCreateTitle: string;
 }>;
 
 type SectionFormProps = Readonly<{
@@ -83,6 +98,24 @@ type DeleteEntityFormProps = Readonly<{
   entityId: string;
   kind: EntityKind;
   locale: Locale;
+}>;
+
+type ToolStepFormProps = Readonly<{
+  clientId: string;
+  copy: SectionsItemsFormCopy;
+  leafItemId: string;
+  locale: Locale;
+  mode: "create" | "update";
+  nextSequenceOrder?: number;
+  step?: CleaningToolStepListItem;
+}>;
+
+type DeleteToolStepFormProps = Readonly<{
+  clientId: string;
+  copy: SectionsItemsFormCopy;
+  leafItemId: string;
+  locale: Locale;
+  stepId: string;
 }>;
 
 type ReferenceImageFormProps = Readonly<{
@@ -364,6 +397,14 @@ export function LeafItemForm({
         <option value="complaint">{copy.tagComplaint}</option>
         <option value="high_priority">{copy.tagHighPriority}</option>
       </SelectField>
+      <FormTextarea
+        error={fieldError(state, "notes", copy)}
+        id={`${formIdPrefix}-notes`}
+        label={copy.notesLabel}
+        maxLength={2000}
+        name="notes"
+        defaultValue={leafItem?.notes ?? ""}
+      />
 
       <Message copy={copy} state={state} />
       <Button
@@ -373,6 +414,152 @@ export function LeafItemForm({
       >
         {copy.save}
       </Button>
+    </form>
+  );
+}
+
+export function ToolStepForm({
+  clientId,
+  copy,
+  leafItemId,
+  locale,
+  mode,
+  nextSequenceOrder = 1,
+  step,
+}: ToolStepFormProps) {
+  const action =
+    mode === "create"
+      ? createCleaningToolStepAction
+      : updateCleaningToolStepAction;
+  const [state, formAction, isPending] = useActionState(
+    action,
+    initialSectionsItemsActionState,
+  );
+  const formIdPrefix = mode === "create" ? "new-tool-step" : `tool-${step?.id}`;
+
+  return (
+    <form action={formAction} className="grid gap-4" noValidate>
+      <input name="clientId" type="hidden" value={clientId} />
+      <input name="leafItemId" type="hidden" value={leafItemId} />
+      <input name="locale" type="hidden" value={locale} />
+      {step ? <input name="id" type="hidden" value={step.id} /> : null}
+
+      <h3 className="font-heading text-primary-container text-base font-bold">
+        {mode === "create" ? copy.toolStepCreateTitle : copy.editToolStepTitle}
+      </h3>
+
+      <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
+        <FormInput
+          error={fieldError(state, "sequenceOrder", copy)}
+          id={`${formIdPrefix}-sequence`}
+          inputMode="numeric"
+          label={copy.stepSequenceLabel}
+          max={999}
+          min={1}
+          name="sequenceOrder"
+          required
+          type="number"
+          defaultValue={step?.sequenceOrder ?? nextSequenceOrder}
+        />
+        <FormInput
+          error={fieldError(state, "toolName", copy)}
+          id={`${formIdPrefix}-tool-name`}
+          label={copy.toolNameLabel}
+          maxLength={160}
+          name="toolName"
+          required
+          type="text"
+          defaultValue={step?.toolName ?? ""}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <FormInput
+          error={fieldError(state, "estimatedMinutes", copy)}
+          id={`${formIdPrefix}-estimated-minutes`}
+          inputMode="numeric"
+          label={copy.stepEstimatedMinutesLabel}
+          max={1440}
+          min={1}
+          name="estimatedMinutes"
+          required
+          type="number"
+          defaultValue={step?.estimatedMinutes ?? 1}
+        />
+        <FormInput
+          error={fieldError(state, "recurrenceDays", copy)}
+          id={`${formIdPrefix}-recurrence-days`}
+          inputMode="numeric"
+          label={copy.stepRecurrenceDaysLabel}
+          max={3650}
+          min={1}
+          name="recurrenceDays"
+          required
+          type="number"
+          defaultValue={step?.recurrenceDays ?? 1}
+        />
+        <label className="border-outline-variant bg-surface-container-lowest flex h-12 items-center gap-3 self-end rounded border px-3 text-sm font-bold">
+          <input
+            className="accent-status-critical size-5"
+            defaultChecked={step?.isMandatory ?? false}
+            name="isMandatory"
+            type="checkbox"
+          />
+          <span className="text-on-surface">{copy.mandatoryLabel}</span>
+        </label>
+      </div>
+
+      <FormTextarea
+        error={fieldError(state, "notes", copy)}
+        id={`${formIdPrefix}-notes`}
+        label={copy.stepNotesLabel}
+        maxLength={2000}
+        name="notes"
+        defaultValue={step?.notes ?? ""}
+      />
+
+      <Message copy={copy} state={state} />
+      <Button
+        icon={<Save aria-hidden="true" />}
+        isLoading={isPending}
+        type="submit"
+      >
+        {copy.save}
+      </Button>
+    </form>
+  );
+}
+
+export function DeleteToolStepForm({
+  clientId,
+  copy,
+  leafItemId,
+  locale,
+  stepId,
+}: DeleteToolStepFormProps) {
+  const [state, formAction, isPending] = useActionState(
+    deleteCleaningToolStepAction,
+    initialSectionsItemsActionState,
+  );
+
+  return (
+    <form action={formAction} className="grid gap-2">
+      <input name="clientId" type="hidden" value={clientId} />
+      <input name="id" type="hidden" value={stepId} />
+      <input name="leafItemId" type="hidden" value={leafItemId} />
+      <input name="locale" type="hidden" value={locale} />
+      <Button
+        icon={<Trash2 aria-hidden="true" />}
+        isLoading={isPending}
+        size="sm"
+        type="submit"
+        variant="danger"
+      >
+        {copy.deleteToolStep}
+      </Button>
+      {state.status === "error" ? (
+        <p className="text-error text-xs font-semibold">{copy.saveError}</p>
+      ) : null}
     </form>
   );
 }

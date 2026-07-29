@@ -6,12 +6,15 @@ import {
   ObjectTreeRow,
   PriorityStatusBadge,
   TaskItemCard,
+  ToolStepCard,
 } from "@/components/ui";
 import {
+  DeleteToolStepForm,
   DeleteEntityForm,
   LeafItemForm,
   ReferenceImageForm,
   SectionForm,
+  ToolStepForm,
   type SectionsItemsFormCopy,
 } from "@/features/admin/sections-items/SectionsItemsForms";
 import {
@@ -47,12 +50,18 @@ type SectionsItemsPageCopy = Readonly<{
   inactive: string;
   leafCount: string;
   leafItemsTitle: string;
+  lastPerformed: string;
   loadError: string;
   minutes: string;
+  neverPerformed: string;
+  noToolSteps: string;
+  optional: string;
   quantity: string;
   recurrenceDays: string;
   selectClient: string;
   selectedSectionTitle: string;
+  stepEstimateTotal: string;
+  toolStepsTitle: string;
   title: string;
   treeTitle: string;
 }>;
@@ -70,13 +79,18 @@ function formCopy(
     createSectionTitle: t(messages, "sectionsItems.createSectionTitle"),
     deleteLeaf: t(messages, "sectionsItems.actions.deleteLeaf"),
     deleteSection: t(messages, "sectionsItems.actions.deleteSection"),
+    deleteToolStep: t(messages, "sectionsItems.actions.deleteToolStep"),
     editLeafTitle: t(messages, "sectionsItems.editLeafTitle"),
     editSectionTitle: t(messages, "sectionsItems.editSectionTitle"),
+    editToolStepTitle: t(messages, "sectionsItems.editToolStepTitle"),
     estimatedMinutesLabel: t(messages, "sectionsItems.fields.estimatedMinutes"),
     fieldError: t(messages, "validation.generic"),
     imageAttached: t(messages, "sectionsItems.feedback.imageAttached"),
     imageLabel: t(messages, "sectionsItems.fields.referenceImage"),
     leafNameLabel: t(messages, "sectionsItems.fields.leafName"),
+    mandatoryLabel: t(messages, "sectionsItems.mandatory"),
+    notesLabel: t(messages, "sectionsItems.fields.notes"),
+    optionalLabel: t(messages, "sectionsItems.optional"),
     parentSectionLabel: t(messages, "sectionsItems.fields.parentSection"),
     quantityLabel: t(messages, "sectionsItems.fields.quantity"),
     recurrenceDaysLabel: t(messages, "sectionsItems.fields.recurrenceDays"),
@@ -86,11 +100,23 @@ function formCopy(
     saveError: t(messages, "sectionsItems.feedback.error"),
     sectionLabel: t(messages, "sectionsItems.fields.section"),
     sectionNameLabel: t(messages, "sectionsItems.fields.sectionName"),
+    stepEstimatedMinutesLabel: t(
+      messages,
+      "sectionsItems.fields.stepEstimatedMinutes",
+    ),
+    stepNotesLabel: t(messages, "sectionsItems.fields.stepNotes"),
+    stepRecurrenceDaysLabel: t(
+      messages,
+      "sectionsItems.fields.stepRecurrenceDays",
+    ),
+    stepSequenceLabel: t(messages, "sectionsItems.fields.sequenceOrder"),
     sortOrderLabel: t(messages, "sectionsItems.fields.sortOrder"),
     tagComplaint: t(messages, "sectionsItems.tags.complaint"),
     tagHighPriority: t(messages, "sectionsItems.tags.highPriority"),
     tagLabel: t(messages, "sectionsItems.fields.tag"),
     tagNormal: t(messages, "sectionsItems.tags.normal"),
+    toolNameLabel: t(messages, "sectionsItems.fields.toolName"),
+    toolStepCreateTitle: t(messages, "sectionsItems.toolStepCreateTitle"),
   };
 }
 
@@ -107,12 +133,18 @@ function pageCopy(
     inactive: t(messages, "adminClients.status.inactive"),
     leafCount: t(messages, "sectionsItems.leafCount"),
     leafItemsTitle: t(messages, "sectionsItems.leafItemsTitle"),
+    lastPerformed: t(messages, "sectionsItems.lastPerformed"),
     loadError: t(messages, "sectionsItems.feedback.loadError"),
     minutes: t(messages, "sectionsItems.minutes"),
+    neverPerformed: t(messages, "sectionsItems.neverPerformed"),
+    noToolSteps: t(messages, "sectionsItems.noToolSteps"),
+    optional: t(messages, "sectionsItems.optional"),
     quantity: t(messages, "sectionsItems.quantity"),
     recurrenceDays: t(messages, "sectionsItems.recurrenceDays"),
     selectClient: t(messages, "sectionsItems.actions.selectClient"),
     selectedSectionTitle: t(messages, "sectionsItems.selectedSectionTitle"),
+    stepEstimateTotal: t(messages, "sectionsItems.stepEstimateTotal"),
+    toolStepsTitle: t(messages, "sectionsItems.toolStepsTitle"),
     title: t(messages, "navigation.admin.sectionsItems"),
     treeTitle: t(messages, "sectionsItems.treeTitle"),
   };
@@ -148,6 +180,26 @@ function tagBadge(
 
 function sectionMeta(section: SectionTreeNode, copy: SectionsItemsPageCopy) {
   return `${section.leafCount} ${copy.leafCount} · ${section.totalEstimatedMinutes} ${copy.minutes}`;
+}
+
+function formatTimestamp(
+  value: string | null,
+  locale: Locale,
+  fallback: string,
+) {
+  if (!value) {
+    return fallback;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return fallback;
+  }
+
+  return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
+    dateStyle: "medium",
+  }).format(date);
 }
 
 function descendantIds(
@@ -225,6 +277,111 @@ function TreeSelector({
   );
 }
 
+function ToolStepsEditor({
+  clientId,
+  copy,
+  formCopy,
+  item,
+  locale,
+}: Readonly<{
+  clientId: string;
+  copy: SectionsItemsPageCopy;
+  formCopy: SectionsItemsFormCopy;
+  item: LeafItemListItem;
+  locale: Locale;
+}>) {
+  const nextSequenceOrder =
+    item.toolSteps.reduce(
+      (maxOrder, step) => Math.max(maxOrder, step.sequenceOrder),
+      0,
+    ) + 1;
+
+  return (
+    <section className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-heading text-primary-container text-lg font-bold">
+            {copy.toolStepsTitle}
+          </h3>
+          <p className="text-on-surface-variant mt-1 text-sm">
+            {copy.stepEstimateTotal}: {item.stepEstimateMinutes} {copy.minutes}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-3">
+        {item.toolSteps.length > 0 ? (
+          item.toolSteps.map((step) => (
+            <div className="grid gap-2" key={step.id}>
+              <ToolStepCard
+                actions={
+                  <DeleteToolStepForm
+                    clientId={clientId}
+                    copy={formCopy}
+                    leafItemId={item.id}
+                    locale={locale}
+                    stepId={step.id}
+                  />
+                }
+                duration={`${step.estimatedMinutes} ${copy.minutes}`}
+                isMandatory={step.isMandatory}
+                mandatoryLabel={formCopy.mandatoryLabel}
+                notes={
+                  <span className="grid gap-1">
+                    <span>
+                      {copy.lastPerformed}:{" "}
+                      {formatTimestamp(
+                        step.lastPerformedAt,
+                        locale,
+                        copy.neverPerformed,
+                      )}
+                    </span>
+                    {step.notes ? <span>{step.notes}</span> : null}
+                  </span>
+                }
+                optionalLabel={formCopy.optionalLabel}
+                recurrence={`${copy.recurrenceDays}: ${step.recurrenceDays}`}
+                sequenceOrder={step.sequenceOrder}
+                title={step.toolName}
+              />
+              <details className="border-outline-variant bg-surface-container-lowest rounded border p-4">
+                <summary className="text-primary-container cursor-pointer text-sm font-bold tracking-normal uppercase">
+                  {copy.edit}
+                </summary>
+                <div className="mt-4">
+                  <ToolStepForm
+                    clientId={clientId}
+                    copy={formCopy}
+                    leafItemId={item.id}
+                    locale={locale}
+                    mode="update"
+                    step={step}
+                  />
+                </div>
+              </details>
+            </div>
+          ))
+        ) : (
+          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-5 text-sm">
+            {copy.noToolSteps}
+          </p>
+        )}
+      </div>
+
+      <div className="border-outline-variant bg-surface-container-low rounded border p-4">
+        <ToolStepForm
+          clientId={clientId}
+          copy={formCopy}
+          leafItemId={item.id}
+          locale={locale}
+          mode="create"
+          nextSequenceOrder={nextSequenceOrder}
+        />
+      </div>
+    </section>
+  );
+}
+
 function LeafItemCard({
   clientId,
   copy,
@@ -291,6 +448,13 @@ function LeafItemCard({
             copy={formCopy}
             entityId={item.id}
             kind="leafItem"
+            locale={locale}
+          />
+          <ToolStepsEditor
+            clientId={clientId}
+            copy={copy}
+            formCopy={formCopy}
+            item={item}
             locale={locale}
           />
         </div>

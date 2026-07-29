@@ -8,6 +8,7 @@ import {
   PriorityStatusBadge,
   ProgressIndicator,
   TaskItemCard,
+  ToolStepCard,
 } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 
@@ -31,13 +32,21 @@ export type MyDaySelectionCopy = Readonly<{
   currentPlan: string;
   emptyItems: string;
   error: string;
+  itemDetails: string;
   itemListTitle: string;
+  itemNotes: string;
   lastCleaned: string;
+  lastPerformed: string;
+  mandatory: string;
   minutes: string;
   neverCleaned: string;
+  neverPerformed: string;
   noPlan: string;
+  noToolSteps: string;
+  optional: string;
   plannedMinutes: string;
   quantity: string;
+  recurrenceDays: string;
   readyToSave: string;
   remainingMinutes: string;
   markAllDone: string;
@@ -48,10 +57,12 @@ export type MyDaySelectionCopy = Readonly<{
   submitCompletion: string;
   statusCritical: string;
   statusInProgress: string;
+  statusMandatoryOverdue: string;
   statusRecent: string;
   statusSubmitted: string;
   statusWarning: string;
   tooShort: string;
+  toolSteps: string;
 }>;
 
 type MyDaySelectionFormProps = Readonly<{
@@ -65,16 +76,16 @@ type MyDaySelectionFormProps = Readonly<{
 function formatTimestamp(
   value: string | null,
   locale: Locale,
-  copy: MyDaySelectionCopy,
+  fallback: string,
 ) {
   if (!value) {
-    return copy.neverCleaned;
+    return fallback;
   }
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return copy.neverCleaned;
+    return fallback;
   }
 
   return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
@@ -146,6 +157,16 @@ export function MyDaySelectionForm({
     () =>
       new Set(items.filter((item) => item.isCompleted).map((item) => item.id)),
   );
+  const [completedStepIds, setCompletedStepIds] = useState(
+    () =>
+      new Set(
+        items.flatMap((item) =>
+          item.toolSteps
+            .filter((step) => step.isCompleted)
+            .map((step) => step.id),
+        ),
+      ),
+  );
   const plannedMinutes = useMemo(
     () =>
       items
@@ -176,8 +197,32 @@ export function MyDaySelectionForm({
           nextCompleted.delete(itemId);
           return nextCompleted;
         });
+        setCompletedStepIds((currentCompletedSteps) => {
+          const nextCompletedSteps = new Set(currentCompletedSteps);
+          const removedItem = items.find((item) => item.id === itemId);
+
+          removedItem?.toolSteps.forEach((step) => {
+            nextCompletedSteps.delete(step.id);
+          });
+
+          return nextCompletedSteps;
+        });
       } else {
         next.add(itemId);
+      }
+
+      return next;
+    });
+  }
+
+  function toggleCompletedStep(stepId: string) {
+    setCompletedStepIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(stepId)) {
+        next.delete(stepId);
+      } else {
+        next.add(stepId);
       }
 
       return next;
@@ -280,76 +325,167 @@ export function MyDaySelectionForm({
               const label = advisoryLabel(item.advisoryStatus, copy);
 
               return (
-                <TaskItemCard
-                  actions={
-                    <div className="flex justify-end gap-2">
-                      <label className="border-outline-variant bg-surface-container-lowest inline-grid size-11 place-items-center rounded border">
-                        <input
-                          checked={selectedIds.has(item.id)}
-                          className="accent-secondary size-5"
-                          disabled={
-                            isSubmitted || isPending || isCompletionPending
-                          }
-                          name="leafItemId"
-                          onChange={() => {
-                            toggleItem(item.id);
-                          }}
-                          type="checkbox"
-                          value={item.id}
-                        />
-                        <span className="sr-only">{copy.selectItem}</span>
-                      </label>
-                      {selectedIds.has(item.id) ? (
+                <div className="grid gap-2" key={item.id}>
+                  <TaskItemCard
+                    actions={
+                      <div className="flex justify-end gap-2">
                         <label className="border-outline-variant bg-surface-container-lowest inline-grid size-11 place-items-center rounded border">
                           <input
-                            checked={completedIds.has(item.id)}
-                            className="accent-status-success size-5"
+                            checked={selectedIds.has(item.id)}
+                            className="accent-secondary size-5"
                             disabled={
                               isSubmitted || isPending || isCompletionPending
                             }
-                            name="completedLeafItemId"
                             onChange={() => {
-                              toggleCompletedItem(item.id);
+                              toggleItem(item.id);
                             }}
                             type="checkbox"
                             value={item.id}
                           />
-                          <span className="sr-only">
-                            {copy.submitCompletion}
-                          </span>
+                          <span className="sr-only">{copy.selectItem}</span>
                         </label>
-                      ) : null}
-                    </div>
-                  }
-                  badge={
-                    item.advisoryStatus && label ? (
-                      <PriorityStatusBadge
-                        label={label}
-                        tone={item.advisoryStatus}
-                      />
-                    ) : null
-                  }
-                  estimatedMinutes={`${item.estimatedMinutes} ${copy.minutes}${
-                    item.quantity > 1
-                      ? ` · ${copy.quantity} ${item.quantity}`
-                      : ""
-                  }`}
-                  key={item.id}
-                  lastCleaned={`${copy.lastCleaned}: ${formatTimestamp(
-                    item.lastCleanedAt,
-                    locale,
-                    copy,
-                  )}`}
-                  selected={selectedIds.has(item.id)}
-                  title={
-                    <span className="grid gap-1">
-                      <span>{item.name}</span>
-                      <span className="text-on-surface-variant text-sm font-normal">
-                        {copy.section}: {item.sectionPath}
+                        {selectedIds.has(item.id) ? (
+                          <label className="border-outline-variant bg-surface-container-lowest inline-grid size-11 place-items-center rounded border">
+                            <input
+                              checked={completedIds.has(item.id)}
+                              className="accent-status-success size-5"
+                              disabled={
+                                isSubmitted || isPending || isCompletionPending
+                              }
+                              name="completedLeafItemId"
+                              onChange={() => {
+                                toggleCompletedItem(item.id);
+                              }}
+                              type="checkbox"
+                              value={item.id}
+                            />
+                            <span className="sr-only">
+                              {copy.submitCompletion}
+                            </span>
+                          </label>
+                        ) : null}
+                      </div>
+                    }
+                    badge={
+                      <span className="flex flex-wrap gap-2">
+                        {item.hasDueMandatoryStep ? (
+                          <PriorityStatusBadge
+                            label={copy.statusMandatoryOverdue}
+                            tone="critical"
+                          />
+                        ) : null}
+                        {item.advisoryStatus && label ? (
+                          <PriorityStatusBadge
+                            label={label}
+                            tone={item.advisoryStatus}
+                          />
+                        ) : null}
                       </span>
-                    </span>
-                  }
-                />
+                    }
+                    estimatedMinutes={`${item.estimatedMinutes} ${
+                      copy.minutes
+                    }${
+                      item.quantity > 1
+                        ? ` · ${copy.quantity} ${item.quantity}`
+                        : ""
+                    }`}
+                    lastCleaned={`${copy.lastCleaned}: ${formatTimestamp(
+                      item.lastCleanedAt,
+                      locale,
+                      copy.neverCleaned,
+                    )}`}
+                    selected={selectedIds.has(item.id)}
+                    title={
+                      <span className="grid gap-1">
+                        <span>{item.name}</span>
+                        <span className="text-on-surface-variant text-sm font-normal">
+                          {copy.section}: {item.sectionPath}
+                        </span>
+                      </span>
+                    }
+                  />
+                  <details className="border-outline-variant bg-surface-container-lowest rounded border p-4">
+                    <summary className="text-primary-container cursor-pointer text-sm font-bold tracking-normal uppercase">
+                      {copy.itemDetails}
+                    </summary>
+                    <div className="mt-4 grid gap-4">
+                      {item.notes ? (
+                        <section className="bg-surface-container-low text-on-surface-variant rounded p-3 text-sm">
+                          <p className="text-primary-container mb-2 text-xs font-bold tracking-normal uppercase">
+                            {copy.itemNotes}
+                          </p>
+                          <p>{item.notes}</p>
+                        </section>
+                      ) : null}
+
+                      <section className="grid gap-3">
+                        <h3 className="font-heading text-primary-container text-lg font-bold">
+                          {copy.toolSteps}
+                        </h3>
+                        {item.toolSteps.length > 0 ? (
+                          <div className="grid gap-3">
+                            {item.toolSteps.map((step) => (
+                              <ToolStepCard
+                                completedControl={
+                                  selectedIds.has(item.id) ? (
+                                    <label className="border-outline-variant bg-surface-container-lowest inline-grid size-11 place-items-center rounded border">
+                                      <input
+                                        checked={completedStepIds.has(step.id)}
+                                        className="accent-status-success size-5"
+                                        disabled={
+                                          isSubmitted ||
+                                          isPending ||
+                                          isCompletionPending
+                                        }
+                                        name="completedToolStepId"
+                                        onChange={() => {
+                                          toggleCompletedStep(step.id);
+                                        }}
+                                        type="checkbox"
+                                        value={step.id}
+                                      />
+                                      <span className="sr-only">
+                                        {copy.submitCompletion}
+                                      </span>
+                                    </label>
+                                  ) : null
+                                }
+                                duration={`${step.estimatedMinutes} ${copy.minutes}`}
+                                isCompleted={completedStepIds.has(step.id)}
+                                isMandatory={step.isMandatory}
+                                key={step.id}
+                                mandatoryLabel={copy.mandatory}
+                                notes={
+                                  <span className="grid gap-1">
+                                    <span>
+                                      {copy.lastPerformed}:{" "}
+                                      {formatTimestamp(
+                                        step.lastPerformedAt,
+                                        locale,
+                                        copy.neverPerformed,
+                                      )}
+                                    </span>
+                                    {step.notes ? (
+                                      <span>{step.notes}</span>
+                                    ) : null}
+                                  </span>
+                                }
+                                optionalLabel={copy.optional}
+                                recurrence={`${copy.recurrenceDays}: ${step.recurrenceDays}`}
+                                sequenceOrder={step.sequenceOrder}
+                                title={step.toolName}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-5 text-sm">
+                            {copy.noToolSteps}
+                          </p>
+                        )}
+                      </section>
+                    </div>
+                  </details>
+                </div>
               );
             })}
           </div>

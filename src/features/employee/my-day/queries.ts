@@ -8,17 +8,33 @@ export type MyDayAdvisoryStatus = "critical" | "recent" | "warning" | null;
 
 export type MyDayItem = Readonly<{
   advisoryStatus: MyDayAdvisoryStatus;
+  hasDueMandatoryStep: boolean;
   estimatedMinutes: number;
   id: string;
   isCompleted: boolean;
   isSelected: boolean;
   lastCleanedAt: string | null;
   name: string;
+  notes: string | null;
   quantity: number;
   recurrenceDays: number | null;
   referenceImagePath: string | null;
   sectionPath: string;
   tag: "complaint" | "high_priority" | "normal";
+  toolSteps: readonly MyDayToolStep[];
+}>;
+
+export type MyDayToolStep = Readonly<{
+  estimatedMinutes: number;
+  id: string;
+  isCompleted: boolean;
+  isDue: boolean;
+  isMandatory: boolean;
+  lastPerformedAt: string | null;
+  notes: string | null;
+  recurrenceDays: number;
+  sequenceOrder: number;
+  toolName: string;
 }>;
 
 export type MyDayPlan = Readonly<{
@@ -84,6 +100,7 @@ const AssignedItemStatusRowSchema = z.object({
   last_cleaned_at: z.string().nullable(),
   leaf_item_id: z.string().uuid(),
   name: z.string(),
+  notes: z.string().nullable(),
   quantity: z.number().int().min(1),
   recurrence_days: z.number().int().min(1).nullable(),
   reference_image_path: z.string().nullable(),
@@ -98,8 +115,31 @@ const DailyPlanRowSchema = z.object({
 });
 
 const DailyPlanItemRowSchema = z.object({
+  id: z.string().uuid(),
   is_completed: z.boolean(),
   leaf_item_id: z.string().uuid(),
+});
+
+const CleaningToolStepRowSchema = z.object({
+  estimated_minutes: z.number().int().min(1),
+  id: z.string().uuid(),
+  is_mandatory: z.boolean(),
+  leaf_item_id: z.string().uuid(),
+  notes: z.string().nullable(),
+  recurrence_days: z.number().int().min(1),
+  sequence_order: z.number().int().min(1),
+  tool_name: z.string(),
+});
+
+const DailyPlanItemStepRowSchema = z.object({
+  cleaning_tool_step_id: z.string().uuid(),
+  daily_plan_item_id: z.string().uuid(),
+  is_completed: z.boolean(),
+});
+
+const CleaningToolStepLastPerformedRowSchema = z.object({
+  cleaning_tool_step_id: z.string().uuid(),
+  last_performed_at: z.string().nullable(),
 });
 
 function emptyData(ok = false): MyDayData {
@@ -154,6 +194,19 @@ function advisoryStatus(
     elapsedDays < row.recurrence_days
     ? "recent"
     : null;
+}
+
+function isStepDue(
+  step: z.infer<typeof CleaningToolStepRowSchema>,
+  lastPerformedAt: string | null,
+  workDate: string,
+) {
+  if (!lastPerformedAt) {
+    return true;
+  }
+
+  const elapsedDays = daysBetween(lastPerformedAt, workDate);
+  return elapsedDays === null || elapsedDays >= step.recurrence_days;
 }
 
 function buildSectionPaths(
@@ -274,7 +327,7 @@ export async function getMyDayData(
     const { data: planItemRows } = parsedPlan.success
       ? await supabase
           .from("daily_plan_items")
-          .select("leaf_item_id, is_completed")
+          .select("id, leaf_item_id, is_completed")
           .eq("daily_plan_id", parsedPlan.data.id)
       : { data: [] };
     const parsedPlanItems = z
@@ -285,24 +338,110 @@ export async function getMyDayData(
         ? parsedPlanItems.data.map((item) => [item.leaf_item_id, item])
         : [],
     );
+    const leafItemIds = parsedItems.data.map((item) => item.leaf_item_id);
+    const { data: toolStepRows } =
+      leafItemIds.length > 0
+        ? await supabase
+            .from("cleaning_tool_steps")
+            .select(
+              "id, leaf_item_id, sequence_order, tool_name, estimated_minutes, recurrence_days, is_mandatory, notes",
+            )
+            .in("leaf_item_id", leafItemIds)
+            .order("sequence_order", { ascending: true })
+        : { data: [] };
+    const parsedToolSteps = z
+      .array(CleaningToolStepRowSchema)
+      .safeParse(toolStepRows);
+    const planItemIds = parsedPlanItems.success
+      ? parsedPlanItems.data.map((item) => item.id)
+      : [];
+    const toolStepIds = parsedToolSteps.success
+      ? parsedToolSteps.data.map((step) => step.id)
+      : [];
+    const [{ data: planStepRows }, { data: lastPerformedRows }] =
+      await Promise.all([
+        planItemIds.length > 0
+          ? supabase
+              .from("daily_plan_item_steps")
+              .select("daily_plan_item_id, cleaning_tool_step_id, is_completed")
+              .in("daily_plan_item_id", planItemIds)
+          : Promise.resolve({ data: [] }),
+        toolStepIds.length > 0
+          ? supabase
+              .from("cleaning_tool_step_last_performed")
+              .select("cleaning_tool_step_id, last_performed_at")
+              .in("cleaning_tool_step_id", toolStepIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+    const parsedPlanSteps = z
+      .array(DailyPlanItemStepRowSchema)
+      .safeParse(planStepRows);
+    const parsedLastPerformed = z
+      .array(CleaningToolStepLastPerformedRowSchema)
+      .safeParse(lastPerformedRows);
+    const completedSteps = new Set(
+      parsedPlanSteps.success
+        ? parsedPlanSteps.data
+            .filter((step) => step.is_completed)
+            .map((step) => step.cleaning_tool_step_id)
+        : [],
+    );
+    const lastPerformed = new Map(
+      parsedLastPerformed.success
+        ? parsedLastPerformed.data.map((row) => [
+            row.cleaning_tool_step_id,
+            row.last_performed_at,
+          ])
+        : [],
+    );
+    const stepsByLeafItem = new Map<string, MyDayToolStep[]>();
+
+    if (parsedToolSteps.success) {
+      parsedToolSteps.data.forEach((step) => {
+        const lastPerformedAt = lastPerformed.get(step.id) ?? null;
+        const mappedStep: MyDayToolStep = {
+          estimatedMinutes: step.estimated_minutes,
+          id: step.id,
+          isCompleted: completedSteps.has(step.id),
+          isDue: isStepDue(step, lastPerformedAt, workDate),
+          isMandatory: step.is_mandatory,
+          lastPerformedAt,
+          notes: step.notes,
+          recurrenceDays: step.recurrence_days,
+          sequenceOrder: step.sequence_order,
+          toolName: step.tool_name,
+        };
+
+        stepsByLeafItem.set(step.leaf_item_id, [
+          ...(stepsByLeafItem.get(step.leaf_item_id) ?? []),
+          mappedStep,
+        ]);
+      });
+    }
     const sectionPaths = buildSectionPaths(parsedSections.data);
     const items = parsedItems.data
       .map((item) => {
         const planItem = selectedItems.get(item.leaf_item_id);
+        const toolSteps = stepsByLeafItem.get(item.leaf_item_id) ?? [];
 
         return {
           advisoryStatus: advisoryStatus(item, workDate),
           estimatedMinutes: item.estimated_minutes,
+          hasDueMandatoryStep: toolSteps.some(
+            (step) => step.isMandatory && step.isDue && !step.isCompleted,
+          ),
           id: item.leaf_item_id,
           isCompleted: planItem?.is_completed ?? false,
           isSelected: Boolean(planItem),
           lastCleanedAt: item.last_cleaned_at,
           name: item.name,
+          notes: item.notes,
           quantity: item.quantity,
           recurrenceDays: item.recurrence_days,
           referenceImagePath: item.reference_image_path,
           sectionPath: sectionPaths.get(item.section_id) ?? "",
           tag: item.tag,
+          toolSteps,
         } satisfies MyDayItem;
       })
       .sort(
@@ -316,7 +455,10 @@ export async function getMyDayData(
 
     return {
       items,
-      ok: true,
+      ok:
+        parsedToolSteps.success &&
+        parsedPlanSteps.success &&
+        parsedLastPerformed.success,
       plan: parsedPlan.success
         ? {
             completedItems: items.filter((item) => item.isCompleted).length,

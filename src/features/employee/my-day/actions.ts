@@ -18,6 +18,7 @@ const SaveSelectionFormDataKeys = [
   "clientId",
   "completeAll",
   "completedLeafItemId",
+  "completedToolStepId",
   "leafItemId",
   "locale",
   "workDate",
@@ -124,11 +125,21 @@ function pickCompletionFormData(formData: FormData) {
 
       return value;
     });
+  const completedToolStepIds = formData
+    .getAll("completedToolStepId")
+    .map((value) => {
+      if (typeof value !== "string") {
+        throw new Error("Unexpected file field.");
+      }
+
+      return value;
+    });
 
   return {
     clientId: scalar("clientId"),
     completeAll: completeAllValue === "true",
     completedLeafItemIds,
+    completedToolStepIds,
     locale: scalar("locale"),
     workDate: scalar("workDate"),
   };
@@ -227,6 +238,7 @@ export async function submitDailyPlanCompletionAction(
     const { error } = await supabase.rpc(
       "submit_current_employee_daily_plan_completion",
       {
+        completed_cleaning_tool_step_ids: dto.completedToolStepIds,
         completed_leaf_item_ids: dto.completedLeafItemIds,
         mark_all_done: dto.completeAll,
         target_client_id: dto.clientId,

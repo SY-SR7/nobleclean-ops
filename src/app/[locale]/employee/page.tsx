@@ -28,15 +28,23 @@ type MyDayCopy = Readonly<{
   error: string;
   emptyItems: string;
   emptySchedule: string;
+  itemDetails: string;
   itemListTitle: string;
+  itemNotes: string;
   lastCleaned: string;
+  lastPerformed: string;
   loadDate: string;
   loadError: string;
+  mandatory: string;
   minutes: string;
   neverCleaned: string;
+  neverPerformed: string;
   noPlan: string;
+  noToolSteps: string;
+  optional: string;
   plannedMinutes: string;
   quantity: string;
+  recurrenceDays: string;
   markAllDone: string;
   readyToSave: string;
   remainingMinutes: string;
@@ -48,11 +56,13 @@ type MyDayCopy = Readonly<{
   submitCompletion: string;
   statusCritical: string;
   statusInProgress: string;
+  statusMandatoryOverdue: string;
   statusRecent: string;
   statusSubmitted: string;
   statusWarning: string;
   tooShort: string;
   title: string;
+  toolSteps: string;
 }>;
 
 function firstSearchValue(value: string | string[] | undefined) {
@@ -69,15 +79,23 @@ function pageCopy(messages: ReturnType<typeof getMessages>): MyDayCopy {
     error: t(messages, "myDay.feedback.error"),
     emptyItems: t(messages, "myDay.emptyItems"),
     emptySchedule: t(messages, "myDay.emptySchedule"),
+    itemDetails: t(messages, "myDay.itemDetails"),
     itemListTitle: t(messages, "myDay.itemListTitle"),
+    itemNotes: t(messages, "myDay.itemNotes"),
     lastCleaned: t(messages, "myDay.lastCleaned"),
+    lastPerformed: t(messages, "myDay.lastPerformed"),
     loadDate: t(messages, "myDay.actions.loadDate"),
     loadError: t(messages, "myDay.feedback.loadError"),
+    mandatory: t(messages, "myDay.mandatory"),
     minutes: t(messages, "myDay.minutes"),
     neverCleaned: t(messages, "myDay.neverCleaned"),
+    neverPerformed: t(messages, "myDay.neverPerformed"),
     noPlan: t(messages, "myDay.noPlan"),
+    noToolSteps: t(messages, "myDay.noToolSteps"),
+    optional: t(messages, "myDay.optional"),
     plannedMinutes: t(messages, "myDay.plannedMinutes"),
     quantity: t(messages, "myDay.quantity"),
+    recurrenceDays: t(messages, "sectionsItems.recurrenceDays"),
     markAllDone: t(messages, "actions.markAllDone"),
     readyToSave: t(messages, "myDay.readyToSave"),
     remainingMinutes: t(messages, "myDay.remainingMinutes"),
@@ -89,11 +107,13 @@ function pageCopy(messages: ReturnType<typeof getMessages>): MyDayCopy {
     statusCritical: t(messages, "status.critical"),
     submitCompletion: t(messages, "myDay.actions.submitCompletion"),
     statusInProgress: t(messages, "status.inProgress"),
+    statusMandatoryOverdue: t(messages, "myDay.statusMandatoryOverdue"),
     statusRecent: t(messages, "status.recent"),
     statusSubmitted: t(messages, "status.submitted"),
     statusWarning: t(messages, "status.warning"),
     tooShort: t(messages, "myDay.feedback.tooShort"),
     title: t(messages, "myDay.title"),
+    toolSteps: t(messages, "myDay.toolSteps"),
   };
 }
 

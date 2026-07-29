@@ -32,11 +32,22 @@ export type LastCleanedItem = Readonly<{
   tag: ItemTag;
 }>;
 
+export type MandatoryStepEscalation = Readonly<{
+  estimatedMinutes: number;
+  id: string;
+  lastPerformedAt: string | null;
+  leafItemName: string;
+  recurrenceDays: number;
+  sequenceOrder: number;
+  toolName: string;
+}>;
+
 export type ReportsData = Readonly<{
   clients: readonly ReportsClientOption[];
   completionRate: number;
   incompletePlans: readonly CompletionPlanSummary[];
   lastCleanedItems: readonly LastCleanedItem[];
+  mandatoryStepEscalations: readonly MandatoryStepEscalation[];
   ok: boolean;
   selectedClientId: string | null;
   totalCompletePlans: number;
@@ -87,18 +98,43 @@ const LastCleanedRowSchema = z.object({
   leaf_item_id: z.string().uuid(),
 });
 
+const MandatoryStepEscalationRowSchema = z.object({
+  cleaning_tool_step_id: z.string().uuid(),
+  estimated_minutes: z.number().int().min(1),
+  last_performed_at: z.string().nullable(),
+  leaf_item_name: z.string(),
+  recurrence_days: z.number().int().min(1),
+  sequence_order: z.number().int().min(1),
+  tool_name: z.string(),
+});
+
 function initialData(): ReportsData {
   return {
     clients: [],
     completionRate: 0,
     incompletePlans: [],
     lastCleanedItems: [],
+    mandatoryStepEscalations: [],
     ok: false,
     selectedClientId: null,
     totalCompletePlans: 0,
     totalIncompletePlans: 0,
     totalPlans: 0,
   };
+}
+
+function toMandatoryStepEscalations(
+  rows: readonly z.infer<typeof MandatoryStepEscalationRowSchema>[],
+) {
+  return rows.map((row) => ({
+    estimatedMinutes: row.estimated_minutes,
+    id: row.cleaning_tool_step_id,
+    lastPerformedAt: row.last_performed_at,
+    leafItemName: row.leaf_item_name,
+    recurrenceDays: row.recurrence_days,
+    sequenceOrder: row.sequence_order,
+    toolName: row.tool_name,
+  })) satisfies readonly MandatoryStepEscalation[];
 }
 
 function toClientOption(
@@ -281,36 +317,53 @@ export async function getReportsData(
       ...new Set(parsedPlans.data.map((plan) => plan.employee_id)),
     ];
     const leafItemIds = parsedLeafItems.data.map((item) => item.id);
-    const [{ data: itemRows }, { data: profileRows }, { data: lastRows }] =
-      await Promise.all([
-        planIds.length > 0
-          ? supabase
-              .from("daily_plan_items")
-              .select("daily_plan_id, is_completed")
-              .in("daily_plan_id", planIds)
-          : Promise.resolve({ data: [] }),
-        employeeIds.length > 0
-          ? supabase
-              .from("profiles")
-              .select("id, full_name")
-              .in("id", employeeIds)
-          : Promise.resolve({ data: [] }),
-        leafItemIds.length > 0
-          ? supabase
-              .from("leaf_item_last_cleaned")
-              .select("leaf_item_id, last_cleaned_at")
-              .in("leaf_item_id", leafItemIds)
-          : Promise.resolve({ data: [] }),
-      ]);
+    const [
+      { data: itemRows },
+      { data: profileRows },
+      { data: lastRows },
+      { data: mandatoryStepRows },
+    ] = await Promise.all([
+      planIds.length > 0
+        ? supabase
+            .from("daily_plan_items")
+            .select("daily_plan_id, is_completed")
+            .in("daily_plan_id", planIds)
+        : Promise.resolve({ data: [] }),
+      employeeIds.length > 0
+        ? supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", employeeIds)
+        : Promise.resolve({ data: [] }),
+      leafItemIds.length > 0
+        ? supabase
+            .from("leaf_item_last_cleaned")
+            .select("leaf_item_id, last_cleaned_at")
+            .in("leaf_item_id", leafItemIds)
+        : Promise.resolve({ data: [] }),
+      supabase
+        .from("mandatory_cleaning_tool_step_status")
+        .select(
+          "cleaning_tool_step_id, leaf_item_name, sequence_order, tool_name, estimated_minutes, recurrence_days, last_performed_at",
+        )
+        .eq("client_id", selectedClient.id)
+        .eq("is_overdue", true)
+        .order("leaf_item_name", { ascending: true })
+        .order("sequence_order", { ascending: true }),
+    ]);
 
     const parsedItems = z.array(DailyPlanItemRowSchema).safeParse(itemRows);
     const parsedProfiles = z.array(ProfileRowSchema).safeParse(profileRows);
     const parsedLastCleaned = z.array(LastCleanedRowSchema).safeParse(lastRows);
+    const parsedMandatorySteps = z
+      .array(MandatoryStepEscalationRowSchema)
+      .safeParse(mandatoryStepRows);
 
     if (
       !parsedItems.success ||
       !parsedProfiles.success ||
-      !parsedLastCleaned.success
+      !parsedLastCleaned.success ||
+      !parsedMandatorySteps.success
     ) {
       return {
         ...initialData(),
@@ -353,6 +406,9 @@ export async function getReportsData(
         parsedLeafItems.data,
         sections,
         lastCleaned,
+      ),
+      mandatoryStepEscalations: toMandatoryStepEscalations(
+        parsedMandatorySteps.data,
       ),
       ok: true,
       selectedClientId: selectedClient.id,

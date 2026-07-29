@@ -528,6 +528,24 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
 - Seed data must stay in migration/seed/test tooling, must avoid real PII/secrets/access details, and must be blocked from production targets.
 - RLS tests must use synthetic fixtures with at least two clients and multiple employees to prove tenant isolation, employee scope restrictions, and safe last-cleaned aggregation.
 
+## Cleaning Tool Steps Implementation
+
+- Implemented PRD v1.2 Cleaning Tool / Equipment Steps per leaf item.
+- Added item-level `leaf_items.notes`, `cleaning_tool_steps`, `daily_plan_item_steps`, step-level RLS helpers/policies, last-performed read model, mandatory-step escalation view, and updated daily plan selection/completion RPC behavior.
+- Admin Sections & Items now supports item notes plus create/edit/reorder/delete for ordered tool steps, using shared `ToolStepCard` and `FormTextarea` components.
+- Employee My Day now includes item details with notes, ordered tool steps, mandatory/optional badges, last-performed visibility, and step-level completion checkboxes. Mandatory-due indicators remain advisory and do not lock item selection or submission.
+- Admin Reports now surfaces overdue mandatory tool steps as a critical escalation metric and list.
+- Added `src/app/favicon.ico` to eliminate the browser `/favicon.ico` 500 seen during smoke testing.
+- Local verification on 2026-07-29:
+  - `supabase db reset --local` applied all migrations from scratch.
+  - `npm run quality:full` passed.
+  - Unit tests passed 46/46.
+  - Integration tests passed 12/12.
+  - Supabase DB tests passed 59/59.
+  - `supabase db lint --local --schema public` found no public schema errors.
+  - `supabase db advisors --local` found no issues.
+  - Edge headless CDP smoke on local production `/de/login` and `/de/employee` found no console warnings/errors, no horizontal overflow, and confirmed protected employee route redirects to `/de/login`.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.

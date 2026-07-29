@@ -12,22 +12,29 @@ import { requireRole } from "@/server/auth/guards";
 
 import {
   AttachReferenceImageInputSchema,
+  CleaningToolStepFormDataKeys,
+  CreateCleaningToolStepInputSchema,
   CreateLeafItemInputSchema,
   CreateSectionInputSchema,
+  DeleteCleaningToolStepInputSchema,
   DeleteLeafItemInputSchema,
   DeleteSectionInputSchema,
   initialSectionsItemsActionState,
   LeafItemFormDataKeys,
   SectionFormDataKeys,
   sectionsItemsFieldErrors,
+  UpdateCleaningToolStepInputSchema,
   UpdateLeafItemInputSchema,
   UpdateSectionInputSchema,
   type AttachReferenceImageCommandDto,
+  type CreateCleaningToolStepCommandDto,
   type CreateLeafItemCommandDto,
   type CreateSectionCommandDto,
+  type DeleteCleaningToolStepCommandDto,
   type DeleteLeafItemCommandDto,
   type DeleteSectionCommandDto,
   type SectionsItemsActionState,
+  type UpdateCleaningToolStepCommandDto,
   type UpdateLeafItemCommandDto,
   type UpdateSectionCommandDto,
 } from "./schema";
@@ -53,6 +60,7 @@ type SectionDbUpdate = Readonly<{
 type LeafItemDbInsert = Readonly<{
   estimated_minutes: number;
   name: string;
+  notes: string | null;
   quantity: number;
   recurrence_days: number | null;
   section_id: string;
@@ -62,11 +70,31 @@ type LeafItemDbInsert = Readonly<{
 type LeafItemDbUpdate = Readonly<{
   estimated_minutes?: number;
   name?: string;
+  notes?: string | null;
   quantity?: number;
   recurrence_days?: number | null;
   reference_image_path?: string | null;
   section_id?: string;
   tag?: string;
+}>;
+
+type CleaningToolStepDbInsert = Readonly<{
+  estimated_minutes: number;
+  is_mandatory: boolean;
+  leaf_item_id: string;
+  notes: string | null;
+  recurrence_days: number;
+  sequence_order: number;
+  tool_name: string;
+}>;
+
+type CleaningToolStepDbUpdate = Readonly<{
+  estimated_minutes?: number;
+  is_mandatory?: boolean;
+  notes?: string | null;
+  recurrence_days?: number;
+  sequence_order?: number;
+  tool_name?: string;
 }>;
 
 type ScopedEntity = Readonly<{
@@ -181,6 +209,28 @@ async function leafItemBelongsToClient(
   };
 }
 
+async function cleaningToolStepBelongsToClient(
+  supabase: SupabaseServerClient,
+  stepId: string,
+  leafItemId: string,
+  clientId: string,
+) {
+  const { data: step, error: stepError } = await supabase
+    .from("cleaning_tool_steps")
+    .select("leaf_item_id")
+    .eq("id", stepId)
+    .eq("leaf_item_id", leafItemId)
+    .maybeSingle();
+
+  if (stepError || !step || typeof step.leaf_item_id !== "string") {
+    return false;
+  }
+
+  return Boolean(
+    await leafItemBelongsToClient(supabase, step.leaf_item_id, clientId),
+  );
+}
+
 async function validateSectionScope(
   supabase: SupabaseServerClient,
   dto: CreateSectionCommandDto | UpdateSectionCommandDto,
@@ -219,6 +269,28 @@ async function validateLeafItemScope(
   return Boolean(
     await sectionBelongsToClient(supabase, dto.sectionId, dto.clientId),
   );
+}
+
+async function validateCleaningToolStepScope(
+  supabase: SupabaseServerClient,
+  dto: CreateCleaningToolStepCommandDto | UpdateCleaningToolStepCommandDto,
+) {
+  if (
+    !(await leafItemBelongsToClient(supabase, dto.leafItemId, dto.clientId))
+  ) {
+    return false;
+  }
+
+  if ("id" in dto) {
+    return cleaningToolStepBelongsToClient(
+      supabase,
+      dto.id,
+      dto.leafItemId,
+      dto.clientId,
+    );
+  }
+
+  return true;
 }
 
 function revalidateSectionsItems(locale: "de" | "en", clientId: string) {
@@ -412,6 +484,7 @@ export async function createLeafItemAction(
   const insert: LeafItemDbInsert = {
     estimated_minutes: dto.estimatedMinutes,
     name: dto.name,
+    notes: dto.notes,
     quantity: dto.quantity,
     recurrence_days: dto.recurrenceDays ?? null,
     section_id: dto.sectionId,
@@ -462,6 +535,7 @@ export async function updateLeafItemAction(
   const update: LeafItemDbUpdate = {
     estimated_minutes: dto.estimatedMinutes,
     name: dto.name,
+    notes: dto.notes,
     quantity: dto.quantity,
     recurrence_days: dto.recurrenceDays ?? null,
     section_id: dto.sectionId,
@@ -524,6 +598,163 @@ export async function deleteLeafItemAction(
     await supabase.storage
       .from("reference-images")
       .remove([scoped.referenceImagePath]);
+  }
+
+  revalidateSectionsItems(dto.locale, dto.clientId);
+  return { code: "DELETED", status: "success" };
+}
+
+export async function createCleaningToolStepAction(
+  _previousState: SectionsItemsActionState = initialSectionsItemsActionState,
+  formData: FormData,
+): Promise<SectionsItemsActionState> {
+  void _previousState;
+
+  let raw;
+
+  try {
+    raw = pickFormData(formData, CleaningToolStepFormDataKeys);
+  } catch {
+    return validationFailure();
+  }
+
+  const parsed = CreateCleaningToolStepInputSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return validationFailure(sectionsItemsFieldErrors(parsed.error));
+  }
+
+  const dto = parsed.data;
+  const supabase = await getAdminMutationClient(dto.locale);
+
+  if (!supabase) {
+    return { code: "AUTH_FAILED", status: "error" };
+  }
+
+  if (!(await validateCleaningToolStepScope(supabase, dto))) {
+    return validationFailure({ leafItemId: "invalid" });
+  }
+
+  const insert: CleaningToolStepDbInsert = {
+    estimated_minutes: dto.estimatedMinutes,
+    is_mandatory: dto.isMandatory,
+    leaf_item_id: dto.leafItemId,
+    notes: dto.notes,
+    recurrence_days: dto.recurrenceDays,
+    sequence_order: dto.sequenceOrder,
+    tool_name: dto.toolName,
+  };
+
+  const { error } = await supabase.from("cleaning_tool_steps").insert(insert);
+
+  if (error) {
+    return { code: "SAVE_FAILED", status: "error" };
+  }
+
+  revalidateSectionsItems(dto.locale, dto.clientId);
+  return { code: "SAVED", status: "success" };
+}
+
+export async function updateCleaningToolStepAction(
+  _previousState: SectionsItemsActionState = initialSectionsItemsActionState,
+  formData: FormData,
+): Promise<SectionsItemsActionState> {
+  void _previousState;
+
+  let raw;
+
+  try {
+    raw = pickFormData(formData, ["id", ...CleaningToolStepFormDataKeys]);
+  } catch {
+    return validationFailure();
+  }
+
+  const parsed = UpdateCleaningToolStepInputSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return validationFailure(sectionsItemsFieldErrors(parsed.error));
+  }
+
+  const dto = parsed.data;
+  const supabase = await getAdminMutationClient(dto.locale);
+
+  if (!supabase) {
+    return { code: "AUTH_FAILED", status: "error" };
+  }
+
+  if (!(await validateCleaningToolStepScope(supabase, dto))) {
+    return validationFailure({ id: "invalid" });
+  }
+
+  const update: CleaningToolStepDbUpdate = {
+    estimated_minutes: dto.estimatedMinutes,
+    is_mandatory: dto.isMandatory,
+    notes: dto.notes,
+    recurrence_days: dto.recurrenceDays,
+    sequence_order: dto.sequenceOrder,
+    tool_name: dto.toolName,
+  };
+
+  const { error } = await supabase
+    .from("cleaning_tool_steps")
+    .update(update)
+    .eq("id", dto.id)
+    .eq("leaf_item_id", dto.leafItemId);
+
+  if (error) {
+    return { code: "SAVE_FAILED", status: "error" };
+  }
+
+  revalidateSectionsItems(dto.locale, dto.clientId);
+  return { code: "SAVED", status: "success" };
+}
+
+export async function deleteCleaningToolStepAction(
+  _previousState: SectionsItemsActionState = initialSectionsItemsActionState,
+  formData: FormData,
+): Promise<SectionsItemsActionState> {
+  void _previousState;
+
+  let raw;
+
+  try {
+    raw = pickFormData(formData, ["clientId", "id", "leafItemId", "locale"]);
+  } catch {
+    return validationFailure();
+  }
+
+  const parsed = DeleteCleaningToolStepInputSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return validationFailure(sectionsItemsFieldErrors(parsed.error));
+  }
+
+  const dto: DeleteCleaningToolStepCommandDto = parsed.data;
+  const supabase = await getAdminMutationClient(dto.locale);
+
+  if (!supabase) {
+    return { code: "AUTH_FAILED", status: "error" };
+  }
+
+  if (
+    !(await cleaningToolStepBelongsToClient(
+      supabase,
+      dto.id,
+      dto.leafItemId,
+      dto.clientId,
+    ))
+  ) {
+    return validationFailure({ id: "invalid" });
+  }
+
+  const { error } = await supabase
+    .from("cleaning_tool_steps")
+    .delete()
+    .eq("id", dto.id)
+    .eq("leaf_item_id", dto.leafItemId);
+
+  if (error) {
+    return { code: "SAVE_FAILED", status: "error" };
   }
 
   revalidateSectionsItems(dto.locale, dto.clientId);

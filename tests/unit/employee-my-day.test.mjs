@@ -37,6 +37,7 @@ test("employee My Day UI uses shared component library primitives", () => {
 
   assert.match(page, /MetricCard/);
   assert.match(form, /TaskItemCard/);
+  assert.match(form, /ToolStepCard/);
   assert.match(form, /ProgressIndicator/);
   assert.match(form, /PriorityStatusBadge/);
 });
@@ -48,6 +49,9 @@ test("employee My Day data is read-only and scoped to the authenticated employee
   assert.match(queries, /work_schedule/);
   assert.match(queries, /session\.profile\.id/);
   assert.match(queries, /get_assigned_client_leaf_item_status/);
+  assert.match(queries, /cleaning_tool_steps/);
+  assert.match(queries, /cleaning_tool_step_last_performed/);
+  assert.match(queries, /daily_plan_item_steps/);
   assert.match(queries, /daily_plans/);
   assert.match(queries, /daily_plan_items/);
   assert.doesNotMatch(queries, /\.insert\(/);
@@ -78,7 +82,9 @@ test("employee My Day advisory indicators match PRD Section 6 and remain visual-
     /elapsedDays >= 0[\s\S]*elapsedDays < row\.recurrence_days[\s\S]*\? "recent"/,
   );
   assert.match(form, /item\.advisoryStatus && label/);
+  assert.match(form, /item\.hasDueMandatoryStep/);
   assert.doesNotMatch(form, /disabled=\{[^}]*item\.advisoryStatus/);
+  assert.doesNotMatch(form, /disabled=\{[^}]*hasDueMandatoryStep/);
   assert.doesNotMatch(form, /aria-disabled=\{[^}]*item\.advisoryStatus/);
 });
 
@@ -95,9 +101,14 @@ test("employee daily plan selection validates ownership through a single server 
   assert.match(actions, /submit_current_employee_daily_plan_completion/);
   assert.match(actions, /selected_leaf_item_ids: dto\.leafItemIds/);
   assert.match(actions, /completed_leaf_item_ids: dto\.completedLeafItemIds/);
+  assert.match(
+    actions,
+    /completed_cleaning_tool_step_ids: dto\.completedToolStepIds/,
+  );
   assert.match(actions, /mark_all_done: dto\.completeAll/);
   assert.match(schema, /leafItemIds: LeafItemIdsSchema/);
   assert.match(schema, /completedLeafItemIds: CompletedLeafItemIdsSchema/);
+  assert.match(schema, /completedToolStepIds: CompletedToolStepIdsSchema/);
   assert.match(schema, /\.min\(1\)/);
   assert.match(migration, /current_employee_has_work_schedule/);
   assert.match(migration, /planned_minutes_below_allocated/);
@@ -110,15 +121,17 @@ test("employee completion flow exposes bulk and partial completion controls", ()
     "src/features/employee/my-day/MyDaySelectionForm.tsx",
   );
   const migration = readProjectFile(
-    "supabase/migrations/20260729014000_daily_plan_completion.sql",
+    "supabase/migrations/20260729153000_cleaning_tool_steps.sql",
   );
 
   assert.match(form, /name="completeAll"/);
   assert.match(form, /name="completedLeafItemId"/);
+  assert.match(form, /name="completedToolStepId"/);
+  assert.match(form, /copy\.itemDetails/);
   assert.match(form, /submitDailyPlanCompletionAction/);
-  assert.match(migration, /completed_at = case/);
-  assert.match(migration, /status = 'submitted'/);
-  assert.match(migration, /submitted_at = completion_time/);
+  assert.match(migration, /daily_plan_item_steps/);
+  assert.match(migration, /completed_cleaning_tool_step_ids/);
+  assert.match(migration, /Missing mandatory steps remain advisory/i);
 });
 
 test("employee My Day UI copy lives in German and English message catalogs", () => {
@@ -137,6 +150,13 @@ test("employee My Day UI copy lives in German and English message catalogs", () 
     "currentPlan",
     "itemListTitle",
     "lastCleaned",
+    "lastPerformed",
+    "itemDetails",
+    "itemNotes",
+    "toolSteps",
+    "mandatory",
+    "optional",
+    "statusMandatoryOverdue",
     "actions",
     "feedback",
   ].forEach((key) => {
