@@ -1,0 +1,259 @@
+{
+  "foundation": {
+    "appName": "NobleClean Ops"
+  },
+  "metadata": {
+    "title": "NobleClean Ops",
+    "description": "Internal operations platform for NobleClean."
+  },
+  "navigation": {
+    "admin": {
+      "label": "Admin navigation",
+      "home": "Home",
+      "clients": "Clients",
+      "staff": "Staff",
+      "sectionsItems": "Sections & Items",
+      "schedule": "Schedule",
+      "reports": "Reports"
+    },
+    "employee": {
+      "label": "Employee navigation",
+      "tasks": "Tasks",
+      "notifications": "Notifications",
+      "history": "History",
+      "profile": "Profile"
+    }
+  },
+  "myDay": {
+    "title": "My Day",
+    "dateLabel": "Work date",
+    "client": "Client",
+    "allocatedHours": "Allocated hours",
+    "plannedMinutes": "Planned minutes",
+    "selectedItems": "Selected items",
+    "currentPlan": "Current plan",
+    "noPlan": "No plan yet",
+    "itemListTitle": "Assigned items",
+    "remainingMinutes": "Remaining minutes",
+    "readyToSave": "Ready to save",
+    "section": "Section",
+    "minutes": "min",
+    "quantity": "Qty",
+    "lastCleaned": "Last cleaned",
+    "neverCleaned": "Never",
+    "emptySchedule": "No schedule entry for this day.",
+    "emptyItems": "No items available for this client.",
+    "actions": {
+      "loadDate": "Load day",
+      "saveSelection": "Save plan",
+      "selectItem": "Select item",
+      "submitCompletion": "Submit completion"
+    },
+    "feedback": {
+      "completionSaved": "The completion was submitted.",
+      "error": "The daily plan could not be saved.",
+      "loadError": "My Day could not be loaded.",
+      "saved": "The daily plan was saved.",
+      "tooShort": "Select enough work to cover the allocated time."
+    }
+  },
+  "adminClients": {
+    "createTitle": "New client",
+    "editTitle": "Edit client",
+    "searchLabel": "Search clients",
+    "empty": "No clients found.",
+    "notAvailable": "Not provided",
+    "fields": {
+      "name": "Name",
+      "address": "Address",
+      "contactName": "Contact person",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "contactNotes": "Contact notes",
+      "updatedAt": "Updated"
+    },
+    "actions": {
+      "create": "Create client",
+      "reactivate": "Reactivate"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Deactivated"
+    },
+    "summary": {
+      "active": "Active",
+      "inactive": "Deactivated"
+    },
+    "feedback": {
+      "created": "The client was created.",
+      "updated": "The client was updated.",
+      "statusUpdated": "Status updated.",
+      "error": "The change could not be saved.",
+      "loadError": "The client list could not be loaded."
+    }
+  },
+  "sectionsItems": {
+    "clientLabel": "Client",
+    "treeTitle": "Section tree",
+    "selectedSectionTitle": "Selected section",
+    "leafItemsTitle": "Items",
+    "createSectionTitle": "Create section",
+    "editSectionTitle": "Edit section",
+    "createLeafTitle": "Create item",
+    "editLeafTitle": "Edit item",
+    "rootParent": "Top level",
+    "emptyClients": "No clients available.",
+    "emptySections": "No sections available.",
+    "emptyLeafItems": "No items available.",
+    "hasImage": "Image",
+    "leafCount": "items",
+    "minutes": "min",
+    "quantity": "Qty",
+    "recurrenceDays": "Interval",
+    "fields": {
+      "sectionName": "Section name",
+      "leafName": "Item name",
+      "parentSection": "Parent section",
+      "sortOrder": "Sort order",
+      "section": "Section",
+      "quantity": "Quantity",
+      "estimatedMinutes": "Minutes",
+      "recurrenceDays": "Interval in days",
+      "tag": "Status",
+      "referenceImage": "Reference image"
+    },
+    "actions": {
+      "selectClient": "Load client",
+      "attachImage": "Attach image",
+      "deleteSection": "Delete section",
+      "deleteLeaf": "Delete item"
+    },
+    "tags": {
+      "normal": "Normal",
+      "complaint": "Complaint",
+      "highPriority": "High priority"
+    },
+    "feedback": {
+      "saved": "Saved.",
+      "imageAttached": "Reference image saved.",
+      "error": "The change could not be saved.",
+      "loadError": "Sections and items could not be loaded."
+    }
+  },
+  "reports": {
+    "clientLabel": "Client",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "totalPlans": "Plans",
+    "completePlans": "Complete",
+    "incompletePlans": "Incomplete",
+    "completionRate": "Rate",
+    "lastCleaned": "Last cleaned",
+    "planCompletion": "Completed",
+    "employee": "Employee",
+    "items": "Items",
+    "neverCleaned": "Never",
+    "emptyClients": "No clients available.",
+    "emptyIncomplete": "No incomplete plans found.",
+    "emptyLastCleaned": "No items found for this client.",
+    "actions": {
+      "filter": "Filter"
+    },
+    "feedback": {
+      "loadError": "Reports could not be loaded."
+    }
+  },
+  "staff": {
+    "assignTitle": "Create assignment",
+    "updateTitle": "Edit assignment",
+    "assignmentsTitle": "Assignments",
+    "employees": "Employees",
+    "activeAssignments": "Active assignments",
+    "emptyAssignments": "No assignments available.",
+    "fields": {
+      "employee": "Employee",
+      "client": "Client",
+      "startDate": "Start date",
+      "endDate": "End date"
+    },
+    "actions": {
+      "endAssignment": "End"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Ended"
+    },
+    "feedback": {
+      "saved": "Assignment saved.",
+      "ended": "Assignment ended.",
+      "error": "The assignment could not be saved.",
+      "loadError": "Assignments could not be loaded."
+    }
+  },
+  "schedule": {
+    "createTitle": "Create schedule entry",
+    "updateTitle": "Edit schedule entry",
+    "schedulesTitle": "Schedule entries",
+    "month": "Month",
+    "entries": "Entries",
+    "allocatedHours": "Hours",
+    "scheduledEmployees": "Scheduled employees",
+    "emptySchedules": "No schedule entries for this month.",
+    "fields": {
+      "workDate": "Work date",
+      "allocatedHours": "Hours"
+    },
+    "actions": {
+      "selectMonth": "Load month",
+      "delete": "Delete entry"
+    },
+    "feedback": {
+      "saved": "Schedule entry saved.",
+      "deleted": "Schedule entry deleted.",
+      "error": "The schedule entry could not be saved.",
+      "loadError": "The work schedule could not be loaded."
+    }
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deactivate": "Deactivate",
+    "search": "Search",
+    "clear": "Clear",
+    "submit": "Submit",
+    "markAllDone": "Mark all as done"
+  },
+  "status": {
+    "critical": "High priority",
+    "warning": "Complaint",
+    "recent": "Recently cleaned",
+    "success": "Completed",
+    "inProgress": "In progress",
+    "submitted": "Submitted"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "invalidEmail": "Enter a valid email address.",
+    "invalidDate": "Enter a valid date.",
+    "positiveMinutes": "Time must be greater than 0 minutes.",
+    "generic": "The input could not be processed."
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "genericError": "Sign in failed. Check your details and try again."
+    },
+    "mfa": {
+      "title": "Second step required",
+      "body": "Confirm this sign-in with your second security step."
+    },
+    "logout": {
+      "submit": "Sign out"
+    }
+  }
+}

@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-surface: var(--nc-color-surface);
+  --color-surface-dim: var(--nc-color-surface-dim);
+  --color-surface-bright: var(--nc-color-surface-bright);
+  --color-surface-container-lowest: var(--nc-color-surface-container-lowest);
+  --color-surface-container-low: var(--nc-color-surface-container-low);
+  --color-surface-container: var(--nc-color-surface-container);
+  --color-surface-container-high: var(--nc-color-surface-container-high);
+  --color-surface-container-highest: var(--nc-color-surface-container-highest);
+  --color-on-surface: var(--nc-color-on-surface);
+  --color-on-surface-variant: var(--nc-color-on-surface-variant);
+  --color-inverse-surface: var(--nc-color-inverse-surface);
+  --color-inverse-on-surface: var(--nc-color-inverse-on-surface);
+  --color-outline: var(--nc-color-outline);
+  --color-outline-variant: var(--nc-color-outline-variant);
+  --color-surface-tint: var(--nc-color-surface-tint);
+  --color-primary: var(--nc-color-primary);
+  --color-on-primary: var(--nc-color-on-primary);
+  --color-primary-container: var(--nc-color-primary-container);
+  --color-on-primary-container: var(--nc-color-on-primary-container);
+  --color-inverse-primary: var(--nc-color-inverse-primary);
+  --color-secondary: var(--nc-color-secondary);
+  --color-on-secondary: var(--nc-color-on-secondary);
+  --color-secondary-container: var(--nc-color-secondary-container);
+  --color-on-secondary-container: var(--nc-color-on-secondary-container);
+  --color-tertiary: var(--nc-color-tertiary);
+  --color-on-tertiary: var(--nc-color-on-tertiary);
+  --color-tertiary-container: var(--nc-color-tertiary-container);
+  --color-on-tertiary-container: var(--nc-color-on-tertiary-container);
+  --color-error: var(--nc-color-error);
+  --color-on-error: var(--nc-color-on-error);
+  --color-error-container: var(--nc-color-error-container);
+  --color-on-error-container: var(--nc-color-on-error-container);
+  --color-surface-accent: var(--nc-color-surface-accent);
+  --color-status-critical: var(--nc-color-status-critical);
+  --color-status-warning: var(--nc-color-status-warning);
+  --color-status-success: var(--nc-color-status-success);
+  --color-status-recent: var(--nc-color-status-recent);
+  --font-sans: var(--nc-font-body);
+  --font-heading: var(--nc-font-heading);
+  --radius-sm: var(--nc-radius-sm);
+  --radius: var(--nc-radius-default);
+  --radius-md: var(--nc-radius-md);
+  --radius-lg: var(--nc-radius-lg);
+  --radius-xl: var(--nc-radius-xl);
+  --radius-full: var(--nc-radius-full);
+  --spacing-base: var(--nc-spacing-base);
+  --spacing-gutter: var(--nc-spacing-gutter);
+  --spacing-mobile-margin: var(--nc-spacing-margin-mobile);
+  --spacing-desktop-margin: var(--nc-spacing-margin-desktop);
+  --shadow-level-1: var(--nc-shadow-level-1);
+  --shadow-level-2: var(--nc-shadow-level-2);
+}
+
+:root {
+  color-scheme: light;
+  --nc-color-surface: #f7f9fb;
+  --nc-color-surface-dim: #d8dadc;
+  --nc-color-surface-bright: #f7f9fb;
+  --nc-color-surface-container-lowest: #ffffff;
+  --nc-color-surface-container-low: #f2f4f6;
+  --nc-color-surface-container: #eceef0;
+  --nc-color-surface-container-high: #e6e8ea;
+  --nc-color-surface-container-highest: #e0e3e5;
+  --nc-color-on-surface: #191c1e;
+  --nc-color-on-surface-variant: #42474d;
+  --nc-color-inverse-surface: #2d3133;
+  --nc-color-inverse-on-surface: #eff1f3;
+  --nc-color-outline: #72787e;
+  --nc-color-outline-variant: #c2c7ce;
+  --nc-color-surface-tint: #3a6283;
+  --nc-color-primary: #001f34;
+  --nc-color-on-primary: #ffffff;
+  --nc-color-primary-container: #003554;
+  --nc-color-on-primary-container: #779ec2;
+  --nc-color-inverse-primary: #a3cbf1;
+  --nc-color-secondary: #00677c;
+  --nc-color-on-secondary: #ffffff;
+  --nc-color-secondary-container: #57dcff;
+  --nc-color-on-secondary-container: #005e72;
+  --nc-color-tertiary: #311600;
+  --nc-color-on-tertiary: #ffffff;
+  --nc-color-tertiary-container: #4f2801;
+  --nc-color-on-tertiary-container: #c88e5d;
+  --nc-color-error: #ba1a1a;
+  --nc-color-on-error: #ffffff;
+  --nc-color-error-container: #ffdad6;
+  --nc-color-on-error-container: #93000a;
+  --nc-color-surface-accent: #ebfafc;
+  --nc-color-status-critical: #e11d48;
+  --nc-color-status-warning: #f59e0b;
+  --nc-color-status-success: #10b981;
+  --nc-color-status-recent: #87cba1;
+  --nc-font-heading: "Montserrat", "Segoe UI", Arial, sans-serif;
+  --nc-font-body: "Hanken Grotesk", "Inter", "Segoe UI", Arial, sans-serif;
+  --nc-type-headline-lg-size: 32px;
+  --nc-type-headline-md-size: 24px;
+  --nc-type-headline-sm-size: 20px;
+  --nc-type-body-lg-size: 18px;
+  --nc-type-body-md-size: 16px;
+  --nc-type-body-sm-size: 14px;
+  --nc-type-label-size: 12px;
+  --nc-spacing-base: 8px;
+  --nc-spacing-gutter: 24px;
+  --nc-spacing-margin-mobile: 16px;
+  --nc-spacing-margin-desktop: 32px;
+  --nc-container-max: 1440px;
+  --nc-radius-sm: 0.25rem;
+  --nc-radius-default: 0.5rem;
+  --nc-radius-md: 0.75rem;
+  --nc-radius-lg: 1rem;
+  --nc-radius-xl: 1.5rem;
+  --nc-radius-full: 9999px;
+  --nc-shadow-level-1: 0 4px 12px rgb(0 53 84 / 0.05);
+  --nc-shadow-level-2: 0 16px 40px rgb(0 53 84 / 0.14);
+  background: var(--nc-color-surface);
+  color: var(--nc-color-on-surface);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--nc-color-surface);
+  color: var(--nc-color-on-surface);
+  font-family: var(--nc-font-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

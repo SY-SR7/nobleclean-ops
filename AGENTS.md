@@ -2,6 +2,19 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
 
+## NobleClean-Ops Context
+
+Before writing application code, read:
+
+- `_handoff/NobleClean-Ops_PRD.md`
+- `_handoff/DESIGN.md`
+- `_handoff/SECURITY_RULES.md`
+- `_handoff/PROJECT_STRATEGY.md`
+- `_handoff/AI_ENVIRONMENT.md`
+- `_handoff/PROGRESS.md`
+
+This is a large, security-critical Next.js App Router + Supabase + Vercel project. Use Beads for task tracking, apply the installed security/browser/deployment skills when relevant, and use browser/MCP inspection for frontend verification. Do not read `.env` or secret files. Do not connect Supabase/Vercel MCP to production data without explicit approval and project scoping.
+
 > **Architecture in one line:** Issues live in a local Dolt database
 > (`.beads/dolt/`); cross-machine sync uses `bd dolt push/pull` (a
 > git-compatible protocol), stored under `refs/dolt/data` on your git

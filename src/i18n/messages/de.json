@@ -1,0 +1,259 @@
+{
+  "foundation": {
+    "appName": "NobleClean Ops"
+  },
+  "metadata": {
+    "title": "NobleClean Ops",
+    "description": "Interne Betriebsplattform fuer NobleClean."
+  },
+  "navigation": {
+    "admin": {
+      "label": "Admin-Navigation",
+      "home": "Start",
+      "clients": "Kunden",
+      "staff": "Team",
+      "sectionsItems": "Bereiche & Objekte",
+      "schedule": "Planung",
+      "reports": "Berichte"
+    },
+    "employee": {
+      "label": "Mitarbeiter-Navigation",
+      "tasks": "Aufgaben",
+      "notifications": "Mitteilungen",
+      "history": "Verlauf",
+      "profile": "Profil"
+    }
+  },
+  "myDay": {
+    "title": "Mein Tag",
+    "dateLabel": "Arbeitstag",
+    "client": "Kunde",
+    "allocatedHours": "Geplante Stunden",
+    "plannedMinutes": "Geplante Minuten",
+    "selectedItems": "Ausgewaehlte Objekte",
+    "currentPlan": "Aktueller Plan",
+    "noPlan": "Noch kein Plan",
+    "itemListTitle": "Zugewiesene Objekte",
+    "remainingMinutes": "Verbleibende Minuten",
+    "readyToSave": "Bereit zum Speichern",
+    "section": "Bereich",
+    "minutes": "Min.",
+    "quantity": "Menge",
+    "lastCleaned": "Zuletzt gereinigt",
+    "neverCleaned": "Noch nie",
+    "emptySchedule": "Fuer diesen Tag ist kein Planeintrag vorhanden.",
+    "emptyItems": "Fuer diesen Kunden sind keine Objekte vorhanden.",
+    "actions": {
+      "loadDate": "Tag laden",
+      "saveSelection": "Plan speichern",
+      "selectItem": "Objekt auswaehlen",
+      "submitCompletion": "Abschluss senden"
+    },
+    "feedback": {
+      "completionSaved": "Der Abschluss wurde gesendet.",
+      "error": "Der Tagesplan konnte nicht gespeichert werden.",
+      "loadError": "Mein Tag konnte nicht geladen werden.",
+      "saved": "Der Tagesplan wurde gespeichert.",
+      "tooShort": "Waehlen Sie genug Arbeit fuer die geplante Zeit aus."
+    }
+  },
+  "adminClients": {
+    "createTitle": "Neuer Kunde",
+    "editTitle": "Kunde bearbeiten",
+    "searchLabel": "Kunden suchen",
+    "empty": "Keine Kunden gefunden.",
+    "notAvailable": "Nicht angegeben",
+    "fields": {
+      "name": "Name",
+      "address": "Adresse",
+      "contactName": "Kontaktperson",
+      "contactEmail": "Kontakt-E-Mail",
+      "contactPhone": "Kontakt-Telefon",
+      "contactNotes": "Kontakt-Notizen",
+      "updatedAt": "Aktualisiert"
+    },
+    "actions": {
+      "create": "Kunde anlegen",
+      "reactivate": "Reaktivieren"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Deaktiviert"
+    },
+    "summary": {
+      "active": "Aktiv",
+      "inactive": "Deaktiviert"
+    },
+    "feedback": {
+      "created": "Der Kunde wurde angelegt.",
+      "updated": "Der Kunde wurde aktualisiert.",
+      "statusUpdated": "Status aktualisiert.",
+      "error": "Die Aenderung konnte nicht gespeichert werden.",
+      "loadError": "Die Kundenliste konnte nicht geladen werden."
+    }
+  },
+  "sectionsItems": {
+    "clientLabel": "Kunde",
+    "treeTitle": "Bereichsbaum",
+    "selectedSectionTitle": "Ausgewaehlter Bereich",
+    "leafItemsTitle": "Objekte",
+    "createSectionTitle": "Bereich anlegen",
+    "editSectionTitle": "Bereich bearbeiten",
+    "createLeafTitle": "Objekt anlegen",
+    "editLeafTitle": "Objekt bearbeiten",
+    "rootParent": "Oberste Ebene",
+    "emptyClients": "Keine Kunden vorhanden.",
+    "emptySections": "Keine Bereiche vorhanden.",
+    "emptyLeafItems": "Keine Objekte vorhanden.",
+    "hasImage": "Bild",
+    "leafCount": "Objekte",
+    "minutes": "Min.",
+    "quantity": "Menge",
+    "recurrenceDays": "Intervall",
+    "fields": {
+      "sectionName": "Bereichsname",
+      "leafName": "Objektname",
+      "parentSection": "Uebergeordneter Bereich",
+      "sortOrder": "Sortierung",
+      "section": "Bereich",
+      "quantity": "Menge",
+      "estimatedMinutes": "Minuten",
+      "recurrenceDays": "Intervall in Tagen",
+      "tag": "Status",
+      "referenceImage": "Referenzbild"
+    },
+    "actions": {
+      "selectClient": "Kunde laden",
+      "attachImage": "Bild anhaengen",
+      "deleteSection": "Bereich loeschen",
+      "deleteLeaf": "Objekt loeschen"
+    },
+    "tags": {
+      "normal": "Normal",
+      "complaint": "Beschwerde",
+      "highPriority": "Hohe Prioritaet"
+    },
+    "feedback": {
+      "saved": "Gespeichert.",
+      "imageAttached": "Referenzbild gespeichert.",
+      "error": "Die Aenderung konnte nicht gespeichert werden.",
+      "loadError": "Bereiche und Objekte konnten nicht geladen werden."
+    }
+  },
+  "reports": {
+    "clientLabel": "Kunde",
+    "dateFrom": "Von",
+    "dateTo": "Bis",
+    "totalPlans": "Plaene",
+    "completePlans": "Vollstaendig",
+    "incompletePlans": "Unvollstaendig",
+    "completionRate": "Quote",
+    "lastCleaned": "Zuletzt gereinigt",
+    "planCompletion": "Erledigt",
+    "employee": "Mitarbeiter",
+    "items": "Objekte",
+    "neverCleaned": "Noch nie",
+    "emptyClients": "Keine Kunden vorhanden.",
+    "emptyIncomplete": "Keine unvollstaendigen Plaene gefunden.",
+    "emptyLastCleaned": "Keine Objekte fuer diesen Kunden gefunden.",
+    "actions": {
+      "filter": "Filtern"
+    },
+    "feedback": {
+      "loadError": "Die Berichte konnten nicht geladen werden."
+    }
+  },
+  "staff": {
+    "assignTitle": "Zuweisung anlegen",
+    "updateTitle": "Zuweisung bearbeiten",
+    "assignmentsTitle": "Zuweisungen",
+    "employees": "Mitarbeiter",
+    "activeAssignments": "Aktive Zuweisungen",
+    "emptyAssignments": "Keine Zuweisungen vorhanden.",
+    "fields": {
+      "employee": "Mitarbeiter",
+      "client": "Kunde",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum"
+    },
+    "actions": {
+      "endAssignment": "Beenden"
+    },
+    "status": {
+      "active": "Aktiv",
+      "inactive": "Beendet"
+    },
+    "feedback": {
+      "saved": "Zuweisung gespeichert.",
+      "ended": "Zuweisung beendet.",
+      "error": "Die Zuweisung konnte nicht gespeichert werden.",
+      "loadError": "Die Zuweisungen konnten nicht geladen werden."
+    }
+  },
+  "schedule": {
+    "createTitle": "Planeintrag anlegen",
+    "updateTitle": "Planeintrag bearbeiten",
+    "schedulesTitle": "Planeintraege",
+    "month": "Monat",
+    "entries": "Eintraege",
+    "allocatedHours": "Stunden",
+    "scheduledEmployees": "Geplante Mitarbeiter",
+    "emptySchedules": "Keine Planeintraege fuer diesen Monat vorhanden.",
+    "fields": {
+      "workDate": "Arbeitstag",
+      "allocatedHours": "Stunden"
+    },
+    "actions": {
+      "selectMonth": "Monat laden",
+      "delete": "Eintrag loeschen"
+    },
+    "feedback": {
+      "saved": "Planeintrag gespeichert.",
+      "deleted": "Planeintrag geloescht.",
+      "error": "Der Planeintrag konnte nicht gespeichert werden.",
+      "loadError": "Der Arbeitsplan konnte nicht geladen werden."
+    }
+  },
+  "actions": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "Loeschen",
+    "deactivate": "Deaktivieren",
+    "search": "Suchen",
+    "clear": "Zuruecksetzen",
+    "submit": "Absenden",
+    "markAllDone": "Alle als erledigt markieren"
+  },
+  "status": {
+    "critical": "Hohe Prioritaet",
+    "warning": "Beschwerde",
+    "recent": "Kuerzlich gereinigt",
+    "success": "Abgeschlossen",
+    "inProgress": "In Bearbeitung",
+    "submitted": "Eingereicht"
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich.",
+    "invalidEmail": "Bitte geben Sie eine gueltige E-Mail-Adresse ein.",
+    "invalidDate": "Bitte geben Sie ein gueltiges Datum ein.",
+    "positiveMinutes": "Die Zeit muss groesser als 0 Minuten sein.",
+    "generic": "Die Eingabe konnte nicht verarbeitet werden."
+  },
+  "auth": {
+    "login": {
+      "title": "Anmelden",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "genericError": "Die Anmeldung ist fehlgeschlagen. Bitte pruefen Sie Ihre Eingaben und versuchen Sie es erneut."
+    },
+    "mfa": {
+      "title": "Zweite Anmeldung erforderlich",
+      "body": "Bitte bestaetigen Sie die Anmeldung mit Ihrer zweiten Sicherheitsstufe."
+    },
+    "logout": {
+      "submit": "Abmelden"
+    }
+  }
+}

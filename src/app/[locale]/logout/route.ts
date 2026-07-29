@@ -1,0 +1,46 @@
+import { NextResponse, type NextRequest } from "next/server";
+
+import { isLocale } from "@/i18n/routing";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+type LogoutRouteContext = Readonly<{
+  params: Promise<{
+    locale: string;
+  }>;
+}>;
+
+function hasSameOriginRequest(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("host");
+
+  if (!origin || !host) {
+    return false;
+  }
+
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: LogoutRouteContext,
+) {
+  const { locale: rawLocale } = await params;
+  const locale = isLocale(rawLocale) ? rawLocale : "de";
+
+  if (hasSameOriginRequest(request)) {
+    try {
+      const supabase = await createSupabaseServerClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Keep logout responses generic and avoid exposing auth internals.
+    }
+  }
+
+  return NextResponse.redirect(new URL(`/${locale}/login`, request.url), {
+    status: 303,
+  });
+}
