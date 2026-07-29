@@ -34,5 +34,41 @@ test("layout shell assets and exports exist", () => {
 
   const layoutIndex = readProjectFile("src/components/layout/index.ts");
   assert.match(layoutIndex, /export \* from "\.\/admin-shell"/);
+  assert.match(layoutIndex, /export \* from "\.\/brand-logo"/);
   assert.match(layoutIndex, /export \* from "\.\/employee-shell"/);
+});
+
+test("admin shell exposes mobile navigation, sign out, skip link, and sticky sidebar", () => {
+  const adminLayout = readProjectFile("src/app/[locale]/admin/layout.tsx");
+  const adminShell = readProjectFile("src/components/layout/admin-shell.tsx");
+  const adminNavigation = readProjectFile(
+    "src/components/layout/admin-navigation.tsx",
+  );
+
+  assert.match(adminLayout, /auth\.logout\.submit/);
+  assert.match(adminLayout, /navigation\.skipToContent/);
+  assert.match(adminShell, /logoutAction/);
+  assert.match(adminShell, /href="#admin-main"/);
+  assert.match(adminShell, /id="admin-main"/);
+  assert.match(adminShell, /lg:sticky/);
+  assert.match(adminShell, /variant="mobile"/);
+  assert.match(adminNavigation, /variant\?: "mobile" \| "sidebar"/);
+  assert.match(adminNavigation, /aria-current/);
+  assert.match(adminNavigation, /focus-visible:ring-secondary/);
+});
+
+test("layout shells render the logo through the shared BrandLogo primitive", () => {
+  const brandLogo = readProjectFile("src/components/layout/brand-logo.tsx");
+  const adminShell = readProjectFile("src/components/layout/admin-shell.tsx");
+  const employeeShell = readProjectFile(
+    "src/components/layout/employee-shell.tsx",
+  );
+
+  assert.match(brandLogo, /src="\/logo\.png"/);
+  assert.match(adminShell, /BrandLogo/);
+  assert.match(employeeShell, /BrandLogo/);
+  assert.doesNotMatch(adminShell, /appName/);
+  assert.doesNotMatch(employeeShell, /appName/);
+  assert.doesNotMatch(adminShell, /src="\/logo\.png"/);
+  assert.doesNotMatch(employeeShell, /src="\/logo\.png"/);
 });

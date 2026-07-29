@@ -75,3 +75,15 @@ test("shared UI components remain prop-driven and do not embed locale copy", () 
     });
   });
 });
+
+test("metric cards keep the Operational Clarity dashboard treatment", () => {
+  const metricCard = readFileSync(
+    path.join(projectRoot, "src/components/ui/metric-card.tsx"),
+    "utf8",
+  );
+
+  assert.match(metricCard, /from-surface-accent/);
+  assert.match(metricCard, /bg-gradient-to-br/);
+  assert.match(metricCard, /min-w-0/);
+  assert.match(metricCard, /break-words/);
+});

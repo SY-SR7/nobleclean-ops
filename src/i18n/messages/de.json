@@ -7,6 +7,7 @@
     "description": "Interne Betriebsplattform fuer NobleClean."
   },
   "navigation": {
+    "skipToContent": "Zum Inhalt springen",
     "admin": {
       "label": "Admin-Navigation",
       "home": "Start",
@@ -22,6 +23,51 @@
       "notifications": "Mitteilungen",
       "history": "Verlauf",
       "profile": "Profil"
+    }
+  },
+  "adminHome": {
+    "title": "Betriebsübersicht",
+    "subtitle": "Überwachen Sie die heutige Auslastung, Prioritäten und aktuelle Abschlüsse in einer geschützten Admin-Ansicht.",
+    "metrics": {
+      "activeClients": "Aktive Kunden",
+      "activeAssignments": "Aktive Zuweisungen",
+      "todaySchedule": "Heutige Planung",
+      "dueItems": "Fällige Objekte",
+      "attentionItems": "Priorisierte Aufmerksamkeit",
+      "mandatoryEscalations": "Pflichtschritt-Eskalationen",
+      "openPlans": "Offene Pläne"
+    },
+    "metadata": {
+      "employees": "Mitarbeiter",
+      "highPriority": "hohe Priorität",
+      "complaint": "Beschwerde",
+      "totalItems": "Objekte gesamt",
+      "hours": "Stunden"
+    },
+    "sections": {
+      "attention": "Jetzt beachten",
+      "recentWork": "Aktuelle Arbeit",
+      "workflows": "Kernabläufe"
+    },
+    "recent": {
+      "employee": "Mitarbeiter",
+      "client": "Kunde",
+      "items": "Objekte"
+    },
+    "actions": {
+      "viewClients": "Kunden prüfen",
+      "viewReports": "Berichte öffnen"
+    },
+    "workflows": {
+      "clients": "Kundendaten anlegen, aktualisieren und deaktivieren.",
+      "staff": "Mitarbeiter-Kunden-Zuweisungen verwalten.",
+      "sectionsItems": "Bereichsbäume, Objekte, Notizen und Geräteschritte pflegen.",
+      "schedule": "Arbeitstage und geplante Stunden der Mitarbeiter planen.",
+      "reports": "Abschlüsse, zuletzt gereinigte Objekte und Eskalationen prüfen."
+    },
+    "emptyRecent": "Keine aktuelle Arbeitsaktivität gefunden.",
+    "feedback": {
+      "loadError": "Die Admin-Übersicht konnte nicht geladen werden."
     }
   },
   "myDay": {

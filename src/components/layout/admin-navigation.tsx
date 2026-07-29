@@ -30,8 +30,10 @@ export type AdminNavigationItem = Readonly<{
 }>;
 
 type AdminNavigationProps = Readonly<{
+  className?: string;
   items: readonly AdminNavigationItem[];
   navigationLabel: string;
+  variant?: "mobile" | "sidebar";
 }>;
 
 function isActivePath(pathname: string, item: AdminNavigationItem) {
@@ -43,13 +45,24 @@ function isActivePath(pathname: string, item: AdminNavigationItem) {
 }
 
 export function AdminNavigation({
+  className,
   items,
   navigationLabel,
+  variant = "sidebar",
 }: AdminNavigationProps) {
   const pathname = usePathname();
+  const isMobile = variant === "mobile";
 
   return (
-    <nav aria-label={navigationLabel} className="grid gap-1 p-3">
+    <nav
+      aria-label={navigationLabel}
+      className={cn(
+        isMobile
+          ? "px-mobile-margin flex gap-2 overflow-x-auto py-2"
+          : "grid gap-1 p-3",
+        className,
+      )}
+    >
       {items.map((item) => {
         const Icon = adminNavigationIcons[item.id];
         const active = isActivePath(pathname, item);
@@ -58,10 +71,19 @@ export function AdminNavigation({
           <Link
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-11 items-center gap-3 rounded px-3 text-sm font-semibold transition",
-              active
+              "focus-visible:ring-secondary focus-visible:ring-offset-surface inline-flex min-h-11 items-center gap-3 rounded px-3 text-sm font-semibold whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+              active && isMobile
                 ? "bg-secondary-container text-on-secondary-container"
-                : "text-inverse-on-surface hover:bg-primary hover:text-on-primary",
+                : undefined,
+              active && !isMobile
+                ? "bg-secondary-container text-on-secondary-container"
+                : undefined,
+              !active && isMobile
+                ? "text-primary-container hover:bg-surface-accent"
+                : undefined,
+              !active && !isMobile
+                ? "text-inverse-on-surface hover:bg-primary hover:text-on-primary"
+                : undefined,
             )}
             href={item.href}
             key={item.id}

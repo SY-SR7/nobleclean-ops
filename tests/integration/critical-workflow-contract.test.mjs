@@ -10,6 +10,7 @@ function readProjectFile(relativePath) {
 
 const protectedRouteFiles = [
   "src/app/[locale]/admin/layout.tsx",
+  "src/app/[locale]/admin/page.tsx",
   "src/app/[locale]/admin/clients/page.tsx",
   "src/app/[locale]/admin/reports/page.tsx",
   "src/app/[locale]/admin/schedule/page.tsx",

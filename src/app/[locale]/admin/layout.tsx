@@ -65,10 +65,12 @@ export default async function AdminLayout({
 
   return (
     <AdminShell
-      appName={t(messages, "foundation.appName")}
+      locale={locale}
       logoAlt={t(messages, "foundation.appName")}
+      logoutLabel={t(messages, "auth.logout.submit")}
       navigation={navigation}
       navigationLabel={t(messages, "navigation.admin.label")}
+      skipToContentLabel={t(messages, "navigation.skipToContent")}
     >
       {children}
     </AdminShell>

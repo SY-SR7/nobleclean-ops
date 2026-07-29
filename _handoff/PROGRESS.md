@@ -567,6 +567,21 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
   - Edge CDP smoke on `/de/login`, `/en/login`, `/de/auth/mfa`, protected admin redirect, and `/de` found no console issues, no horizontal overflow, visible wordmark, labelled auth section, and no local/session storage entries.
 - Follow-up blockers remain for production-grade MFA challenge/enrollment behavior and distributed login rate limiting; do not fake either locally.
 
+## Admin Shell/Home UI QA Loop
+
+- Completed a 7-agent Admin Shell/Home section review loop for Beads issue `nobleclean-bwr`: accessibility, visual design, responsive/browser, UX/i18n, security/privacy, component reuse, and one implementation agent.
+- Replaced the placeholder Admin Home with a guarded operational overview using shared `MetricCard` components, attention summaries, recent work activity, and workflow shortcuts.
+- Added explicit Admin Home role guarding before rendering dashboard content, in addition to the protected admin layout guard.
+- Added mobile admin navigation, visible Admin sign-out, a skip link, sticky desktop sidebar behavior, and stronger focus-visible states for admin navigation.
+- Extracted shared `BrandLogo` usage for layout shells and removed duplicate accessible brand announcements.
+- Improved `MetricCard` dashboard treatment with tokenized surface accent tinting and safer text containment.
+- Local verification on 2026-07-29:
+  - `npm run quality` passed.
+  - Unit tests passed 54/54.
+  - `npm run test:integration` passed 13/13.
+  - Edge CDP smoke on unauthenticated `/de/admin` at mobile and desktop redirected to `/de/login?next=%2Fde%2Fadmin`, found no Admin dashboard text leak, no console issues, no horizontal overflow, and no local/session storage entries.
+- Follow-up production blockers remain for admin edge/network hardening and CSP nonce/hash hardening; both are tracked in Beads and require production infrastructure access or policy confirmation.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.

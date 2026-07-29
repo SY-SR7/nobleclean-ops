@@ -31,19 +31,21 @@ export function MetricCard({
   return (
     <section
       className={cn(
-        "border-outline-variant bg-surface-container-lowest shadow-level-1 rounded-lg border p-4",
+        "border-outline-variant from-surface-accent bg-surface-container-lowest shadow-level-1 min-w-0 rounded-lg border bg-gradient-to-br to-white p-4",
         statusTone ? "border-l-4" : undefined,
         statusTone ? accentClasses[statusTone] : undefined,
         className,
       )}
       {...props}
     >
-      <div className="font-heading text-primary-container text-3xl font-bold">
+      <div className="font-heading text-primary-container min-w-0 text-3xl font-bold break-words">
         {value}
       </div>
-      <div className="text-on-surface-variant mt-2 text-sm">{label}</div>
+      <div className="text-on-surface-variant mt-2 min-w-0 text-sm break-words">
+        {label}
+      </div>
       {metadata ? (
-        <div className="text-secondary mt-3 text-xs font-bold tracking-normal uppercase">
+        <div className="text-secondary mt-3 min-w-0 text-xs font-bold tracking-normal break-words uppercase">
           {metadata}
         </div>
       ) : null}

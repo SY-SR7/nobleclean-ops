@@ -7,6 +7,7 @@
     "description": "Internal operations platform for NobleClean."
   },
   "navigation": {
+    "skipToContent": "Skip to content",
     "admin": {
       "label": "Admin navigation",
       "home": "Home",
@@ -22,6 +23,51 @@
       "notifications": "Notifications",
       "history": "History",
       "profile": "Profile"
+    }
+  },
+  "adminHome": {
+    "title": "Operations overview",
+    "subtitle": "Monitor today's operational load, priority attention, and recent completion activity from one guarded admin surface.",
+    "metrics": {
+      "activeClients": "Active clients",
+      "activeAssignments": "Active assignments",
+      "todaySchedule": "Today's schedule",
+      "dueItems": "Items due",
+      "attentionItems": "Priority attention",
+      "mandatoryEscalations": "Mandatory step escalations",
+      "openPlans": "Open plans"
+    },
+    "metadata": {
+      "employees": "employees",
+      "highPriority": "high priority",
+      "complaint": "complaint",
+      "totalItems": "total items",
+      "hours": "hours"
+    },
+    "sections": {
+      "attention": "Attention now",
+      "recentWork": "Recent work",
+      "workflows": "Core workflows"
+    },
+    "recent": {
+      "employee": "Employee",
+      "client": "Client",
+      "items": "Items"
+    },
+    "actions": {
+      "viewClients": "Review clients",
+      "viewReports": "Open reports"
+    },
+    "workflows": {
+      "clients": "Create, update, and deactivate client records.",
+      "staff": "Manage employee-client assignments.",
+      "sectionsItems": "Maintain facility trees, items, notes, and tool steps.",
+      "schedule": "Plan employee work dates and allocated hours.",
+      "reports": "Review completion, last-cleaned data, and escalations."
+    },
+    "emptyRecent": "No recent work activity found.",
+    "feedback": {
+      "loadError": "The admin dashboard could not be loaded."
     }
   },
   "myDay": {

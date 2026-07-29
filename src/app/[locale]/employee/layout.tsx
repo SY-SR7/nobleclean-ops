@@ -59,7 +59,6 @@ export default async function EmployeeLayout({
 
   return (
     <EmployeeShell
-      appName={t(messages, "foundation.appName")}
       logoAlt={t(messages, "foundation.appName")}
       navigationLabel={t(messages, "navigation.employee.label")}
       tabs={tabs}
