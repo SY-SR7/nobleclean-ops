@@ -276,11 +276,12 @@
       "email": "E-Mail",
       "password": "Passwort",
       "submit": "Anmelden",
-      "genericError": "Die Anmeldung ist fehlgeschlagen. Bitte pruefen Sie Ihre Eingaben und versuchen Sie es erneut."
+      "support": "Der Zugang wird von der NobleClean-Administration verwaltet. Wenn Sie sich nicht anmelden können, wenden Sie sich an Ihre Führungskraft.",
+      "genericError": "Anmeldung fehlgeschlagen. Prüfen Sie Ihre Eingaben und versuchen Sie es erneut."
     },
     "mfa": {
-      "title": "Zweite Anmeldung erforderlich",
-      "body": "Bitte bestaetigen Sie die Anmeldung mit Ihrer zweiten Sicherheitsstufe."
+      "title": "Zusätzliche Bestätigung erforderlich",
+      "body": "Bestätigen Sie die Anmeldung mit Ihrem zweiten Faktor."
     },
     "logout": {
       "submit": "Abmelden"

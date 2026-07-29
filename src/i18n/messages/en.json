@@ -276,6 +276,7 @@
       "email": "Email",
       "password": "Password",
       "submit": "Sign in",
+      "support": "Access is managed by NobleClean administration. If you cannot sign in, contact your manager.",
       "genericError": "Sign in failed. Check your details and try again."
     },
     "mfa": {

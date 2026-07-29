@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { Button, FormInput } from "@/components/ui";
 import { loginAction, type LoginActionState } from "@/features/auth/actions";
 import type { Locale } from "@/i18n/routing";
 
@@ -27,62 +28,54 @@ export function LoginForm({ copy, locale, nextPath }: LoginFormProps) {
     loginAction,
     initialState,
   );
+  const hasError = Boolean(state.errorCode);
+  const errorId = "login-error";
+  const inputDescribedBy = hasError ? errorId : undefined;
 
   return (
     <form action={formAction} className="grid gap-5" noValidate>
       <input name="locale" type="hidden" value={locale} />
       <input name="next" type="hidden" value={nextPath} />
 
-      <div className="grid gap-2">
-        <label
-          className="text-on-surface-variant text-xs font-bold tracking-normal uppercase"
-          htmlFor="email"
-        >
-          {copy.emailLabel}
-        </label>
-        <input
-          autoComplete="email"
-          className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm transition outline-none"
-          id="email"
-          inputMode="email"
-          maxLength={254}
-          name="email"
-          required
-          type="email"
-        />
-      </div>
+      <FormInput
+        aria-describedby={inputDescribedBy}
+        aria-invalid={hasError || undefined}
+        autoComplete="email"
+        id="email"
+        inputMode="email"
+        label={copy.emailLabel}
+        maxLength={254}
+        name="email"
+        required
+        type="email"
+      />
 
-      <div className="grid gap-2">
-        <label
-          className="text-on-surface-variant text-xs font-bold tracking-normal uppercase"
-          htmlFor="password"
-        >
-          {copy.passwordLabel}
-        </label>
-        <input
-          autoComplete="current-password"
-          className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm transition outline-none"
-          id="password"
-          maxLength={1024}
-          name="password"
-          required
-          type="password"
-        />
-      </div>
+      <FormInput
+        aria-describedby={inputDescribedBy}
+        aria-invalid={hasError || undefined}
+        autoComplete="current-password"
+        id="password"
+        label={copy.passwordLabel}
+        maxLength={1024}
+        name="password"
+        required
+        type="password"
+      />
 
-      {state.errorCode ? (
-        <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">
+      {hasError ? (
+        <p
+          aria-live="polite"
+          className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm"
+          id={errorId}
+          role="alert"
+        >
           {copy.genericError}
         </p>
       ) : null}
 
-      <button
-        className="bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container h-12 rounded px-4 text-sm font-bold tracking-normal uppercase transition disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isPending}
-        type="submit"
-      >
+      <Button className="w-full" isLoading={isPending} type="submit">
         {copy.submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

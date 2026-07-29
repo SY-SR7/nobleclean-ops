@@ -2,6 +2,7 @@
 .claude/
 .git/
 .next/
+.playwright-cli/
 .tools/
 node_modules/
 out/

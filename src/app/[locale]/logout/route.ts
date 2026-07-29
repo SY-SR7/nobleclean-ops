@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { isLocale } from "@/i18n/routing";
+import { isSameOrigin } from "@/lib/security/request-origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type LogoutRouteContext = Readonly<{
@@ -10,18 +11,10 @@ type LogoutRouteContext = Readonly<{
 }>;
 
 function hasSameOriginRequest(request: NextRequest): boolean {
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-
-  if (!origin || !host) {
-    return false;
-  }
-
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
-  }
+  return isSameOrigin(
+    request.headers.get("origin"),
+    request.headers.get("host"),
+  );
 }
 
 export async function POST(

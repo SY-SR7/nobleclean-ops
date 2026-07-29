@@ -1,7 +1,12 @@
 import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 import type { Locale } from "@/i18n/routing";
+import {
+  appendSafeNextParam,
+  safeLocalizedRedirectPath,
+} from "@/lib/security/redirects";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AppRole = "admin" | "employee";
@@ -25,6 +30,10 @@ type AuthLoadResult =
       status: "mfa_required" | "profile_missing" | "unauthenticated";
     }>;
 
+type AuthLoadOptions = Readonly<{
+  preserveCurrentPathOnClientError?: boolean;
+}>;
+
 const UserClaimsSchema = z
   .object({
     sub: z.string().uuid(),
@@ -41,26 +50,43 @@ const AssignedClientSchema = z.object({
   client_id: z.string().uuid(),
 });
 
-function loginPath(locale: Locale): string {
-  return `/${locale}/login`;
+function loginPath(locale: Locale, nextPath?: string): string {
+  return appendSafeNextParam(`/${locale}/login`, nextPath);
 }
 
-function mfaPath(locale: Locale): string {
-  return `/${locale}/auth/mfa`;
+function mfaPath(locale: Locale, nextPath?: string): string {
+  return appendSafeNextParam(`/${locale}/auth/mfa`, nextPath);
 }
 
-async function createGuardClient(locale: Locale) {
+async function currentRequestPath(locale: Locale): Promise<string> {
+  const headerStore = await headers();
+
+  return safeLocalizedRedirectPath(
+    headerStore.get("x-nobleclean-current-path"),
+    locale,
+  );
+}
+
+async function createGuardClient(
+  locale: Locale,
+  options: AuthLoadOptions = {},
+) {
   try {
     return await createSupabaseServerClient();
   } catch {
-    redirect(loginPath(locale));
+    const nextPath = options.preserveCurrentPathOnClientError
+      ? await currentRequestPath(locale)
+      : undefined;
+
+    redirect(loginPath(locale, nextPath));
   }
 }
 
 async function loadAuthenticatedSession(
   locale: Locale,
+  options: AuthLoadOptions = {},
 ): Promise<AuthLoadResult> {
-  const supabase = await createGuardClient(locale);
+  const supabase = await createGuardClient(locale, options);
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
 
@@ -124,19 +150,21 @@ export async function getAuthenticatedSession(
 export async function requireAuthenticatedSession(
   locale: Locale,
 ): Promise<AuthenticatedSession> {
-  const result = await loadAuthenticatedSession(locale);
+  const result = await loadAuthenticatedSession(locale, {
+    preserveCurrentPathOnClientError: true,
+  });
 
   switch (result.status) {
     case "authenticated":
       return result.session;
     case "mfa_required":
-      redirect(mfaPath(locale));
+      redirect(mfaPath(locale, await currentRequestPath(locale)));
       throw new Error("Unexpected MFA redirect continuation.");
     case "profile_missing":
       notFound();
       throw new Error("Unexpected notFound continuation.");
     case "unauthenticated":
-      redirect(loginPath(locale));
+      redirect(loginPath(locale, await currentRequestPath(locale)));
       throw new Error("Unexpected login redirect continuation.");
   }
 }

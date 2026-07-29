@@ -38,7 +38,7 @@ test("proxy covers API paths without locale-redirecting them", () => {
   assert.match(proxy, /pathname\.startsWith\("\/api\/"\)/);
   assert.match(
     proxy,
-    /refreshSupabaseSession\(request,\s*NextResponse\.next\(\)\)/,
+    /refreshSupabaseSession\(request,\s*createNextResponse\(request\)\)/,
   );
   assert.doesNotMatch(proxy, /api\|_next/);
 });

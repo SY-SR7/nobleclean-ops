@@ -52,7 +52,7 @@ export function Button({
     <button
       aria-busy={isLoading || undefined}
       className={cn(
-        "inline-flex items-center justify-center rounded font-bold tracking-normal uppercase transition disabled:cursor-not-allowed disabled:opacity-60",
+        "focus-visible:ring-secondary focus-visible:ring-offset-surface inline-flex items-center justify-center rounded font-bold tracking-normal uppercase transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
         buttonSizes[size],
         buttonVariants[variant],
         className,

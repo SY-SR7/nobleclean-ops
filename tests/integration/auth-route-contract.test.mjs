@@ -31,7 +31,10 @@ test("auth state changes keep same-origin protection at every entry point", () =
   assert.match(requestOrigin, /headers\(\)/);
   assert.match(requestOrigin, /origin/);
   assert.match(requestOrigin, /host/);
+  assert.match(requestOrigin, /NODE_ENV\s*===\s*"production"/);
+  assert.match(requestOrigin, /originUrl\.protocol\s*!==\s*"https:"/);
   assert.match(logoutRoute, /hasSameOriginRequest/);
+  assert.match(logoutRoute, /isSameOrigin/);
   assert.match(logoutRoute, /request\.headers\.get\("origin"\)/);
   assert.match(logoutRoute, /request\.headers\.get\("host"\)/);
 });
@@ -42,4 +45,30 @@ test("logout route only exposes POST and responds with a redirect", () => {
   assert.match(logoutRoute, /export async function POST/);
   assert.doesNotMatch(logoutRoute, /export async function GET/);
   assert.match(logoutRoute, /status:\s*303/);
+});
+
+test("localized root and protected redirects preserve safe relative destinations", () => {
+  const rootPage = readProjectFile("src/app/[locale]/page.tsx");
+  const guards = readProjectFile("src/server/auth/guards.ts");
+  const proxy = readProjectFile("src/proxy.ts");
+  const redirects = readProjectFile("src/lib/security/redirects.ts");
+  const actions = readProjectFile("src/features/auth/actions.ts");
+
+  assert.match(rootPage, /getAuthenticatedSession/);
+  assert.match(rootPage, /redirect\(`\/\$\{locale\}\/login`\)/);
+  assert.match(rootPage, /session\.profile\.role === "admin"/);
+  assert.match(rootPage, /`\/\$\{locale\}\/admin`/);
+  assert.match(rootPage, /`\/\$\{locale\}\/employee`/);
+  assert.match(proxy, /x-nobleclean-current-path/);
+  assert.match(guards, /currentRequestPath/);
+  assert.match(guards, /appendSafeNextParam/);
+  assert.match(guards, /safeLocalizedRedirectPath/);
+  assert.match(
+    guards,
+    /loginPath\(locale,\s*await currentRequestPath\(locale\)\)/,
+  );
+  assert.match(actions, /safeLocalizedRedirectPath\(next,\s*locale\)/);
+  assert.match(redirects, /value\.startsWith\("\/\/"\)/);
+  assert.match(redirects, /parsed\.origin !== LOCAL_REDIRECT_ORIGIN/);
+  assert.match(redirects, /startsWith\(`\$\{localeRoot\}\/`\)/);
 });

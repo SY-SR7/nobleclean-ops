@@ -36,7 +36,7 @@ export function FormInput({
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={cn(
-          "border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm transition outline-none",
+          "border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary focus-visible:border-secondary focus-visible:ring-secondary focus-visible:ring-offset-surface-container-lowest h-12 rounded border px-3 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           error ? "border-error" : undefined,
           inputClassName,
         )}

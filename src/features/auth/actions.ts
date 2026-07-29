@@ -3,10 +3,11 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { isLocale, type Locale } from "@/i18n/routing";
+import { isLocale } from "@/i18n/routing";
 import { checkRequestRateLimit } from "@/lib/security/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasSameOriginRequest } from "@/lib/security/request-origin";
+import { safeLocalizedRedirectPath } from "@/lib/security/redirects";
 import { pickFormData } from "@/lib/validation/form-data";
 
 export type LoginActionState = Readonly<{
@@ -31,27 +32,6 @@ const LogoutInputSchema = z
     locale: z.enum(["de", "en"]),
   })
   .strict();
-
-function safeNextPath(value: string | undefined, locale: Locale): string {
-  const fallback = `/${locale}`;
-
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return fallback;
-  }
-
-  const parsed = new URL(value, "https://nobleclean.local");
-
-  const localeRoot = `/${locale}`;
-  const isLocalePath =
-    parsed.pathname === localeRoot ||
-    parsed.pathname.startsWith(`${localeRoot}/`);
-
-  if (parsed.origin !== "https://nobleclean.local" || !isLocalePath) {
-    return fallback;
-  }
-
-  return `${parsed.pathname}${parsed.search}`;
-}
 
 export async function loginAction(
   _previousState: LoginActionState = initialState,
@@ -89,7 +69,7 @@ export async function loginAction(
     return { errorCode: "AUTH_FAILED" };
   }
 
-  const nextPath = safeNextPath(next, locale);
+  const nextPath = safeLocalizedRedirectPath(next, locale);
 
   let supabase;
 

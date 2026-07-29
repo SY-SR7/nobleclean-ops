@@ -1,6 +1,10 @@
-import { getMessages } from "@/i18n/messages";
+import { redirect } from "next/navigation";
+
 import type { Locale } from "@/i18n/routing";
-import { t } from "@/i18n/translate";
+import { getAuthenticatedSession } from "@/server/auth/guards";
+
+export const dynamic = "force-dynamic";
+export const fetchCache = "default-no-store";
 
 type HomePageProps = Readonly<{
   params: Promise<{
@@ -10,11 +14,15 @@ type HomePageProps = Readonly<{
 
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
-  const messages = getMessages(locale);
+  const session = await getAuthenticatedSession(locale);
 
-  return (
-    <main className="min-h-screen px-4 py-8">
-      <h1 className="sr-only">{t(messages, "foundation.appName")}</h1>
-    </main>
+  if (!session) {
+    redirect(`/${locale}/login`);
+  }
+
+  redirect(
+    session.profile.role === "admin"
+      ? `/${locale}/admin`
+      : `/${locale}/employee`,
   );
 }

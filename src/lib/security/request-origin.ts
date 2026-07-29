@@ -6,7 +6,16 @@ export function isSameOrigin(origin: string | null, host: string | null) {
   }
 
   try {
-    return new URL(origin).host === host;
+    const originUrl = new URL(origin);
+
+    if (
+      process.env.NODE_ENV === "production" &&
+      originUrl.protocol !== "https:"
+    ) {
+      return false;
+    }
+
+    return originUrl.host === host;
   } catch {
     return false;
   }

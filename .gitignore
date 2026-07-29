@@ -30,6 +30,9 @@ node_modules/
 # Project-local tool downloads/runtimes
 .tools/
 
+# Local browser automation artifacts
+.playwright-cli/
+
 # Next.js
 .next/
 out/

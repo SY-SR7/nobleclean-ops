@@ -553,6 +553,20 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
 - `git remote -v` is empty, so no GitHub push, Supabase Cloud setup, or Vercel production deployment has been completed from this environment.
 - To continue production handoff, provide the intended Git remote URL and approved access for Supabase/Vercel configuration.
 
+## Login/Auth UI QA Loop
+
+- Completed a 7-agent Login/Auth section review loop for Beads issue `nobleclean-cz0`: accessibility, visual design, responsive/browser, UX/i18n, security/privacy, component reuse, and one implementation agent.
+- Added a reusable `AuthShell` with the NobleClean wordmark, accessible labelled sections, and consistent Operational Clarity card styling for Login and MFA screens.
+- Refactored `LoginForm` to use shared `FormInput` and `Button` primitives, added accessible generic error announcement, and strengthened shared focus-visible states.
+- Fixed localized root/protected-route redirects so unauthenticated users land on login and protected paths preserve safe relative `next` values.
+- Added production HTTPS origin hardening for same-origin checks while keeping development behavior usable.
+- Local verification on 2026-07-29:
+  - `npm run quality` passed.
+  - Unit tests passed 49/49.
+  - `npm run test:integration` passed 13/13.
+  - Edge CDP smoke on `/de/login`, `/en/login`, `/de/auth/mfa`, protected admin redirect, and `/de` found no console issues, no horizontal overflow, visible wordmark, labelled auth section, and no local/session storage entries.
+- Follow-up blockers remain for production-grade MFA challenge/enrollment behavior and distributed login rate limiting; do not fake either locally.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.
