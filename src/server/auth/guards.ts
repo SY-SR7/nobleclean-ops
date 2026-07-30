@@ -100,14 +100,10 @@ async function loadAuthenticatedSession(
     return { status: "unauthenticated" };
   }
 
-  const { data: assurance, error: assuranceError } =
+  const { data: assurance } =
     await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
-  if (
-    assuranceError ||
-    !assurance ||
-    (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2")
-  ) {
+  if (assurance?.nextLevel === "aal2" && assurance?.currentLevel !== "aal2") {
     return { status: "mfa_required" };
   }
 
