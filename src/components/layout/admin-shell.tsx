@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 
 import {
   AdminNavigation,
@@ -78,9 +78,9 @@ export function AdminShell({
           type="button"
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="size-3.5" aria-hidden="true" />
+            <ChevronLeft className="size-3.5" aria-hidden="true" />
           ) : (
-            <PanelLeftOpen className="size-3.5" aria-hidden="true" />
+            <ChevronRight className="size-3.5" aria-hidden="true" />
           )}
         </button>
 
