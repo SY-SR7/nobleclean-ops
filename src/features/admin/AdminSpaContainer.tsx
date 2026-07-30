@@ -61,12 +61,12 @@ export function AdminSpaContainer({
 
       {/* Render active tab content instantly */}
       <div>
-        <div className={activeTab === "home" ? "block" : "hidden"}>{homeTab}</div>
-        <div className={activeTab === "clients" ? "block" : "hidden"}>{clientsTab}</div>
-        <div className={activeTab === "staff" ? "block" : "hidden"}>{staffTab}</div>
-        <div className={activeTab === "sections" ? "block" : "hidden"}>{sectionsTab}</div>
-        <div className={activeTab === "schedule" ? "block" : "hidden"}>{scheduleTab}</div>
-        <div className={activeTab === "reports" ? "block" : "hidden"}>{reportsTab}</div>
+        {activeTab === "home" && homeTab}
+        {activeTab === "clients" && clientsTab}
+        {activeTab === "staff" && staffTab}
+        {activeTab === "sections" && sectionsTab}
+        {activeTab === "schedule" && scheduleTab}
+        {activeTab === "reports" && reportsTab}
       </div>
     </div>
   );

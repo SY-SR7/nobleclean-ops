@@ -9,8 +9,6 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 
 import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 import { cn } from "@/lib/cn";
@@ -54,10 +52,7 @@ export function AdminNavigation({
   navigationLabel,
   variant = "sidebar",
 }: AdminNavigationProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const { activeTab: spaActiveTab, setActiveTab } = useAdminSpa();
-  const currentTab = searchParams.get("tab") || spaActiveTab;
+  const { activeTab, setActiveTab } = useAdminSpa();
   const isMobile = variant === "mobile";
 
   return (
@@ -73,16 +68,18 @@ export function AdminNavigation({
       {items.map((item) => {
         const Icon = adminNavigationIcons[item.id];
         const targetTab = tabParamMap[item.id] ?? "home";
-        const active = currentTab === targetTab || spaActiveTab === targetTab;
+        const active = activeTab === targetTab;
 
         return (
-          <Link
+          <button
             key={item.id}
+            type="button"
             aria-current={active ? "page" : undefined}
             aria-label={collapsed ? item.label : undefined}
             title={collapsed ? item.label : undefined}
+            onClick={() => setActiveTab(targetTab)}
             className={cn(
-              "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 cursor-pointer",
+              "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 cursor-pointer select-none border-0 text-left w-full",
               collapsed && !isMobile ? "w-full justify-center px-0" : "px-3",
               active
                 ? "bg-secondary-container text-on-secondary-container font-semibold"
@@ -94,21 +91,14 @@ export function AdminNavigation({
                 ? "text-on-surface-variant hover:bg-surface-container"
                 : undefined,
             )}
-            href={item.href}
-            onClick={(e) => {
-              // SPA transition without reload
-              e.preventDefault();
-              setActiveTab(targetTab);
-            }}
           >
             <Icon aria-hidden="true" className="size-4 shrink-0" />
             {!collapsed && (
               <span className="min-w-0 truncate">{item.label}</span>
             )}
-          </Link>
+          </button>
         );
       })}
     </nav>
   );
 }
-
