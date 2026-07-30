@@ -94,6 +94,7 @@ export async function createClientAction(
   }
 
   revalidatePath(`/${dto.locale}/admin/clients`);
+  revalidatePath(`/${dto.locale}/admin`);
   return { code: "CLIENT_CREATED", status: "success" };
 }
 
@@ -144,6 +145,7 @@ export async function updateClientAction(
   }
 
   revalidatePath(`/${dto.locale}/admin/clients`);
+  revalidatePath(`/${dto.locale}/admin`);
   return { code: "CLIENT_UPDATED", status: "success" };
 }
 
@@ -192,5 +194,6 @@ export async function setClientActiveAction(
   }
 
   revalidatePath(`/${dto.locale}/admin/clients`);
+  revalidatePath(`/${dto.locale}/admin`);
   return { code: "STATUS_UPDATED", status: "success" };
 }

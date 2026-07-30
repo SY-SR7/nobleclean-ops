@@ -77,6 +77,7 @@ async function hasActiveAssignmentForDate(
 
 function revalidateSchedule(locale: "de" | "en") {
   revalidatePath(`/${locale}/admin/schedule`);
+  revalidatePath(`/${locale}/admin`);
 }
 
 export async function createScheduleAction(
