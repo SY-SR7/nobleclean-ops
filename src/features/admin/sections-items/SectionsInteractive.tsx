@@ -11,11 +11,11 @@ import {
   CalendarClock,
   ChevronRight,
 } from "lucide-react";
+import Image from "next/image";
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
-import { PriorityStatusBadge } from "@/components/ui";
 import type {
   SectionTreeNode,
   LeafItemListItem,
@@ -49,6 +49,29 @@ type SectionsInteractiveProps = Readonly<{
   };
 }>;
 
+/** Maps section name keywords to a section image path */
+function getSectionImage(name: string): string | null {
+  const n = name.toLowerCase();
+  if (n.includes("cardio") || n.includes("ausdauer") || n.includes("cycling")) return "/images/sections/cardio.jpg";
+  if (n.includes("eingang") || n.includes("entrance") || n.includes("lobby") || n.includes("empfang")) return "/images/sections/entrance.jpg";
+  if (n.includes("sanitar") || n.includes("sanitär") || n.includes("toilette") || n.includes("wc") || n.includes("dusche") || n.includes("umkleide")) return "/images/sections/sanitary.jpg";
+  if (n.includes("sauna") || n.includes("dampf") || n.includes("wellness")) return "/images/sections/sauna.jpg";
+  if (n.includes("kraft") || n.includes("weight") || n.includes("gym") || n.includes("freih") || n.includes("gerät")) return "/images/sections/strength.jpg";
+  // fallback — cycle through available images based on name hash
+  const images = ["/images/sections/entrance.jpg", "/images/sections/strength.jpg", "/images/sections/cardio.jpg", "/images/sections/sanitary.jpg", "/images/sections/sauna.jpg"];
+  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return images[hash % images.length];
+}
+
+/** Maps tool name keywords to a tool image */
+function getToolImage(toolName: string): string | null {
+  const n = toolName.toLowerCase();
+  if (n.includes("mopp") || n.includes("mop") || n.includes("wischer") || n.includes("wischm")) return "/images/tools/mop.jpg";
+  if (n.includes("schrubb") || n.includes("bürst") || n.includes("scrub")) return "/images/tools/scrubber.jpg";
+  if (n.includes("desinfekt") || n.includes("reiniger") || n.includes("spray") || n.includes("mittel")) return "/images/tools/disinfectant.jpg";
+  return null;
+}
+
 function formatTimestamp(value: string | null, locale: Locale, fallback: string) {
   if (!value) return fallback;
   const date = new Date(value);
@@ -67,12 +90,19 @@ function ToolStepDetail({
   locale: Locale;
   copy: { minutes: string; lastPerformed: string; neverPerformed: string; recurrenceDays: string };
 }) {
+  const toolImg = getToolImage(step.toolName);
   return (
-    <div className="border-outline-variant bg-surface-container rounded-lg border p-3 flex gap-3">
-      <div className="bg-secondary/10 text-secondary flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-        {step.sequenceOrder}
+    <div className="border-outline-variant bg-surface-container rounded-xl border p-3 flex gap-3 items-start">
+      <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-surface-container-highest">
+        {toolImg ? (
+          <Image src={toolImg} alt={step.toolName} fill className="object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-secondary/10 text-secondary font-bold text-sm">
+            {step.sequenceOrder}
+          </div>
+        )}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="text-on-surface text-sm font-semibold truncate">{step.toolName}</p>
           {step.isMandatory ? (
@@ -107,89 +137,6 @@ export function SectionsInteractive({
 }: SectionsInteractiveProps) {
   const { open } = useDetailDrawer();
   const [viewMode, setViewMode] = useViewMode("sections", "grid");
-
-  const openSectionDrawer = useCallback(
-    (section: SectionTreeNode) => {
-      const sectionItems = leafItems.filter((item) => item.sectionId === section.id);
-
-      const config: DrawerConfig = {
-        title: section.name,
-        subtitle: `${section.leafCount} ${copy.leafCount} · ${section.totalEstimatedMinutes} ${copy.minutes}`,
-        icon: <Layers className="size-5" />,
-        accentColor: "secondary",
-        sections: [
-          {
-            label: "Überblick",
-            content: (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-surface-container rounded-lg p-3">
-                  <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                    {copy.leafCount}
-                  </p>
-                  <p className="font-heading text-on-surface text-xl font-bold mt-0.5">
-                    {section.leafCount}
-                  </p>
-                </div>
-                <div className="bg-surface-container rounded-lg p-3">
-                  <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                    {copy.minutes}
-                  </p>
-                  <p className="font-heading text-on-surface text-xl font-bold mt-0.5">
-                    {section.totalEstimatedMinutes}
-                  </p>
-                </div>
-                {section.hasReferenceImage && (
-                  <div className="col-span-2 flex items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2">
-                    <ImageIcon className="text-secondary size-4 shrink-0" />
-                    <span className="text-secondary text-xs font-semibold">{copy.hasImage}</span>
-                  </div>
-                )}
-              </div>
-            ),
-          },
-          ...(sectionItems.length > 0
-            ? [
-                {
-                  label: `Aufgaben (${sectionItems.length})`,
-                  content: (
-                    <div className="grid gap-2">
-                      {sectionItems.map((item) => (
-                        <button
-                          key={item.id}
-                          className="border-outline-variant hover:bg-surface-container group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors cursor-pointer"
-                          onClick={() => openLeafItemDrawer(item)}
-                          type="button"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">
-                              {item.name}
-                            </p>
-                            <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
-                              <Clock className="size-3" />
-                              {item.estimatedMinutes} {copy.minutes}
-                              {item.toolSteps.length > 0 && (
-                                <>
-                                  {" · "}
-                                  <Wrench className="size-3" />
-                                  {item.toolSteps.length}
-                                </>
-                              )}
-                            </p>
-                          </div>
-                          <ChevronRight className="text-on-surface-variant size-4 shrink-0" />
-                        </button>
-                      ))}
-                    </div>
-                  ),
-                },
-              ]
-            : []),
-        ],
-      };
-      open(config);
-    },
-    [open, leafItems, copy, locale],
-  );
 
   const openLeafItemDrawer = useCallback(
     (item: LeafItemListItem) => {
@@ -228,20 +175,12 @@ export function SectionsInteractive({
                 )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.minutes}
-                    </p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">
-                      {item.estimatedMinutes}
-                    </p>
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.minutes}</p>
+                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{item.estimatedMinutes}</p>
                   </div>
                   <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.quantity}
-                    </p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">
-                      {item.quantity}
-                    </p>
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.quantity}</p>
+                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{item.quantity}</p>
                   </div>
                 </div>
                 {item.recurrenceDays && (
@@ -253,9 +192,7 @@ export function SectionsInteractive({
                   </div>
                 )}
                 {item.notes && (
-                  <p className="text-on-surface-variant border-outline-variant rounded-lg border p-3 text-sm italic">
-                    {item.notes}
-                  </p>
+                  <p className="text-on-surface-variant border-outline-variant rounded-lg border p-3 text-sm italic">{item.notes}</p>
                 )}
                 {item.hasReferenceImage && (
                   <div className="flex items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2">
@@ -299,8 +236,78 @@ export function SectionsInteractive({
     [open, copy, locale, tagLabels],
   );
 
-  // Only top-level and direct children (depth 0 and 1)
-  const rootSections = sections.filter((s) => s.depth === 0);
+  const openSectionDrawer = useCallback(
+    (section: SectionTreeNode) => {
+      const sectionItems = leafItems.filter((item) => item.sectionId === section.id);
+      const sectionImg = getSectionImage(section.name);
+
+      const config: DrawerConfig = {
+        title: section.name,
+        subtitle: `${section.leafCount} ${copy.leafCount} · ${section.totalEstimatedMinutes} ${copy.minutes}`,
+        icon: <Layers className="size-5" />,
+        accentColor: "secondary",
+        sections: [
+          {
+            label: "Überblick",
+            content: (
+              <div className="grid gap-3">
+                {sectionImg && (
+                  <div className="relative w-full h-36 rounded-xl overflow-hidden">
+                    <Image src={sectionImg} alt={section.name} fill className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <p className="absolute bottom-2 left-3 text-white text-sm font-bold">{section.name}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-surface-container rounded-lg p-3">
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.leafCount}</p>
+                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{section.leafCount}</p>
+                  </div>
+                  <div className="bg-surface-container rounded-lg p-3">
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.minutes}</p>
+                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{section.totalEstimatedMinutes}</p>
+                  </div>
+                </div>
+              </div>
+            ),
+          },
+          ...(sectionItems.length > 0
+            ? [
+                {
+                  label: `Aufgaben (${sectionItems.length})`,
+                  content: (
+                    <div className="grid gap-2">
+                      {sectionItems.map((item) => (
+                        <button
+                          key={item.id}
+                          className="border-outline-variant hover:bg-surface-container group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors cursor-pointer"
+                          onClick={() => openLeafItemDrawer(item)}
+                          type="button"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">{item.name}</p>
+                            <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
+                              <Clock className="size-3" />
+                              {item.estimatedMinutes} {copy.minutes}
+                              {item.toolSteps.length > 0 && (
+                                <><span className="mx-0.5">·</span><Wrench className="size-3" />{item.toolSteps.length}</>
+                              )}
+                            </p>
+                          </div>
+                          <ChevronRight className="text-on-surface-variant size-4 shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  ),
+                },
+              ]
+            : []),
+        ],
+      };
+      open(config);
+    },
+    [open, leafItems, copy, locale, openLeafItemDrawer],
+  );
 
   return (
     <div className="grid gap-4">
@@ -313,53 +320,58 @@ export function SectionsInteractive({
       </div>
 
       {viewMode === "grid" ? (
-        /* ── Grid View ── */
+        /* ── Grid View with real section photos ── */
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sections.map((section) => {
             const isSelected = section.id === selectedSectionId;
+            const sectionImg = getSectionImage(section.name);
             return (
               <button
                 key={section.id}
                 type="button"
                 className={[
-                  "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer",
+                  "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-0.5 cursor-pointer",
                   isSelected
-                    ? "border-secondary bg-secondary/5"
-                    : "border-outline-variant bg-surface-container-lowest hover:border-secondary",
+                    ? "border-secondary ring-2 ring-secondary/30"
+                    : "border-outline-variant hover:border-secondary",
                 ].join(" ")}
-                style={{ paddingLeft: 0 }}
                 onClick={() => {
                   if (onSelectSection) onSelectSection(section.id);
                   openSectionDrawer(section);
                 }}
               >
-                {/* Top: icon area with depth indicator */}
-                <div className={[
-                  "flex items-center justify-between px-4 py-4",
-                  isSelected ? "bg-secondary/10" : "bg-surface-container",
-                ].join(" ")}>
-                  <div className={[
-                    "flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105",
-                    isSelected ? "bg-secondary text-on-secondary" : "bg-surface-container-highest text-secondary",
-                  ].join(" ")}>
-                    <Layers className="size-6" />
-                  </div>
+                {/* Photo area */}
+                <div className="relative h-32 w-full overflow-hidden bg-surface-container">
+                  {sectionImg && (
+                    <Image
+                      src={sectionImg}
+                      alt={section.name}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  {/* depth badge */}
+                  {section.depth > 0 && (
+                    <span className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      {"›".repeat(section.depth)} Unterbereich
+                    </span>
+                  )}
                   {section.hasReferenceImage && (
-                    <ImageIcon className="text-secondary size-4" />
+                    <div className="absolute top-2 right-2 bg-secondary/80 text-on-secondary rounded-full p-1 backdrop-blur-sm">
+                      <ImageIcon className="size-3" />
+                    </div>
                   )}
                 </div>
                 {/* Body */}
-                <div className="flex flex-1 flex-col gap-1.5 p-4">
+                <div className="flex flex-col gap-1.5 p-4 bg-surface-container-lowest flex-1">
                   <p className={[
-                    "font-bold text-sm leading-tight transition-colors line-clamp-2",
+                    "font-bold text-sm leading-tight transition-colors",
                     isSelected ? "text-secondary" : "text-on-surface group-hover:text-secondary",
                   ].join(" ")}>
-                    {section.depth > 0 && (
-                      <span className="text-on-surface-variant font-normal mr-1">{"›".repeat(section.depth)}</span>
-                    )}
                     {section.name}
                   </p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-3 mt-0.5">
                     <span className="text-on-surface-variant text-xs flex items-center gap-1">
                       <CheckCircle2 className="size-3" />
                       {section.leafCount} {copy.leafCount}
@@ -370,7 +382,7 @@ export function SectionsInteractive({
                     </span>
                   </div>
                 </div>
-                <div className={["h-1 transition-colors", isSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/50"].join(" ")} />
+                <div className={["h-1 transition-colors", isSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
               </button>
             );
           })}
@@ -380,11 +392,12 @@ export function SectionsInteractive({
         <div className="grid gap-2">
           {sections.map((section) => {
             const isSelected = section.id === selectedSectionId;
+            const sectionImg = getSectionImage(section.name);
             return (
               <button
                 key={section.id}
                 className={[
-                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all border cursor-pointer",
+                  "group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all border cursor-pointer",
                   isSelected
                     ? "border-secondary bg-secondary/10"
                     : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
@@ -396,36 +409,25 @@ export function SectionsInteractive({
                 }}
                 type="button"
               >
-                <Layers
-                  className={[
-                    "size-4 shrink-0 transition-colors",
-                    isSelected ? "text-secondary" : "text-on-surface-variant group-hover:text-secondary",
-                  ].join(" ")}
-                />
+                {/* Thumbnail */}
+                <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+                  {sectionImg ? (
+                    <Image src={sectionImg} alt={section.name} fill className="object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Layers className="size-5 text-secondary" />
+                    </div>
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
-                  <p
-                    className={[
-                      "text-sm font-medium truncate transition-colors",
-                      isSelected ? "text-secondary font-semibold" : "text-on-surface group-hover:text-secondary",
-                    ].join(" ")}
-                  >
+                  <p className={["text-sm font-semibold truncate transition-colors", isSelected ? "text-secondary" : "text-on-surface group-hover:text-secondary"].join(" ")}>
                     {section.name}
                   </p>
                   <p className="text-on-surface-variant text-xs mt-0.5">
                     {section.leafCount} {copy.leafCount} · {section.totalEstimatedMinutes} {copy.minutes}
-                    {section.hasReferenceImage && (
-                      <span className="ml-1.5 inline-flex items-center gap-0.5">
-                        <ImageIcon className="size-3" />
-                      </span>
-                    )}
                   </p>
                 </div>
-                <ChevronRight
-                  className={[
-                    "size-4 shrink-0 transition-colors",
-                    isSelected ? "text-secondary" : "text-on-surface-variant",
-                  ].join(" ")}
-                />
+                <ChevronRight className={["size-4 shrink-0", isSelected ? "text-secondary" : "text-on-surface-variant"].join(" ")} />
               </button>
             );
           })}
