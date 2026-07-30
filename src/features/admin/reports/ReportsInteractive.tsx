@@ -459,7 +459,7 @@ export function EscalationInteractiveCard({
           label: "Eskalation beheben",
           content: (
             <InlineStepMarkForm
-              stepId={item.cleaningToolStepId}
+              stepId={item.id}
               locale={locale}
               buttonText="Pflichtschritt als erledigt markieren"
             />

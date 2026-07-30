@@ -138,7 +138,7 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                   reactivate: "Kunde reaktivieren",
                   success: "Status geändert",
                 }}
-                isCurrentlyActive={client.isActive}
+                isActive={client.isActive}
                 locale={locale}
               />
             ),
