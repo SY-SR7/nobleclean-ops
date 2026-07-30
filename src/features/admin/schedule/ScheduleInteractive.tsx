@@ -3,7 +3,7 @@
 import { CalendarDays, User, Building2, Clock, ArrowRight } from "lucide-react";
 import { useCallback } from "react";
 
-import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { DeleteScheduleForm } from "./ScheduleForms";
 import type { ScheduleListItem } from "./queries";
@@ -44,51 +44,30 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
     (item: ScheduleListItem) => {
       const config: DrawerConfig = {
         title: item.employeeName,
-        subtitle: `${item.clientName} · ${formatDate(item.workDate, locale)}`,
-        icon: <CalendarDays className="size-5" />,
+        subtitle: `${item.clientName} · ${formatDateShort(item.workDate, locale)}`,
+        icon: <CalendarDays className="size-6" />,
         accentColor: "secondary",
+        badge: {
+          label: `${item.allocatedHours} Stunden`,
+          variant: "success",
+        },
+        kpis: [
+          { label: "Stunden", value: `${item.allocatedHours}h`, color: "text-emerald-600" },
+          { label: "Mitarbeiter", value: item.employeeName.split(" ")[0], color: "text-blue-600" },
+          { label: "Kunde", value: item.clientName.split(" ")[0], color: "text-violet-600" },
+        ],
         sections: [
           {
             label: "Schichtdetails",
             content: (
-              <div className="grid gap-3">
-                <div className="flex items-center gap-3">
-                  <User className="text-secondary size-5 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.employees}
-                    </p>
-                    <p className="text-on-surface text-sm font-medium">{item.employeeName}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Building2 className="text-secondary size-5 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.clients}
-                    </p>
-                    <p className="text-on-surface text-sm font-medium">{item.clientName}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CalendarDays className="text-secondary size-5 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.workDate}
-                    </p>
-                    <p className="text-on-surface text-sm font-medium">{formatDate(item.workDate, locale)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="text-secondary size-5 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.allocatedHours}
-                    </p>
-                    <p className="text-on-surface text-sm font-medium">{item.allocatedHours}h</p>
-                  </div>
-                </div>
-              </div>
+              <InfoGrid
+                items={[
+                  { icon: <User className="size-4" />, label: copy.employees, value: item.employeeName },
+                  { icon: <Building2 className="size-4" />, label: copy.clients, value: item.clientName },
+                  { icon: <CalendarDays className="size-4" />, label: copy.workDate, value: formatDateShort(item.workDate, locale) },
+                  { icon: <Clock className="size-4" />, label: copy.allocatedHours, value: `${item.allocatedHours} Std.` },
+                ]}
+              />
             ),
           },
           {

@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useActionState } from "react";
 
-import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { Button } from "@/components/ui";
 import { updatePlanProgressAction, markToolStepPerformedAction } from "./actions";
@@ -101,37 +101,30 @@ export function PlanInteractiveCard({ plan, locale, copy }: {
     const config: DrawerConfig = {
       title: plan.employeeName,
       subtitle: formatDate(plan.workDate, locale, ""),
-      icon: <BarChart3 className="size-5" />,
+      icon: <BarChart3 className="size-6" />,
       accentColor: plan.isComplete ? "success" : "warning",
+      badge: {
+        label: plan.status === "submitted" ? copy.statusSubmitted : copy.statusInProgress,
+        variant: plan.isComplete ? "success" : "warning",
+      },
+      kpis: [
+        { label: "Fortschritt", value: `${pct}%`, color: pct === 100 ? "text-emerald-600" : "text-amber-600" },
+        { label: "Erledigt", value: `${plan.completedItems}/${plan.totalItems}`, color: "text-blue-600" },
+      ],
       sections: [
         {
           label: "Plan Status",
           content: (
             <div className="grid gap-3">
-              <div className="flex items-center gap-2">
-                {plan.isComplete ? <CheckCircle2 className="text-status-success size-5 shrink-0" /> : <XCircle className="text-status-warning size-5 shrink-0" />}
-                <span className="text-on-surface text-sm font-semibold">{plan.status === "submitted" ? copy.statusSubmitted : copy.statusInProgress}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <User className="text-secondary size-4 shrink-0" />
-                <div>
-                  <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.employee}</p>
-                  <p className="text-on-surface text-sm font-medium">{plan.employeeName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <CalendarDays className="text-secondary size-4 shrink-0" />
-                <div>
-                  <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.workDate}</p>
-                  <p className="text-on-surface text-sm font-medium">{formatDate(plan.workDate, locale, "")}</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-on-surface-variant mb-1.5 text-xs font-semibold uppercase tracking-wide">{copy.items}</p>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-on-surface text-sm">{plan.completedItems} / {plan.totalItems}</span>
-                  <span className="text-secondary text-sm font-bold">{pct}%</span>
-                </div>
+              <InfoGrid
+                items={[
+                  { icon: <User className="size-4" />, label: copy.employee, value: plan.employeeName },
+                  { icon: <CalendarDays className="size-4" />, label: copy.workDate, value: formatDate(plan.workDate, locale, "") },
+                  { icon: <CheckCircle2 className="size-4" />, label: copy.items, value: `${plan.completedItems} von ${plan.totalItems}` },
+                  { icon: <BarChart3 className="size-4" />, label: "Quote", value: `${pct}%` },
+                ]}
+              />
+              <div className="mt-1">
                 <div className="bg-surface-container h-2.5 w-full overflow-hidden rounded-full">
                   <div className={["h-full rounded-full transition-all", pct === 100 ? "bg-status-success" : "bg-secondary"].join(" ")} style={{ width: `${pct}%` }} />
                 </div>

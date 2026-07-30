@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 import { useCallback } from "react";
 
-import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import type {
   SectionTreeNode,
@@ -150,55 +150,37 @@ export function SectionsInteractive({
       const config: DrawerConfig = {
         title: item.name,
         subtitle: `${item.estimatedMinutes} ${copy.minutes}`,
-        icon: <CheckCircle2 className="size-5" />,
+        icon: <CheckCircle2 className="size-6" />,
         accentColor:
           item.tag === "complaint"
             ? "warning"
             : item.tag === "high_priority"
               ? "critical"
               : "secondary",
+        badge: {
+          label: tagLabel || "Aufgabe",
+          variant: item.tag === "high_priority" ? "critical" : item.tag === "complaint" ? "warning" : "success",
+        },
+        kpis: [
+          { label: "Dauer", value: `${item.estimatedMinutes}m`, color: "text-emerald-600" },
+          { label: "Anzahl", value: item.quantity, color: "text-blue-600" },
+          { label: "Schritte", value: item.toolSteps.length, color: "text-violet-600" },
+        ],
         sections: [
           {
             label: "Details",
             content: (
               <div className="grid gap-3">
-                {tagLabel && (
-                  <div
-                    className={
-                      item.tag === "high_priority"
-                        ? "bg-error-container text-on-error-container rounded-lg px-3 py-2 text-xs font-bold"
-                        : "bg-warning-container text-on-warning-container rounded-lg px-3 py-2 text-xs font-bold"
-                    }
-                  >
-                    {tagLabel}
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.minutes}</p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{item.estimatedMinutes}</p>
-                  </div>
-                  <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.quantity}</p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{item.quantity}</p>
-                  </div>
-                </div>
-                {item.recurrenceDays && (
-                  <div className="flex items-center gap-2 rounded-lg bg-surface-container px-3 py-2">
-                    <CalendarClock className="text-secondary size-4 shrink-0" />
-                    <span className="text-on-surface text-xs">
-                      {copy.recurrenceDays}: <strong>{item.recurrenceDays}</strong>
-                    </span>
-                  </div>
-                )}
+                <InfoGrid
+                  items={[
+                    { icon: <Clock className="size-4" />, label: copy.minutes, value: `${item.estimatedMinutes} min` },
+                    { icon: <Layers className="size-4" />, label: copy.quantity, value: item.quantity },
+                    ...(item.recurrenceDays ? [{ icon: <CalendarClock className="size-4" />, label: copy.recurrenceDays, value: `${item.recurrenceDays} Tage` }] : []),
+                    ...(item.hasReferenceImage ? [{ icon: <ImageIcon className="size-4" />, label: "Foto", value: copy.hasImage }] : []),
+                  ]}
+                />
                 {item.notes && (
-                  <p className="text-on-surface-variant border-outline-variant rounded-lg border p-3 text-sm italic">{item.notes}</p>
-                )}
-                {item.hasReferenceImage && (
-                  <div className="flex items-center gap-2 rounded-lg bg-secondary/10 px-3 py-2">
-                    <ImageIcon className="text-secondary size-4" />
-                    <span className="text-secondary text-xs font-semibold">{copy.hasImage}</span>
-                  </div>
+                  <p className="text-on-surface-variant border-outline-variant rounded-xl border p-3.5 text-sm italic">{item.notes}</p>
                 )}
               </div>
             ),
@@ -221,7 +203,7 @@ export function SectionsInteractive({
                       }}
                     />
                   ))}
-                  <div className="text-on-surface-variant border-outline-variant rounded-lg border px-3 py-2 text-xs">
+                  <div className="text-on-surface-variant border-outline-variant rounded-xl border px-3.5 py-2.5 text-xs">
                     {copy.stepEstimateTotal}: <strong>{item.stepEstimateMinutes} {copy.minutes}</strong>
                   </div>
                 </div>
@@ -244,30 +226,34 @@ export function SectionsInteractive({
       const config: DrawerConfig = {
         title: section.name,
         subtitle: `${section.leafCount} ${copy.leafCount} · ${section.totalEstimatedMinutes} ${copy.minutes}`,
-        icon: <Layers className="size-5" />,
+        icon: <Layers className="size-6" />,
         accentColor: "secondary",
+        badge: {
+          label: `${section.leafCount} Aufgaben`,
+          variant: "success",
+        },
+        kpis: [
+          { label: "Aufgaben", value: section.leafCount, color: "text-emerald-600" },
+          { label: "Gesamtdauer", value: `${section.totalEstimatedMinutes}m`, color: "text-blue-600" },
+        ],
         sections: [
           {
             label: "Überblick",
             content: (
               <div className="grid gap-3">
                 {sectionImg && (
-                  <div className="relative w-full h-36 rounded-xl overflow-hidden">
+                  <div className="relative w-full h-36 rounded-2xl overflow-hidden shadow-sm">
                     <Image src={sectionImg} alt={section.name} fill className="object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <p className="absolute bottom-2 left-3 text-white text-sm font-bold">{section.name}</p>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <p className="absolute bottom-3 left-4 text-white text-base font-extrabold">{section.name}</p>
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.leafCount}</p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{section.leafCount}</p>
-                  </div>
-                  <div className="bg-surface-container rounded-lg p-3">
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.minutes}</p>
-                    <p className="font-heading text-on-surface text-xl font-bold mt-0.5">{section.totalEstimatedMinutes}</p>
-                  </div>
-                </div>
+                <InfoGrid
+                  items={[
+                    { icon: <CheckCircle2 className="size-4" />, label: copy.leafCount, value: section.leafCount },
+                    { icon: <Clock className="size-4" />, label: copy.minutes, value: `${section.totalEstimatedMinutes} min` },
+                  ]}
+                />
               </div>
             ),
           },
