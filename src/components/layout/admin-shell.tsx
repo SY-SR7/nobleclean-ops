@@ -29,7 +29,7 @@ type AdminShellProps = Readonly<{
 export function AdminShell({
   children,
   locale,
-  logoAlt: _logoAlt,
+  logoAlt,
   logoutLabel,
   navigation,
   navigationLabel,
@@ -40,66 +40,58 @@ export function AdminShell({
   return (
     <div
       className={cn(
-        "bg-surface text-on-surface min-h-screen transition-[grid-template-columns] duration-300 lg:grid",
+        "bg-surface text-on-surface min-h-screen lg:grid",
         sidebarOpen
-          ? "lg:grid-cols-[18rem_1fr]"
-          : "lg:grid-cols-[4.5rem_1fr]",
+          ? "lg:grid-cols-[16rem_1fr]"
+          : "lg:grid-cols-[4rem_1fr]",
+        "transition-[grid-template-columns] duration-300 ease-in-out",
       )}
     >
       {/* Skip to content */}
       <a
-        className="focus:bg-secondary focus:text-on-secondary focus:ring-secondary focus:ring-offset-surface sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        className="focus:bg-secondary focus:text-on-secondary focus:ring-secondary sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:ring-2 focus:outline-none"
         href="#admin-main"
       >
         {skipToContentLabel}
       </a>
 
-      {/* ── Desktop Sidebar ── */}
+      {/* ── Desktop Sidebar (Light) ── */}
       <aside
         className={cn(
-          "border-outline-variant bg-primary-container text-on-primary hidden border-r lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden",
-          "transition-all duration-300",
-          sidebarOpen ? "w-72" : "w-[4.5rem]",
+          "border-outline-variant bg-surface-container-lowest hidden border-r",
+          "lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden",
+          "transition-all duration-300 ease-in-out",
+          sidebarOpen ? "w-64" : "w-16",
         )}
       >
-        {/* Header: two-tone — white logo area + dark toggle row */}
-        <div className="shrink-0">
-          {/* White strip: original logo colors are fully visible */}
-          {sidebarOpen ? (
-            <div className="bg-surface-container-lowest flex items-center justify-between px-5 py-4">
-              <BrandLogo
-                alt={_logoAlt}
-                className="w-36"
-                height={36}
-                priority
-                width={220}
-              />
-              <button
-                aria-label="Sidebar schließen"
-                className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
-                onClick={() => setSidebarOpen(false)}
-                type="button"
-              >
-                <PanelLeftClose className="size-5" aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            /* Collapsed: show only the toggle on the dark background */
-            <div className="border-on-primary/15 flex min-h-[4.5rem] items-center justify-center border-b">
-              <button
-                aria-label="Sidebar öffnen"
-                className="text-on-primary/60 hover:bg-primary hover:text-on-primary flex h-9 w-9 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-                onClick={() => setSidebarOpen(true)}
-                type="button"
-              >
-                <PanelLeftOpen className="size-5" aria-hidden="true" />
-              </button>
-            </div>
+        {/* Logo + toggle */}
+        <div
+          className={cn(
+            "border-outline-variant flex min-h-[3.75rem] shrink-0 items-center border-b",
+            sidebarOpen ? "justify-between px-4" : "justify-center",
           )}
-          {/* Subtle divider between white logo and dark nav */}
+        >
           {sidebarOpen && (
-            <div className="bg-primary-container/80 h-1 w-full" />
+            <BrandLogo
+              alt={logoAlt}
+              className="w-32"
+              height={32}
+              priority
+              width={200}
+            />
           )}
+          <button
+            aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
+            className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30"
+            onClick={() => setSidebarOpen((v) => !v)}
+            type="button"
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="size-4" aria-hidden="true" />
+            ) : (
+              <PanelLeftOpen className="size-4" aria-hidden="true" />
+            )}
+          </button>
         </div>
 
         {/* Navigation */}
@@ -107,34 +99,33 @@ export function AdminShell({
           collapsed={!sidebarOpen}
           items={navigation}
           navigationLabel={navigationLabel}
+          variant="sidebar"
         />
 
         {/* Logout */}
         <form
           action={logoutAction}
-          className={cn(
-            "border-on-primary/15 mt-auto shrink-0 border-t p-3",
-          )}
+          className="border-outline-variant mt-auto shrink-0 border-t p-2"
         >
           <input name="locale" type="hidden" value={locale} />
           {sidebarOpen ? (
             <Button
-              className="border-on-primary/30 text-on-primary hover:bg-primary hover:text-on-primary w-full justify-start"
-              icon={<LogOut aria-hidden="true" />}
+              className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface w-full justify-start"
+              icon={<LogOut className="size-4" aria-hidden="true" />}
               size="sm"
               type="submit"
-              variant="secondary"
+              variant="ghost"
             >
               {logoutLabel}
             </Button>
           ) : (
             <button
               aria-label={logoutLabel}
-              className="text-on-primary/60 hover:bg-primary hover:text-on-primary flex h-9 w-full items-center justify-center rounded transition-colors"
+              className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-9 w-full items-center justify-center rounded transition-colors"
               title={logoutLabel}
               type="submit"
             >
-              <LogOut className="size-5" aria-hidden="true" />
+              <LogOut className="size-4" aria-hidden="true" />
             </button>
           )}
         </form>
@@ -144,18 +135,12 @@ export function AdminShell({
       <div className="min-w-0">
         {/* Mobile header */}
         <header className="border-outline-variant bg-surface-container-lowest shadow-level-1 sticky top-0 z-30 border-b lg:hidden">
-          <div className="px-mobile-margin flex min-h-16 items-center justify-between gap-3">
-            <BrandLogo
-              alt={_logoAlt}
-              className="w-32"
-              height={32}
-              variant="light"
-              width={200}
-            />
+          <div className="px-mobile-margin flex min-h-14 items-center justify-between gap-3">
+            <BrandLogo alt={logoAlt} className="w-28" height={28} width={180} />
             <form action={logoutAction}>
               <input name="locale" type="hidden" value={locale} />
               <Button
-                icon={<LogOut aria-hidden="true" />}
+                icon={<LogOut className="size-4" aria-hidden="true" />}
                 size="sm"
                 type="submit"
                 variant="ghost"
