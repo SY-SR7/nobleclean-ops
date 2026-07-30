@@ -76,25 +76,24 @@ export function AdminNavigation({
             aria-label={collapsed ? item.label : undefined}
             title={collapsed ? item.label : undefined}
             className={cn(
-              "focus-visible:ring-secondary focus-visible:ring-offset-surface inline-flex min-h-11 items-center gap-3 rounded text-sm font-semibold whitespace-nowrap transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
-              // collapsed sidebar: icon-only, centered
-              collapsed && !isMobile ? "justify-center px-0" : "px-3",
-              active && isMobile
-                ? "bg-secondary-container text-on-secondary-container"
+              "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2",
+              collapsed && !isMobile ? "w-full justify-center px-0" : "px-3",
+              // Active state — same for both mobile and sidebar
+              active
+                ? "bg-secondary-container text-on-secondary-container font-semibold"
                 : undefined,
-              active && !isMobile
-                ? "bg-secondary-container text-on-secondary-container"
-                : undefined,
-              !active && isMobile
-                ? "text-primary-container hover:bg-surface-accent"
-                : undefined,
+              // Inactive — light sidebar style
               !active && !isMobile
-                ? "text-inverse-on-surface hover:bg-primary hover:text-on-primary"
+                ? "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                : undefined,
+              // Inactive — mobile scrollable strip
+              !active && isMobile
+                ? "text-on-surface-variant hover:bg-surface-container"
                 : undefined,
             )}
             href={item.href}
           >
-            <Icon aria-hidden="true" className="size-5 shrink-0" />
+            <Icon aria-hidden="true" className="size-4 shrink-0" />
             {!collapsed && (
               <span className="min-w-0 truncate">{item.label}</span>
             )}
