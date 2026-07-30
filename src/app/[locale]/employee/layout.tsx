@@ -59,7 +59,9 @@ export default async function EmployeeLayout({
 
   return (
     <EmployeeShell
+      locale={locale}
       logoAlt={t(messages, "foundation.appName")}
+      logoutLabel={t(messages, "auth.logout.submit")}
       navigationLabel={t(messages, "navigation.employee.label")}
       tabs={tabs}
     >

@@ -591,6 +591,25 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
 - Actual GitHub upload is not complete because this project still has no `origin` remote and GitHub CLI is not installed/authenticated in this environment.
 - To finish upload, provide two approved GitHub remotes: one for `nobleclean-ops` and one for `nobleclean-sync-bot`, plus a working GitHub authentication method.
 
+## Employee Shell / My Day UI QA Loop
+
+- Completed a 7-agent Employee Shell/My Day section review loop and single implementation pass for Beads issue `nobleclean-7io`.
+- Fixed P0 selection form bug in `MyDaySelectionForm.tsx` by adding missing `name="leafItemId"` input attribute to ensure selected items are passed to `saveDailyPlanSelectionAction`.
+- Added item-specific accessible `sr-only` labels for item selection, item completion, and tool-step completion checkboxes.
+- Added ARIA live regions (`role="status"`/`aria-live="polite"` and `role="alert"`/`aria-live="assertive"`) to feedback messages in My Day.
+- Fixed `ProgressIndicator` ARIA clamp so `aria-valuenow` never exceeds `aria-valuemax`.
+- Made item details `<summary>` item-specific and localized.
+- Added protected placeholder pages for employee bottom tab links (`/employee/notifications`, `/employee/history`, `/employee/profile`).
+- Added a clear Employee sign-out action button to `EmployeeShell` header using `logoutAction`.
+- Formatted optional tool steps with neutral tone badges (`PriorityStatusBadge` tone="neutral").
+- Enforced `requireAssignedClient(locale, clientId)` server-side guard on My Day write actions (`saveDailyPlanSelectionAction` and `submitDailyPlanCompletionAction`) before RPC execution.
+- Polished German copy and Umlaut transliterations across `src/i18n/messages/de.json` (`Ausgewählte`, `ausgeführt`, `Reinigungsschritte`, `Für`, `fällig`, `Wählen`).
+- Local verification on 2026-07-30:
+  - `npm run quality` passed.
+  - Unit tests passed 54/54.
+  - `npm run test:integration` passed 13/13.
+  - Production build compiled successfully.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.

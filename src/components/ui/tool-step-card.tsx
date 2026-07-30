@@ -8,8 +8,10 @@ type ToolStepCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> &
   Readonly<{
     actions?: ReactNode;
     completedControl?: ReactNode;
+    dueLabel?: ReactNode;
     duration: ReactNode;
     isCompleted?: boolean;
+    isDue?: boolean;
     isMandatory: boolean;
     mandatoryLabel: ReactNode;
     notes?: ReactNode;
@@ -23,8 +25,10 @@ export function ToolStepCard({
   actions,
   className,
   completedControl,
+  dueLabel,
   duration,
   isCompleted = false,
+  isDue = false,
   isMandatory,
   mandatoryLabel,
   notes,
@@ -54,8 +58,11 @@ export function ToolStepCard({
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <PriorityStatusBadge
               label={isMandatory ? mandatoryLabel : optionalLabel}
-              tone={isMandatory ? "critical" : "recent"}
+              tone={isMandatory ? "critical" : "neutral"}
             />
+            {isMandatory && isDue && !isCompleted && dueLabel ? (
+              <PriorityStatusBadge label={dueLabel} tone="critical" />
+            ) : null}
             <span className="text-on-surface-variant text-sm">{duration}</span>
             <span className="text-on-surface-variant text-sm">
               {recurrence}

@@ -76,7 +76,7 @@
     "client": "Kunde",
     "allocatedHours": "Geplante Stunden",
     "plannedMinutes": "Geplante Minuten",
-    "selectedItems": "Ausgewaehlte Objekte",
+    "selectedItems": "Ausgewählte Objekte",
     "currentPlan": "Aktueller Plan",
     "noPlan": "Noch kein Plan",
     "itemListTitle": "Zugewiesene Objekte",
@@ -86,22 +86,22 @@
     "minutes": "Min.",
     "quantity": "Menge",
     "lastCleaned": "Zuletzt gereinigt",
-    "lastPerformed": "Zuletzt ausgefuehrt",
+    "lastPerformed": "Zuletzt ausgeführt",
     "neverCleaned": "Noch nie",
     "neverPerformed": "Noch nie",
     "itemDetails": "Objektdetails",
     "itemNotes": "Objekt-Notizen",
-    "toolSteps": "Reinigungsgeraete-Schritte",
-    "noToolSteps": "Fuer dieses Objekt sind keine Geraeteschritte definiert.",
+    "toolSteps": "Reinigungsschritte",
+    "noToolSteps": "Für dieses Objekt sind keine Geräteschritte definiert.",
     "mandatory": "Pflicht",
     "optional": "Optional",
-    "statusMandatoryOverdue": "Pflichtschritt faellig",
-    "emptySchedule": "Fuer diesen Tag ist kein Planeintrag vorhanden.",
-    "emptyItems": "Fuer diesen Kunden sind keine Objekte vorhanden.",
+    "statusMandatoryOverdue": "Pflichtschritt fällig",
+    "emptySchedule": "Für diesen Tag ist kein Planeintrag vorhanden.",
+    "emptyItems": "Für diesen Kunden sind keine Objekte vorhanden.",
     "actions": {
       "loadDate": "Tag laden",
       "saveSelection": "Plan speichern",
-      "selectItem": "Objekt auswaehlen",
+      "selectItem": "Objekt auswählen",
       "submitCompletion": "Abschluss senden"
     },
     "feedback": {
@@ -109,7 +109,7 @@
       "error": "Der Tagesplan konnte nicht gespeichert werden.",
       "loadError": "Mein Tag konnte nicht geladen werden.",
       "saved": "Der Tagesplan wurde gespeichert.",
-      "tooShort": "Waehlen Sie genug Arbeit fuer die geplante Zeit aus."
+      "tooShort": "Wählen Sie genug Arbeit für die geplante Zeit aus."
     }
   },
   "adminClients": {

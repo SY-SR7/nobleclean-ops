@@ -35,7 +35,7 @@ test("shared controls expose accessible semantics for progress and navigation", 
   assert.match(progress, /role="progressbar"/);
   assert.match(progress, /aria-valuemin=\{0\}/);
   assert.match(progress, /aria-valuemax=\{max\}/);
-  assert.match(progress, /aria-valuenow=\{value\}/);
+  assert.match(progress, /aria-valuenow=\{(value|ariaValue)\}/);
   assert.match(mobileTabs, /aria-label=\{label\}/);
   assert.match(mobileTabs, /aria-current/);
 });
@@ -47,7 +47,7 @@ test("employee mobile controls keep labels and avoid advisory-state locks", () =
   const page = readProjectFile("src/app/[locale]/employee/page.tsx");
 
   assert.match(page, /htmlFor="my-day-date"/);
-  assert.match(form, /<span className="sr-only">\{copy\.selectItem\}<\/span>/);
+  assert.match(form, /copy\.selectItem/);
   assert.match(form, /name="completedLeafItemId"/);
   assert.doesNotMatch(form, /disabled=\{[^}]*advisoryStatus/);
   assert.doesNotMatch(form, /aria-disabled=\{[^}]*advisoryStatus/);

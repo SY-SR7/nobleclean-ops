@@ -7,6 +7,7 @@ type MetricStatusTone = LeafItemStatusTone | SystemStatusTone;
 
 const accentClasses: Record<MetricStatusTone, string> = {
   critical: "border-l-status-critical",
+  neutral: "border-l-outline",
   recent: "border-l-status-recent",
   success: "border-l-status-success",
   warning: "border-l-status-warning",

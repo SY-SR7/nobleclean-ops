@@ -52,11 +52,5 @@
     "supabase/.temp/",
     "tsconfig.tsbuildinfo"
   ],
-  "secretNamePatterns": [
-    "*.key",
-    "*.pem",
-    "*.p12",
-    "*.pfx",
-    "*.crt"
-  ]
+  "secretNamePatterns": ["*.key", "*.pem", "*.p12", "*.pfx", "*.crt"]
 }

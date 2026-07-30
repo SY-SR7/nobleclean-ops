@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasSameOriginRequest } from "@/lib/security/request-origin";
-import { requireRole } from "@/server/auth/guards";
+import { requireAssignedClient, requireRole } from "@/server/auth/guards";
 
 import {
   initialMyDaySelectionActionState,
@@ -176,6 +176,7 @@ export async function saveDailyPlanSelectionAction(
   }
 
   await requireRole(dto.locale, "employee");
+  await requireAssignedClient(dto.locale, dto.clientId);
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -232,6 +233,7 @@ export async function submitDailyPlanCompletionAction(
   }
 
   await requireRole(dto.locale, "employee");
+  await requireAssignedClient(dto.locale, dto.clientId);
 
   try {
     const supabase = await createSupabaseServerClient();

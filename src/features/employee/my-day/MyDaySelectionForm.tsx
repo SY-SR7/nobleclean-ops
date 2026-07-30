@@ -116,11 +116,13 @@ function feedbackMessage(
 
   return (
     <p
+      aria-live={state.status === "success" ? "polite" : "assertive"}
       className={
         state.status === "success"
           ? "border-secondary bg-secondary-container text-on-secondary-container rounded border px-3 py-2 text-sm"
           : "border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm"
       }
+      role={state.status === "success" ? "status" : "alert"}
     >
       {state.status === "success"
         ? state.code === "COMPLETED"
@@ -336,13 +338,16 @@ export function MyDaySelectionForm({
                             disabled={
                               isSubmitted || isPending || isCompletionPending
                             }
+                            name="leafItemId"
                             onChange={() => {
                               toggleItem(item.id);
                             }}
                             type="checkbox"
                             value={item.id}
                           />
-                          <span className="sr-only">{copy.selectItem}</span>
+                          <span className="sr-only">
+                            {copy.selectItem}: {item.name}
+                          </span>
                         </label>
                         {selectedIds.has(item.id) ? (
                           <label className="border-outline-variant bg-surface-container-lowest inline-grid size-11 place-items-center rounded border">
@@ -360,7 +365,7 @@ export function MyDaySelectionForm({
                               value={item.id}
                             />
                             <span className="sr-only">
-                              {copy.submitCompletion}
+                              {copy.submitCompletion}: {item.name}
                             </span>
                           </label>
                         ) : null}
@@ -406,7 +411,7 @@ export function MyDaySelectionForm({
                   />
                   <details className="border-outline-variant bg-surface-container-lowest rounded border p-4">
                     <summary className="text-primary-container cursor-pointer text-sm font-bold tracking-normal uppercase">
-                      {copy.itemDetails}
+                      {item.name} — {copy.itemDetails}
                     </summary>
                     <div className="mt-4 grid gap-4">
                       {item.notes ? (
@@ -445,7 +450,8 @@ export function MyDaySelectionForm({
                                         value={step.id}
                                       />
                                       <span className="sr-only">
-                                        {copy.submitCompletion}
+                                        {copy.submitCompletion}: step{" "}
+                                        {step.sequenceOrder} - {step.toolName}
                                       </span>
                                     </label>
                                   ) : null

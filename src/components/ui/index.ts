@@ -1,4 +1,5 @@
 export * from "./button";
+export * from "./checkbox-tile";
 export * from "./form-input";
 export * from "./form-textarea";
 export * from "./metric-card";

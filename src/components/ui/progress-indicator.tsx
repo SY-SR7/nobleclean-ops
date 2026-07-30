@@ -19,6 +19,18 @@ function clampPercentage(value: number, max: number): number {
   return Math.min(100, Math.max(0, (value / max) * 100));
 }
 
+function clampAriaValue(value: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  if (!Number.isFinite(max) || max <= 0) {
+    return Math.max(0, value);
+  }
+
+  return Math.min(Math.max(0, value), max);
+}
+
 export function ProgressIndicator({
   className,
   label,
@@ -29,6 +41,7 @@ export function ProgressIndicator({
   ...props
 }: ProgressIndicatorProps) {
   const percentage = clampPercentage(value, max);
+  const ariaValue = clampAriaValue(value, max);
   const ariaLabel = typeof label === "string" ? label : undefined;
 
   if (mode === "ring") {
@@ -37,7 +50,7 @@ export function ProgressIndicator({
         aria-label={ariaLabel}
         aria-valuemax={max}
         aria-valuemin={0}
-        aria-valuenow={value}
+        aria-valuenow={ariaValue}
         className={cn("inline-grid place-items-center gap-2", className)}
         role="progressbar"
         {...props}
@@ -81,7 +94,7 @@ export function ProgressIndicator({
       aria-label={ariaLabel}
       aria-valuemax={max}
       aria-valuemin={0}
-      aria-valuenow={value}
+      aria-valuenow={ariaValue}
       className={cn("grid gap-2", className)}
       role="progressbar"
       {...props}

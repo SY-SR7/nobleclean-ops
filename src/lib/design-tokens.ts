@@ -21,6 +21,7 @@ export const leafItemStatusTokens = {
 } as const;
 
 export const systemStatusTokens = {
+  neutral: "outline",
   success: "status-success",
 } as const;
 

@@ -96,7 +96,10 @@ test("employee daily plan selection validates ownership through a single server 
   );
 
   assert.match(actions, /hasSameOriginRequest/);
-  assert.match(actions, /requireRole\(dto\.locale,\s*"employee"\)/);
+  assert.match(
+    actions,
+    /requireAssignedClient\(dto\.locale,\s*dto\.clientId\)/,
+  );
   assert.match(actions, /save_current_employee_daily_plan_selection/);
   assert.match(actions, /submit_current_employee_daily_plan_completion/);
   assert.match(actions, /selected_leaf_item_ids: dto\.leafItemIds/);
@@ -124,6 +127,7 @@ test("employee completion flow exposes bulk and partial completion controls", ()
     "supabase/migrations/20260729153000_cleaning_tool_steps.sql",
   );
 
+  assert.match(form, /name="leafItemId"/);
   assert.match(form, /name="completeAll"/);
   assert.match(form, /name="completedLeafItemId"/);
   assert.match(form, /name="completedToolStepId"/);

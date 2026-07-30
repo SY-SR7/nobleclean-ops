@@ -7,6 +7,7 @@ type StatusTone = LeafItemStatusTone | SystemStatusTone;
 
 const badgeToneClasses: Record<StatusTone, string> = {
   critical: "border-status-critical text-status-critical",
+  neutral: "border-outline-variant text-on-surface-variant",
   recent: "border-status-recent text-status-recent",
   success: "border-status-success text-status-success",
   warning: "border-status-warning text-status-warning",
@@ -14,6 +15,7 @@ const badgeToneClasses: Record<StatusTone, string> = {
 
 const dotToneClasses: Record<StatusTone, string> = {
   critical: "bg-status-critical",
+  neutral: "bg-outline",
   recent: "bg-status-recent",
   success: "bg-status-success",
   warning: "bg-status-warning",
