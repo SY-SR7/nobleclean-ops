@@ -10,6 +10,7 @@ import {
 } from "@/components/layout/admin-navigation";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { Button, DetailDrawerProvider } from "@/components/ui";
+import { AdminSpaProvider } from "@/context/admin-spa-context";
 import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/i18n/routing";
@@ -176,9 +177,11 @@ export function AdminShell({
         >
           <div className="mx-auto grid max-w-[var(--nc-container-max)] gap-6 lg:grid-cols-12">
             <div className="min-w-0 lg:col-span-12">
-              <DetailDrawerProvider>
-                {children}
-              </DetailDrawerProvider>
+              <AdminSpaProvider>
+                <DetailDrawerProvider>
+                  {children}
+                </DetailDrawerProvider>
+              </AdminSpaProvider>
             </div>
           </div>
         </main>

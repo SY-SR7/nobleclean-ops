@@ -12,6 +12,7 @@ import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 import { cn } from "@/lib/cn";
 
 const adminNavigationIcons = {
@@ -37,34 +38,14 @@ type AdminNavigationProps = Readonly<{
   variant?: "mobile" | "sidebar";
 }>;
 
-// Maps nav item id → the ?tab= value used for that section
-const tabParamMap: Record<string, string> = {
+const tabParamMap: Record<string, AdminTab> = {
+  home: "home",
   clients: "clients",
   staff: "staff",
   sectionsItems: "sections",
   schedule: "schedule",
   reports: "reports",
 };
-
-function isActivePath(
-  pathname: string,
-  item: AdminNavigationItem,
-  currentTab: string | null,
-) {
-  // Home is active when no tab param or tab is explicitly "home"
-  if (item.id === "home") {
-    return !currentTab || currentTab === "home";
-  }
-
-  // For other items, check if the ?tab= param matches
-  const expectedTab = tabParamMap[item.id];
-  if (expectedTab) {
-    return currentTab === expectedTab;
-  }
-
-  // Fallback: exact path match
-  return pathname === item.href;
-}
 
 export function AdminNavigation({
   className,
@@ -75,7 +56,8 @@ export function AdminNavigation({
 }: AdminNavigationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get("tab");
+  const { activeTab: spaActiveTab, setActiveTab } = useAdminSpa();
+  const currentTab = searchParams.get("tab") || spaActiveTab;
   const isMobile = variant === "mobile";
 
   return (
@@ -90,7 +72,8 @@ export function AdminNavigation({
     >
       {items.map((item) => {
         const Icon = adminNavigationIcons[item.id];
-        const active = isActivePath(pathname, item, currentTab);
+        const targetTab = tabParamMap[item.id] ?? "home";
+        const active = currentTab === targetTab || spaActiveTab === targetTab;
 
         return (
           <Link
@@ -99,22 +82,24 @@ export function AdminNavigation({
             aria-label={collapsed ? item.label : undefined}
             title={collapsed ? item.label : undefined}
             className={cn(
-              "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2",
+              "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 cursor-pointer",
               collapsed && !isMobile ? "w-full justify-center px-0" : "px-3",
-              // Active state — same for both mobile and sidebar
               active
                 ? "bg-secondary-container text-on-secondary-container font-semibold"
                 : undefined,
-              // Inactive — light sidebar style
               !active && !isMobile
                 ? "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
                 : undefined,
-              // Inactive — mobile scrollable strip
               !active && isMobile
                 ? "text-on-surface-variant hover:bg-surface-container"
                 : undefined,
             )}
             href={item.href}
+            onClick={(e) => {
+              // SPA transition without reload
+              e.preventDefault();
+              setActiveTab(targetTab);
+            }}
           >
             <Icon aria-hidden="true" className="size-4 shrink-0" />
             {!collapsed && (
@@ -126,3 +111,4 @@ export function AdminNavigation({
     </nav>
   );
 }
+
