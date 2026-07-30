@@ -97,7 +97,10 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
         footer: (
           <button
             type="button"
-            onClick={() => setActiveTab("reports")}
+            onClick={() => {
+              close();
+              setActiveTab("reports");
+            }}
             className="w-full bg-secondary text-on-secondary py-2.5 rounded-lg font-semibold flex items-center justify-between px-4 text-sm"
           >
             <span>{copy.viewReports}</span>

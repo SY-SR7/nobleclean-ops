@@ -55,12 +55,15 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setConfig(null), 250);
   }, []);
 
-  // Auto-close modal when active tab changes
+  // Auto-close modal immediately when active tab changes
   useEffect(() => {
-    const handleTabChange = () => close();
+    const handleTabChange = () => {
+      setIsOpen(false);
+      setConfig(null);
+    };
     window.addEventListener("nc-tab-change", handleTabChange);
     return () => window.removeEventListener("nc-tab-change", handleTabChange);
-  }, [close]);
+  }, []);
 
   const accentClass = {
     primary: "border-primary text-primary",
