@@ -4,7 +4,7 @@ import { ImageUp, Save, Trash2 } from "lucide-react";
 import type { ReactNode, SelectHTMLAttributes } from "react";
 import { useActionState } from "react";
 
-import { Button, FormInput, FormTextarea } from "@/components/ui";
+import { Button, FormInput, FormTextarea, FormSelect } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 
@@ -134,38 +134,7 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> &
     label: ReactNode;
   }>;
 
-function SelectField({
-  children,
-  className,
-  error,
-  id,
-  label,
-  ...props
-}: SelectFieldProps) {
-  return (
-    <div className="grid gap-2">
-      <label
-        className="text-on-surface-variant text-xs font-bold tracking-normal uppercase"
-        htmlFor={id}
-      >
-        {label}
-      </label>
-      <select
-        aria-invalid={error ? true : undefined}
-        className={cn(
-          "border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm transition outline-none",
-          error ? "border-error" : undefined,
-          className,
-        )}
-        id={id}
-        {...props}
-      >
-        {children}
-      </select>
-      {error ? <p className="text-error text-sm">{error}</p> : null}
-    </div>
-  );
-}
+const SelectField = FormSelect;
 
 function messageForState(
   state: SectionsItemsActionState,
