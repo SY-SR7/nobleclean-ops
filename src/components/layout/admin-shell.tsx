@@ -9,7 +9,7 @@ import {
   type AdminNavigationItem,
 } from "@/components/layout/admin-navigation";
 import { BrandLogo } from "@/components/layout/brand-logo";
-import { Button } from "@/components/ui";
+import { Button, DetailDrawerProvider } from "@/components/ui";
 import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/cn";
 import type { Locale } from "@/i18n/routing";
