@@ -84,6 +84,7 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                 </div>
               </div>
             ),
+          },
           {
             label: "Schicht löschen",
             content: (

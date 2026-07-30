@@ -102,6 +102,7 @@ export function StaffInteractive({
                 </div>
               </div>
             ),
+          },
           {
             label: "Aktion",
             content: assignment.isActive ? (
