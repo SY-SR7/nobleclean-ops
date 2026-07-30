@@ -796,18 +796,18 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
   const data = await getScheduleData(locale, from, to);
 
   const scheduleCopy = {
-    activeEnded: t(messages, "schedule.feedback.ended"),
+    allocatedHoursLabel: t(messages, "schedule.fields.allocatedHours"),
     clientLabel: t(messages, "staff.fields.client"),
+    createTitle: t(messages, "schedule.createTitle"),
+    deleteAction: t(messages, "schedule.actions.delete"),
+    deleted: t(messages, "schedule.feedback.deleted"),
     employeeLabel: t(messages, "staff.fields.employee"),
-    endAction: t(messages, "schedule.actions.delete"),
-    endDateLabel: t(messages, "staff.fields.endDate"),
     error: t(messages, "schedule.feedback.error"),
     fieldError: t(messages, "validation.generic"),
-    hoursLabel: t(messages, "schedule.fields.hours"),
     inactiveClient: t(messages, "adminClients.status.inactive"),
     save: t(messages, "actions.save"),
     saved: t(messages, "schedule.feedback.saved"),
-    scheduleTitle: t(messages, "schedule.createTitle"),
+    updateTitle: t(messages, "schedule.updateTitle"),
     workDateLabel: t(messages, "schedule.fields.workDate"),
   };
 
