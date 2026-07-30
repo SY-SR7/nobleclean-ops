@@ -74,7 +74,7 @@ function descendantIds(sections: readonly SectionTreeNode[], sectionId: string) 
 }
 
 export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClientProps) {
-  const { selectedClientId: spaClientId, selectedSectionId: spaSectionId, setSelectedSectionId } = useAdminSpa();
+  const { selectedClientId: spaClientId, selectedSectionId: spaSectionId, setSelectedSectionId, setActiveTab } = useAdminSpa();
 
   // Active client ID and section ID in SPA state
   const selectedClientId = spaClientId || data.selectedClientId || data.clients[0]?.id || "";
