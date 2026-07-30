@@ -331,6 +331,8 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
       (item) => item.tag === "complaint",
     ).length;
 
+    const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+
     return {
       activeAssignmentCount: countValue(activeAssignmentsResult.count),
       activeClientCount: countValue(activeClientsResult.count),
@@ -348,7 +350,7 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
         recentPlans.data,
         planItems.data,
         new Map(
-          profiles.data.map((profile) => [profile.id, profile.full_name]),
+          profiles.data.map((profile) => [profile.id, sanitizeName(profile.full_name)]),
         ),
         new Map(clients.data.map((client) => [client.id, client.name])),
       ),

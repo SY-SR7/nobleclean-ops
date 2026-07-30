@@ -372,8 +372,10 @@ export async function getReportsData(
       };
     }
 
+    const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+
     const profiles = new Map(
-      parsedProfiles.data.map((profile) => [profile.id, profile.full_name]),
+      parsedProfiles.data.map((profile) => [profile.id, sanitizeName(profile.full_name)]),
     );
     const sections = new Map(
       parsedSections.data.map((section) => [section.id, section.name]),
