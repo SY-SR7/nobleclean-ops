@@ -4,6 +4,7 @@ import { CalendarDays, User, Building2, ArrowRight, Clock, CheckCircle2, XCircle
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { EndAssignmentForm } from "./StaffAssignmentForms";
 import type { StaffAssignmentListItem, StaffClientOption, StaffEmployeeOption } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -40,6 +41,7 @@ export function StaffInteractive({
   copy,
 }: StaffInteractiveProps) {
   const { open } = useDetailDrawer();
+  const [viewMode, setViewMode] = useViewMode("staff", "grid");
 
   const openAssignmentDrawer = useCallback(
     (assignment: StaffAssignmentListItem) => {
@@ -104,29 +106,19 @@ export function StaffInteractive({
             ),
           },
           {
-            label: "Aktion",
-            content: assignment.isActive ? (
+            label: "Zuweisung beenden",
+            content: (
               <EndAssignmentForm
                 assignmentId={assignment.id}
                 copy={{
-                  activeEnded: "Zuweisung beendet",
-                  assignTitle: "Zuweisung anlegen",
-                  clientLabel: "Kunde",
-                  employeeLabel: "Mitarbeiter",
-                  endAction: "Zuweisung jetzt beenden",
-                  endDateLabel: "Enddatum",
-                  error: "Fehler beim Beenden",
+                  endDate: "Enddatum",
+                  error: "Fehler beim Beenden der Zuweisung",
                   fieldError: "Ungültige Eingabe",
-                  inactiveClient: "Inaktiver Kunde",
-                  save: "Speichern",
-                  saved: "Gespeichert",
-                  startDateLabel: "Startdatum",
-                  updateTitle: "Zuweisung bearbeiten",
+                  submit: "Zuweisung beenden",
+                  success: "Zuweisung beendet",
                 }}
                 locale={locale}
               />
-            ) : (
-              <p className="text-on-surface-variant text-xs italic">Diese Zuweisung ist bereits beendet.</p>
             ),
           },
         ],
@@ -136,7 +128,7 @@ export function StaffInteractive({
     [open, locale, copy],
   );
 
-  // Group assignments by employee
+  // Group by employee
   const byEmployee = assignments.reduce<
     Record<string, { name: string; items: StaffAssignmentListItem[] }>
   >((acc, a) => {
@@ -147,61 +139,134 @@ export function StaffInteractive({
     return acc;
   }, {});
 
+  const employeeEntries = Object.entries(byEmployee);
+
   return (
     <div className="grid gap-4">
-      {Object.entries(byEmployee).map(([empId, { name, items }]) => (
-        <div
-          key={empId}
-          className="border-outline-variant bg-surface-container-lowest rounded-lg border overflow-hidden"
-        >
-          {/* Employee header */}
-          <div className="bg-surface-container px-4 py-3 flex items-center gap-3">
-            <div className="bg-secondary text-on-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm">
-              {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-on-surface font-semibold text-sm">{name}</p>
-              <p className="text-on-surface-variant text-xs">
-                {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
-              </p>
-            </div>
-          </div>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-on-surface-variant text-sm">
+          {assignments.length} Zuweisung{assignments.length !== 1 ? "en" : ""}
+          {" · "}
+          {employeeEntries.length} Mitarbeiter
+        </p>
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
+      </div>
 
-          {/* Assignment rows */}
-          <div className="divide-outline-variant divide-y">
-            {items.map((a) => (
-              <button
-                key={a.id}
-                className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container"
-                onClick={() => openAssignmentDrawer(a)}
-                type="button"
+      {viewMode === "grid" ? (
+        /* ── Grid View: one card per employee ── */
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {employeeEntries.map(([empId, { name, items }]) => {
+            const activeCount = items.filter((i) => i.isActive).length;
+            const initials = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+            return (
+              <div
+                key={empId}
+                className="flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all hover:border-secondary hover:shadow-md"
               >
-                <Building2 className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">
-                    {a.clientName}
-                  </p>
-                  <p className="text-on-surface-variant text-xs flex items-center gap-1">
-                    <Clock className="size-3" />
-                    {formatDate(a.startDate, locale)}
-                    {a.endDate ? ` – ${formatDate(a.endDate, locale)}` : " – Aktiv"}
+                {/* Employee header */}
+                <div className="flex flex-col items-center gap-3 bg-surface-container px-4 py-5">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-on-secondary font-bold text-xl">
+                    {initials}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-on-surface font-bold text-sm">{name}</p>
+                    <p className="text-on-surface-variant text-xs mt-0.5">
+                      {activeCount} aktiv · {items.length} gesamt
+                    </p>
+                  </div>
+                </div>
+                {/* Assignment list */}
+                <div className="divide-y divide-outline-variant">
+                  {items.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container cursor-pointer"
+                      onClick={() => openAssignmentDrawer(a)}
+                    >
+                      <Building2 className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-on-surface group-hover:text-secondary text-xs font-semibold truncate transition-colors">
+                          {a.clientName}
+                        </p>
+                        <p className="text-on-surface-variant text-xs flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {formatDate(a.startDate, locale)}
+                        </p>
+                      </div>
+                      <span
+                        className={
+                          a.isActive
+                            ? "shrink-0 bg-secondary-container text-on-secondary-container rounded-full px-2 py-0.5 text-xs font-bold"
+                            : "shrink-0 bg-surface-container text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-bold"
+                        }
+                      >
+                        {a.isActive ? copy.active : copy.inactive}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="h-1 bg-secondary" />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* ── List View: grouped by employee ── */
+        <div className="grid gap-4">
+          {employeeEntries.map(([empId, { name, items }]) => (
+            <div
+              key={empId}
+              className="border-outline-variant bg-surface-container-lowest rounded-xl border overflow-hidden shadow-sm"
+            >
+              <div className="bg-surface-container px-4 py-3 flex items-center gap-3">
+                <div className="bg-secondary text-on-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm">
+                  {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-on-surface font-semibold text-sm">{name}</p>
+                  <p className="text-on-surface-variant text-xs">
+                    {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
                   </p>
                 </div>
-                <span
-                  className={
-                    a.isActive
-                      ? "bg-secondary-container text-on-secondary-container rounded-full px-2 py-0.5 text-xs font-bold"
-                      : "bg-surface-container text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-bold"
-                  }
-                >
-                  {a.isActive ? copy.active : copy.inactive}
-                </span>
-                <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
-              </button>
-            ))}
-          </div>
+              </div>
+              <div className="divide-outline-variant divide-y">
+                {items.map((a) => (
+                  <button
+                    key={a.id}
+                    className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container cursor-pointer"
+                    onClick={() => openAssignmentDrawer(a)}
+                    type="button"
+                  >
+                    <Building2 className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">
+                        {a.clientName}
+                      </p>
+                      <p className="text-on-surface-variant text-xs flex items-center gap-1">
+                        <Clock className="size-3" />
+                        {formatDate(a.startDate, locale)}
+                        {a.endDate ? ` – ${formatDate(a.endDate, locale)}` : " – Aktiv"}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        a.isActive
+                          ? "bg-secondary-container text-on-secondary-container rounded-full px-2 py-0.5 text-xs font-bold"
+                          : "bg-surface-container text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-bold"
+                      }
+                    >
+                      {a.isActive ? copy.active : copy.inactive}
+                    </span>
+                    <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
