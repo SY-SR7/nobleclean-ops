@@ -60,18 +60,38 @@ export function AdminShell({
         className={cn(
           "border-outline-variant bg-surface-container-lowest hidden border-r",
           "lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden",
-          "transition-all duration-300 ease-in-out",
+          "relative transition-all duration-300 ease-in-out",
           sidebarOpen ? "w-64" : "w-16",
         )}
       >
-        {/* Logo + toggle */}
+        {/* Floating toggle button — sits on the right border, Notion-style */}
+        <button
+          aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
+          className={cn(
+            "border-outline-variant bg-surface-container-lowest text-on-surface-variant",
+            "shadow-level-1 hover:bg-surface-container hover:text-secondary hover:border-secondary",
+            "absolute top-5 -right-3.5 z-50",
+            "flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
+          )}
+          onClick={() => setSidebarOpen((v) => !v)}
+          type="button"
+        >
+          {sidebarOpen ? (
+            <PanelLeftClose className="size-3.5" aria-hidden="true" />
+          ) : (
+            <PanelLeftOpen className="size-3.5" aria-hidden="true" />
+          )}
+        </button>
+
+        {/* Logo */}
         <div
           className={cn(
             "border-outline-variant flex min-h-[3.75rem] shrink-0 items-center border-b",
-            sidebarOpen ? "justify-between px-4" : "justify-center",
+            sidebarOpen ? "px-5" : "justify-center px-0",
           )}
         >
-          {sidebarOpen && (
+          {sidebarOpen ? (
             <BrandLogo
               alt={logoAlt}
               className="w-32"
@@ -79,19 +99,12 @@ export function AdminShell({
               priority
               width={200}
             />
+          ) : (
+            /* Collapsed: show "NC" monogram */
+            <span className="text-secondary font-heading text-sm font-bold select-none">
+              NC
+            </span>
           )}
-          <button
-            aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
-            className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/30"
-            onClick={() => setSidebarOpen((v) => !v)}
-            type="button"
-          >
-            {sidebarOpen ? (
-              <PanelLeftClose className="size-4" aria-hidden="true" />
-            ) : (
-              <PanelLeftOpen className="size-4" aria-hidden="true" />
-            )}
-          </button>
         </div>
 
         {/* Navigation */}
