@@ -70,7 +70,14 @@ export function AdminShell({
           )}
         >
           {sidebarOpen && (
-            <BrandLogo variant="dark" />
+            <BrandLogo
+              alt={_logoAlt}
+              className="w-36"
+              height={36}
+              priority
+              variant="dark"
+              width={220}
+            />
           )}
           <button
             aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
@@ -129,7 +136,13 @@ export function AdminShell({
         {/* Mobile header */}
         <header className="border-outline-variant bg-surface-container-lowest shadow-level-1 sticky top-0 z-30 border-b lg:hidden">
           <div className="px-mobile-margin flex min-h-16 items-center justify-between gap-3">
-            <BrandLogo variant="light" />
+            <BrandLogo
+              alt={_logoAlt}
+              className="w-32"
+              height={32}
+              variant="light"
+              width={200}
+            />
             <form action={logoutAction}>
               <input name="locale" type="hidden" value={locale} />
               <Button

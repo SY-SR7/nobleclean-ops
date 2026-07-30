@@ -1,40 +1,42 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/cn";
 
 type BrandLogoProps = Readonly<{
+  alt: string;
   className?: string;
-  /** "dark" = on dark sidebar bg (noble=white, clean=cyan)
-   *  "light" = on light header bg (noble=navy, clean=teal) */
+  height: number;
+  priority?: boolean;
+  /**
+   * "dark"  → logo on dark sidebar background: invert to white
+   * "light" → logo on light header background: original colors
+   */
   variant?: "dark" | "light";
+  width: number;
 }>;
 
 export function BrandLogo({
+  alt,
   className,
+  height,
+  priority = false,
   variant = "light",
+  width,
 }: BrandLogoProps) {
-  const isDark = variant === "dark";
-
   return (
-    <span
-      aria-label="nobleclean"
+    <Image
+      alt={alt}
       className={cn(
-        "select-none font-heading text-2xl font-bold tracking-tight leading-none",
+        "h-auto",
+        // On dark backgrounds invert the logo so it appears white/readable.
+        // This is the standard industry technique (Slack, Notion, Linear…).
+        variant === "dark" && "brightness-0 invert",
         className,
       )}
-    >
-      <span
-        className={cn(
-          isDark ? "text-white" : "text-primary-container",
-        )}
-      >
-        noble
-      </span>
-      <span
-        className={cn(
-          isDark ? "text-secondary-container" : "text-secondary",
-        )}
-      >
-        clean
-      </span>
-    </span>
+      height={height}
+      priority={priority}
+      src="/logo.png"
+      width={width}
+    />
   );
 }
