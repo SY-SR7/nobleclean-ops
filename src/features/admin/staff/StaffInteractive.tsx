@@ -174,7 +174,7 @@ export function StaffInteractive({
               >
                 {/* Employee header */}
                 <div className="flex flex-col items-center gap-3 bg-surface-container px-4 py-5">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-on-secondary font-bold text-xl">
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-2xl font-bold text-xl text-white bg-gradient-to-br ${["from-violet-500 to-purple-700","from-blue-500 to-indigo-700","from-emerald-500 to-teal-700","from-amber-500 to-orange-600","from-rose-500 to-pink-700","from-cyan-500 to-blue-600"][name.split("""").reduce((a,c)=>a+c.charCodeAt(0),0) % 6]}`}>
                     {initials}
                   </div>
                   <div className="text-center">
@@ -278,3 +278,4 @@ export function StaffInteractive({
     </div>
   );
 }
+
