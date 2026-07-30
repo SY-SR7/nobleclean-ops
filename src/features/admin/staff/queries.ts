@@ -106,8 +106,10 @@ export async function getStaffAssignmentsData(
       return initialData();
     }
 
+    const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+
     const employeeMap = new Map(
-      employees.data.map((employee) => [employee.id, employee.full_name]),
+      employees.data.map((employee) => [employee.id, sanitizeName(employee.full_name)]),
     );
     const clientMap = new Map(
       clients.data.map((client) => [client.id, client.name]),
@@ -133,7 +135,7 @@ export async function getStaffAssignmentsData(
         name: client.name,
       })),
       employees: employees.data.map((employee) => ({
-        fullName: employee.full_name,
+        fullName: sanitizeName(employee.full_name),
         id: employee.id,
       })),
       ok: true,
