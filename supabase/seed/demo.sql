@@ -465,7 +465,7 @@ SELECT
   END,
   CASE
     WHEN dp.status = 'submitted' AND items.rn % 14 != 0
-    THEN dp.work_date::timestamptz + make_interval(hours => 7, mins => (items.rn * 13) % 540)
+    THEN dp.work_date::timestamptz + make_interval(hours => 7, mins => ((items.rn * 13) % 540)::integer)
     ELSE NULL
   END
 FROM public.daily_plans dp
