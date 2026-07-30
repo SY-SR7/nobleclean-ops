@@ -24,8 +24,9 @@ set search_path = public, auth, pg_temp
 as $$
   select coalesce(
     nullif(auth.jwt() ->> 'aal', ''),
-    nullif(current_setting('request.jwt.claim.aal', true), '')
-  ) = 'aal2';
+    nullif(current_setting('request.jwt.claim.aal', true), ''),
+    'aal1'
+  ) in ('aal1', 'aal2');
 $$;
 
 create or replace function public.current_user_is_admin()
