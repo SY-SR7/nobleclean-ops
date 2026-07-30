@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarDays, User, Building2, ArrowRight, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { useCallback } from "react";
+import { CalendarDays, User, Building2, ArrowRight, Clock, Sparkles } from "lucide-react";
+import { useCallback, useState } from "react";
 
-import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import { EmployeeAvailabilityCalendar } from "./EmployeeAvailabilityCalendar";
 import { EndAssignmentForm } from "./StaffAssignmentForms";
 import type { StaffAssignmentListItem, StaffClientOption, StaffEmployeeOption } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -56,6 +57,7 @@ export function StaffInteractive({
 }: StaffInteractiveProps) {
   const { open } = useDetailDrawer();
   const [viewMode, setViewMode] = useViewMode("staff", "grid");
+  const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{ id: string; name: string } | null>(null);
 
   const openAssignmentDrawer = useCallback(
     (assignment: StaffAssignmentListItem) => {
@@ -74,6 +76,21 @@ export function StaffInteractive({
           { label: "Kunde", value: assignment.clientName.split(" ")[0], color: "text-violet-600" },
         ],
         sections: [
+          {
+            label: "Verfügbarkeit & Schichten",
+            content: (
+              <div className="py-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCalendarEmployee({ id: assignment.employeeId, name: assignment.employeeName })}
+                  className="w-full bg-secondary text-on-secondary flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold shadow-sm transition hover:opacity-90 cursor-pointer"
+                >
+                  <CalendarDays className="size-5" />
+                  Verfügbarkeit & Schichten (Nächster Monat)
+                </button>
+              </div>
+            ),
+          },
           {
             label: "Zuweisung bearbeiten / beenden",
             content: (
@@ -141,7 +158,7 @@ export function StaffInteractive({
                 className="flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all hover:border-secondary hover:shadow-xl"
               >
                 {/* Gradient header */}
-                <div className={`flex flex-col items-center gap-3 bg-gradient-to-br ${gradient} px-4 py-6`}>
+                <div className={`flex flex-col items-center gap-3 bg-gradient-to-br ${gradient} px-4 py-6 relative`}>
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-white font-bold text-2xl backdrop-blur-sm border border-white/30">
                     {initials}
                   </div>
@@ -152,8 +169,21 @@ export function StaffInteractive({
                     </p>
                   </div>
                 </div>
+
+                {/* Calendar availability button */}
+                <div className="p-3 border-b border-outline-variant bg-surface-container-low/40">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCalendarEmployee({ id: empId, name })}
+                    className="w-full bg-secondary/10 hover:bg-secondary/20 text-secondary flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-xs font-bold transition cursor-pointer"
+                  >
+                    <CalendarDays className="size-4" />
+                    Verfügbarkeit & Schichten (Nächster Monat)
+                  </button>
+                </div>
+
                 {/* Assignment list */}
-                <div className="divide-y divide-outline-variant">
+                <div className="divide-y divide-outline-variant flex-1">
                   {items.map((a) => (
                     <button
                       key={a.id}
@@ -198,16 +228,25 @@ export function StaffInteractive({
                 key={empId}
                 className="border-outline-variant bg-surface-container-lowest rounded-xl border overflow-hidden shadow-sm"
               >
-                <div className={`bg-gradient-to-r ${gradient} px-4 py-3 flex items-center gap-3`}>
-                  <div className="bg-white/20 text-white flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm border border-white/30 backdrop-blur-sm">
-                    {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                <div className={`bg-gradient-to-r ${gradient} px-4 py-3 flex items-center justify-between`}>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 text-white flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm border border-white/30 backdrop-blur-sm">
+                      {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm drop-shadow">{name}</p>
+                      <p className="text-white/80 text-xs">
+                        {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-white font-semibold text-sm drop-shadow">{name}</p>
-                    <p className="text-white/80 text-xs">
-                      {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCalendarEmployee({ id: empId, name })}
+                    className="bg-white/20 hover:bg-white/30 text-white flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border border-white/30 backdrop-blur-sm transition cursor-pointer"
+                  >
+                    <CalendarDays className="size-3.5" /> Verfügbarkeit
+                  </button>
                 </div>
                 <div className="divide-outline-variant divide-y">
                   {items.map((a) => (
@@ -244,6 +283,36 @@ export function StaffInteractive({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Full Availability & Shift Calendar Modal */}
+      {selectedCalendarEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-surface-container-lowest border-outline-variant w-full max-w-5xl rounded-3xl border p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5 text-secondary" />
+                <h2 className="font-heading text-primary-container text-xl font-bold">
+                  Mitarbeiter Verfügbarkeit & Schichten
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCalendarEmployee(null)}
+                className="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-full p-2 text-sm font-bold cursor-pointer transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <EmployeeAvailabilityCalendar
+              employeeId={selectedCalendarEmployee.id}
+              employeeName={selectedCalendarEmployee.name}
+              clients={clients}
+              locale={locale}
+            />
+          </div>
         </div>
       )}
     </div>

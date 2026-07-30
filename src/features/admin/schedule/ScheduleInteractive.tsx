@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarDays, User, Building2, Clock, ArrowRight } from "lucide-react";
-import { useCallback } from "react";
+import { CalendarDays, User, Building2, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { useCallback, useState } from "react";
 
-import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import { EmployeeAvailabilityCalendar } from "@/features/admin/staff/EmployeeAvailabilityCalendar";
 import { DeleteScheduleForm } from "./ScheduleForms";
 import type { ScheduleListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -39,6 +40,12 @@ function formatDateShort(value: string, locale: Locale) {
 export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInteractiveProps) {
   const { open } = useDetailDrawer();
   const [viewMode, setViewMode] = useViewMode("schedule", "grid");
+  const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{ id: string; name: string } | null>(null);
+
+  // Extract unique clients for availability calendar modal
+  const uniqueClients = Array.from(
+    new Map(schedules.map((s) => [s.clientId, { id: s.clientId, name: s.clientName }])).values()
+  );
 
   const openScheduleDrawer = useCallback(
     (item: ScheduleListItem) => {
@@ -57,6 +64,21 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
           { label: "Kunde", value: item.clientName.split(" ")[0], color: "text-violet-600" },
         ],
         sections: [
+          {
+            label: "Mitarbeiter-Verfügbarkeit",
+            content: (
+              <div className="py-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCalendarEmployee({ id: item.employeeId, name: item.employeeName })}
+                  className="w-full bg-secondary text-on-secondary flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold shadow-sm transition hover:opacity-90 cursor-pointer"
+                >
+                  <CalendarDays className="size-5" />
+                  Verfügbarkeit & Schichten (Nächster Monat)
+                </button>
+              </div>
+            ),
+          },
           {
             label: "Schicht bearbeiten / löschen",
             content: (
@@ -118,76 +140,100 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
               <button
                 key={item.id}
                 type="button"
-                className="group flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest text-left shadow-sm transition-all hover:border-secondary hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest text-left shadow-sm transition-all hover:border-secondary hover:shadow-xl hover:-translate-y-1 cursor-pointer"
                 onClick={() => openScheduleDrawer(item)}
               >
-                {/* Top: avatar + hours badge */}
-                <div className="flex items-center justify-between bg-surface-container px-4 py-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-on-secondary font-bold text-base">
-                    {initials}
-                  </div>
-                  <div className="bg-secondary-container text-on-secondary-container rounded-full px-3 py-1 text-xs font-bold">
-                    {item.allocatedHours}h
-                  </div>
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-outline-variant/60 bg-surface-container-low px-4 py-3">
+                  <span className="text-secondary font-bold text-xs flex items-center gap-1.5">
+                    <CalendarDays className="size-4" />
+                    {formatDateShort(item.workDate, locale)}
+                  </span>
+                  <span className="bg-secondary-container text-on-secondary-container rounded-full px-2.5 py-0.5 text-xs font-bold">
+                    {item.allocatedHours} Std.
+                  </span>
                 </div>
                 {/* Body */}
-                <div className="flex flex-1 flex-col gap-1.5 p-4">
-                  <p className="text-on-surface group-hover:text-secondary font-bold text-sm transition-colors truncate">
-                    {item.employeeName}
-                  </p>
-                  <p className="text-on-surface-variant text-xs flex items-center gap-1.5 truncate">
-                    <Building2 className="size-3 shrink-0" />
-                    {item.clientName}
-                  </p>
-                  <p className="text-on-surface-variant text-xs flex items-center gap-1.5 mt-1">
-                    <CalendarDays className="size-3 shrink-0" />
-                    {formatDateShort(item.workDate, locale)}
-                  </p>
+                <div className="flex items-center gap-3 p-4">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    {initials}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-heading text-on-surface group-hover:text-secondary text-sm font-bold transition-colors truncate">
+                      {item.employeeName}
+                    </h3>
+                    <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5 truncate">
+                      <Building2 className="size-3 shrink-0" />
+                      {item.clientName}
+                    </p>
+                  </div>
                 </div>
-                <div className="h-1 bg-secondary" />
               </button>
             );
           })}
         </div>
       ) : (
-        /* ── List View: grouped by date ── */
-        <div className="grid gap-4">
-          {dateEntries.map(([date, items]) => (
-            <div key={date}>
-              <p className="text-on-surface-variant mb-2 text-xs font-bold uppercase tracking-wider">
-                {formatDate(date, locale)}
-              </p>
-              <div className="border-outline-variant divide-outline-variant divide-y overflow-hidden rounded-xl border shadow-sm">
-                {items.map((item) => (
-                  <button
-                    key={item.id}
-                    className="group flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-container cursor-pointer"
-                    onClick={() => openScheduleDrawer(item)}
-                    type="button"
-                  >
-                    <div className="bg-secondary/10 text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold">
-                      {item.employeeName.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-on-surface group-hover:text-secondary text-sm font-semibold truncate transition-colors">
-                        {item.employeeName}
-                      </p>
-                      <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
-                        <Building2 className="size-3" />
-                        {item.clientName}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="bg-secondary-container text-on-secondary-container rounded-full px-2.5 py-1 text-xs font-bold">
-                        {item.allocatedHours}h
-                      </div>
-                      <ArrowRight className="text-on-surface-variant size-4" />
-                    </div>
-                  </button>
-                ))}
+        /* ── List View ── */
+        <div className="grid gap-2">
+          {schedules.map((item) => {
+            const initials = item.employeeName.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className="group flex w-full items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-left shadow-sm transition-all hover:border-secondary hover:shadow-md cursor-pointer"
+                onClick={() => openScheduleDrawer(item)}
+              >
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-on-surface group-hover:text-secondary font-semibold text-sm transition-colors truncate">
+                    {item.employeeName}
+                  </p>
+                  <p className="text-on-surface-variant text-xs flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1"><Building2 className="size-3" />{item.clientName}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><CalendarDays className="size-3" />{formatDateShort(item.workDate, locale)}</span>
+                  </p>
+                </div>
+                <span className="bg-secondary-container text-on-secondary-container shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold">
+                  {item.allocatedHours} Std.
+                </span>
+                <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Full Availability & Shift Calendar Modal */}
+      {selectedCalendarEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="bg-surface-container-lowest border-outline-variant w-full max-w-5xl rounded-3xl border p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5 text-secondary" />
+                <h2 className="font-heading text-primary-container text-xl font-bold">
+                  Mitarbeiter Verfügbarkeit & Schichten
+                </h2>
               </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCalendarEmployee(null)}
+                className="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-full p-2 text-sm font-bold cursor-pointer transition"
+              >
+                ✕
+              </button>
             </div>
-          ))}
+
+            <EmployeeAvailabilityCalendar
+              employeeId={selectedCalendarEmployee.id}
+              employeeName={selectedCalendarEmployee.name}
+              clients={uniqueClients}
+              locale={locale}
+            />
+          </div>
         </div>
       )}
     </div>
