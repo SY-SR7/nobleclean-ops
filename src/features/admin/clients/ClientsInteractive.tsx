@@ -3,7 +3,7 @@
 import { Building2, MapPin, Phone, Mail, User, FileText, ArrowRight } from "lucide-react";
 import { useCallback } from "react";
 
-import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { ClientForm, ClientStatusForm } from "./ClientForm";
 import { useAdminSpa } from "@/context/admin-spa-context";
@@ -54,18 +54,6 @@ function formatDate(value: string | null, locale: Locale) {
   }).format(date);
 }
 
-function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3">
-      {icon && <div className="text-secondary mt-0.5 shrink-0">{icon}</div>}
-      <div>
-        <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{label}</p>
-        <p className="text-on-surface text-sm mt-0.5">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 export function ClientsInteractive({ clients, locale, copy }: ClientsInteractiveProps) {
   const { open, close } = useDetailDrawer();
   const { setActiveTab } = useAdminSpa();
@@ -77,34 +65,31 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
       const drawerConfig: DrawerConfig = {
         title: client.name,
         subtitle: client.address || copy.notAvailable,
-        icon: <Building2 className="size-5" />,
+        icon: <Building2 className="size-6" />,
         accentColor: client.isActive ? "secondary" : "warning",
+        badge: {
+          label: client.isActive ? copy.active : copy.inactive,
+          variant: client.isActive ? "success" : "neutral",
+        },
+        kpis: [
+          { label: "Status", value: client.isActive ? "Aktiv" : "Inaktiv", color: client.isActive ? "text-emerald-600" : "text-gray-400" },
+          { label: "Kontakt", value: client.contactInfo.contactName || "—", color: "text-blue-600" },
+          { label: "Telefon", value: client.contactInfo.phone || "—", color: "text-violet-600" },
+        ],
         sections: [
           {
-            label: "Status",
+            label: "Kontaktdaten & Standort",
             content: (
-              <span className={
-                client.isActive
-                  ? "bg-secondary-container text-on-secondary-container inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide"
-                  : "bg-surface-container text-on-surface-variant inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide"
-              }>
-                {client.isActive ? copy.active : copy.inactive}
-              </span>
-            ),
-          },
-          {
-            label: "Kontaktdaten",
-            content: (
-              <div className="grid gap-3">
-                <InfoRow icon={<MapPin className="size-4" />} label={copy.address} value={client.address || copy.notAvailable} />
-                <InfoRow icon={<User className="size-4" />} label={copy.contactName} value={client.contactInfo.contactName || copy.notAvailable} />
-                <InfoRow icon={<Mail className="size-4" />} label={copy.contactEmail} value={client.contactInfo.email || copy.notAvailable} />
-                <InfoRow icon={<Phone className="size-4" />} label={copy.contactPhone} value={client.contactInfo.phone || copy.notAvailable} />
-                {client.contactInfo.notes && (
-                  <InfoRow icon={<FileText className="size-4" />} label={copy.contactNotes} value={client.contactInfo.notes} />
-                )}
-                {updatedAt && <InfoRow label={copy.updatedAt} value={updatedAt} />}
-              </div>
+              <InfoGrid
+                items={[
+                  { icon: <MapPin className="size-4" />, label: copy.address, value: client.address || copy.notAvailable },
+                  { icon: <User className="size-4" />, label: copy.contactName, value: client.contactInfo.contactName || copy.notAvailable },
+                  { icon: <Mail className="size-4" />, label: copy.contactEmail, value: client.contactInfo.email || copy.notAvailable },
+                  { icon: <Phone className="size-4" />, label: copy.contactPhone, value: client.contactInfo.phone || copy.notAvailable },
+                  ...(client.contactInfo.notes ? [{ icon: <FileText className="size-4" />, label: copy.contactNotes, value: client.contactInfo.notes }] : []),
+                  ...(updatedAt ? [{ label: copy.updatedAt, value: updatedAt }] : []),
+                ]}
+              />
             ),
           },
           {

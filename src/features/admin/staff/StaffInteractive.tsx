@@ -3,7 +3,7 @@
 import { CalendarDays, User, Building2, ArrowRight, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { useCallback } from "react";
 
-import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { EndAssignmentForm } from "./StaffAssignmentForms";
 import type { StaffAssignmentListItem, StaffClientOption, StaffEmployeeOption } from "./queries";
@@ -62,53 +62,29 @@ export function StaffInteractive({
       const config: DrawerConfig = {
         title: assignment.employeeName,
         subtitle: assignment.clientName,
-        icon: <User className="size-5" />,
+        icon: <User className="size-6" />,
         accentColor: assignment.isActive ? "secondary" : "warning",
+        badge: {
+          label: assignment.isActive ? copy.statusActive : copy.statusInactive,
+          variant: assignment.isActive ? "success" : "neutral",
+        },
+        kpis: [
+          { label: "Status", value: assignment.isActive ? "Aktiv" : "Inaktiv", color: assignment.isActive ? "text-emerald-600" : "text-gray-400" },
+          { label: "Mitarbeiter", value: assignment.employeeName.split(" ")[0], color: "text-blue-600" },
+          { label: "Kunde", value: assignment.clientName.split(" ")[0], color: "text-violet-600" },
+        ],
         sections: [
           {
-            label: "Status",
+            label: "Zuweisungsdetails",
             content: (
-              <div className="flex items-center gap-2">
-                {assignment.isActive ? (
-                  <CheckCircle2 className="text-status-success size-4 shrink-0" />
-                ) : (
-                  <XCircle className="text-on-surface-variant size-4 shrink-0" />
-                )}
-                <span className="text-sm font-semibold">
-                  {assignment.isActive ? copy.statusActive : copy.statusInactive}
-                </span>
-              </div>
-            ),
-          },
-          {
-            label: "Zuweisung",
-            content: (
-              <div className="grid gap-3">
-                <div className="flex items-center gap-3">
-                  <User className="text-secondary size-4 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.employees}</p>
-                    <p className="text-on-surface text-sm">{assignment.employeeName}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Building2 className="text-secondary size-4 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.clients}</p>
-                    <p className="text-on-surface text-sm">{assignment.clientName}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CalendarDays className="text-secondary size-4 shrink-0" />
-                  <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">Zeitraum</p>
-                    <p className="text-on-surface text-sm">
-                      {formatDate(assignment.startDate, locale)} –{" "}
-                      {assignment.endDate ? formatDate(assignment.endDate, locale) : "Aktiv"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <InfoGrid
+                items={[
+                  { icon: <User className="size-4" />, label: copy.employees, value: assignment.employeeName },
+                  { icon: <Building2 className="size-4" />, label: copy.clients, value: assignment.clientName },
+                  { icon: <CalendarDays className="size-4" />, label: "Startdatum", value: formatDate(assignment.startDate, locale) },
+                  { icon: <Clock className="size-4" />, label: "Enddatum", value: assignment.endDate ? formatDate(assignment.endDate, locale) : "Aktiv" },
+                ]}
+              />
             ),
           },
           {
