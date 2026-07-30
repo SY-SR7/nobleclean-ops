@@ -24,6 +24,20 @@ type StaffInteractiveProps = Readonly<{
   };
 }>;
 
+const GRADIENTS = [
+  "from-violet-500 to-purple-700",
+  "from-blue-500 to-indigo-700",
+  "from-emerald-500 to-teal-700",
+  "from-amber-500 to-orange-600",
+  "from-rose-500 to-pink-700",
+  "from-cyan-500 to-blue-600",
+];
+
+function nameGradient(name: string): string {
+  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return GRADIENTS[hash % GRADIENTS.length];
+}
+
 function formatDate(value: string | null, locale: Locale) {
   if (!value) return "—";
   const date = new Date(value);
@@ -73,32 +87,24 @@ export function StaffInteractive({
                 <div className="flex items-center gap-3">
                   <User className="text-secondary size-4 shrink-0" />
                   <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.employees}
-                    </p>
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.employees}</p>
                     <p className="text-on-surface text-sm">{assignment.employeeName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <Building2 className="text-secondary size-4 shrink-0" />
                   <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      {copy.clients}
-                    </p>
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">{copy.clients}</p>
                     <p className="text-on-surface text-sm">{assignment.clientName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <CalendarDays className="text-secondary size-4 shrink-0" />
                   <div>
-                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
-                      Zeitraum
-                    </p>
+                    <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">Zeitraum</p>
                     <p className="text-on-surface text-sm">
                       {formatDate(assignment.startDate, locale)} –{" "}
-                      {assignment.endDate
-                        ? formatDate(assignment.endDate, locale)
-                        : "Aktiv"}
+                      {assignment.endDate ? formatDate(assignment.endDate, locale) : "Aktiv"}
                     </p>
                   </div>
                 </div>
@@ -140,9 +146,7 @@ export function StaffInteractive({
   const byEmployee = assignments.reduce<
     Record<string, { name: string; items: StaffAssignmentListItem[] }>
   >((acc, a) => {
-    if (!acc[a.employeeId]) {
-      acc[a.employeeId] = { name: a.employeeName, items: [] };
-    }
+    if (!acc[a.employeeId]) acc[a.employeeId] = { name: a.employeeName, items: [] };
     acc[a.employeeId].items.push(a);
     return acc;
   }, {});
@@ -167,19 +171,20 @@ export function StaffInteractive({
           {employeeEntries.map(([empId, { name, items }]) => {
             const activeCount = items.filter((i) => i.isActive).length;
             const initials = name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+            const gradient = nameGradient(name);
             return (
               <div
                 key={empId}
-                className="flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all hover:border-secondary hover:shadow-md"
+                className="flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all hover:border-secondary hover:shadow-xl"
               >
-                {/* Employee header */}
-                <div className="flex flex-col items-center gap-3 bg-surface-container px-4 py-5">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-on-secondary font-bold text-xl">
+                {/* Gradient header */}
+                <div className={`flex flex-col items-center gap-3 bg-gradient-to-br ${gradient} px-4 py-6`}>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-white font-bold text-2xl backdrop-blur-sm border border-white/30">
                     {initials}
                   </div>
                   <div className="text-center">
-                    <p className="text-on-surface font-bold text-sm">{name}</p>
-                    <p className="text-on-surface-variant text-xs mt-0.5">
+                    <p className="text-white font-bold text-sm drop-shadow">{name}</p>
+                    <p className="text-white/80 text-xs mt-0.5">
                       {activeCount} aktiv · {items.length} gesamt
                     </p>
                   </div>
@@ -215,67 +220,69 @@ export function StaffInteractive({
                     </button>
                   ))}
                 </div>
-                <div className="h-1 bg-secondary" />
+                <div className={`h-1.5 bg-gradient-to-r ${gradient}`} />
               </div>
             );
           })}
         </div>
       ) : (
-        /* ── List View: grouped by employee ── */
+        /* ── List View ── */
         <div className="grid gap-4">
-          {employeeEntries.map(([empId, { name, items }]) => (
-            <div
-              key={empId}
-              className="border-outline-variant bg-surface-container-lowest rounded-xl border overflow-hidden shadow-sm"
-            >
-              <div className="bg-surface-container px-4 py-3 flex items-center gap-3">
-                <div className="bg-secondary text-on-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm">
-                  {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+          {employeeEntries.map(([empId, { name, items }]) => {
+            const gradient = nameGradient(name);
+            return (
+              <div
+                key={empId}
+                className="border-outline-variant bg-surface-container-lowest rounded-xl border overflow-hidden shadow-sm"
+              >
+                <div className={`bg-gradient-to-r ${gradient} px-4 py-3 flex items-center gap-3`}>
+                  <div className="bg-white/20 text-white flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-sm border border-white/30 backdrop-blur-sm">
+                    {name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm drop-shadow">{name}</p>
+                    <p className="text-white/80 text-xs">
+                      {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-on-surface font-semibold text-sm">{name}</p>
-                  <p className="text-on-surface-variant text-xs">
-                    {items.filter((i) => i.isActive).length} aktive Zuweisung(en)
-                  </p>
-                </div>
-              </div>
-              <div className="divide-outline-variant divide-y">
-                {items.map((a) => (
-                  <button
-                    key={a.id}
-                    className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container cursor-pointer"
-                    onClick={() => openAssignmentDrawer(a)}
-                    type="button"
-                  >
-                    <Building2 className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">
-                        {a.clientName}
-                      </p>
-                      <p className="text-on-surface-variant text-xs flex items-center gap-1">
-                        <Clock className="size-3" />
-                        {formatDate(a.startDate, locale)}
-                        {a.endDate ? ` – ${formatDate(a.endDate, locale)}` : " – Aktiv"}
-                      </p>
-                    </div>
-                    <span
-                      className={
-                        a.isActive
-                          ? "bg-secondary-container text-on-secondary-container rounded-full px-2 py-0.5 text-xs font-bold"
-                          : "bg-surface-container text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-bold"
-                      }
+                <div className="divide-outline-variant divide-y">
+                  {items.map((a) => (
+                    <button
+                      key={a.id}
+                      className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-container cursor-pointer"
+                      onClick={() => openAssignmentDrawer(a)}
+                      type="button"
                     >
-                      {a.isActive ? copy.active : copy.inactive}
-                    </span>
-                    <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
-                  </button>
-                ))}
+                      <Building2 className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">
+                          {a.clientName}
+                        </p>
+                        <p className="text-on-surface-variant text-xs flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {formatDate(a.startDate, locale)}
+                          {a.endDate ? ` – ${formatDate(a.endDate, locale)}` : " – Aktiv"}
+                        </p>
+                      </div>
+                      <span
+                        className={
+                          a.isActive
+                            ? "bg-secondary-container text-on-secondary-container rounded-full px-2 py-0.5 text-xs font-bold"
+                            : "bg-surface-container text-on-surface-variant rounded-full px-2 py-0.5 text-xs font-bold"
+                        }
+                      >
+                        {a.isActive ? copy.active : copy.inactive}
+                      </span>
+                      <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
-
