@@ -3,7 +3,7 @@
 import { Building2, MapPin, Phone, Mail, User, FileText, ArrowRight } from "lucide-react";
 import { useCallback } from "react";
 
-import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
+import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { ClientForm, ClientStatusForm } from "./ClientForm";
 import { useAdminSpa } from "@/context/admin-spa-context";
@@ -44,16 +44,6 @@ function getClientGradient(name: string): string {
   return gradients[hash % gradients.length];
 }
 
-function formatDate(value: string | null, locale: Locale) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
 export function ClientsInteractive({ clients, locale, copy }: ClientsInteractiveProps) {
   const { open, close } = useDetailDrawer();
   const { setActiveTab } = useAdminSpa();
@@ -61,7 +51,6 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
 
   const openClientDrawer = useCallback(
     (client: AdminClientListItem) => {
-      const updatedAt = formatDate(client.updatedAt, locale);
       const drawerConfig: DrawerConfig = {
         title: client.name,
         subtitle: client.address || copy.notAvailable,
@@ -78,22 +67,7 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
         ],
         sections: [
           {
-            label: "Kontaktdaten & Standort",
-            content: (
-              <InfoGrid
-                items={[
-                  { icon: <MapPin className="size-4" />, label: copy.address, value: client.address || copy.notAvailable },
-                  { icon: <User className="size-4" />, label: copy.contactName, value: client.contactInfo.contactName || copy.notAvailable },
-                  { icon: <Mail className="size-4" />, label: copy.contactEmail, value: client.contactInfo.email || copy.notAvailable },
-                  { icon: <Phone className="size-4" />, label: copy.contactPhone, value: client.contactInfo.phone || copy.notAvailable },
-                  ...(client.contactInfo.notes ? [{ icon: <FileText className="size-4" />, label: copy.contactNotes, value: client.contactInfo.notes }] : []),
-                  ...(updatedAt ? [{ label: copy.updatedAt, value: updatedAt }] : []),
-                ]}
-              />
-            ),
-          },
-          {
-            label: "Kunde bearbeiten",
+            label: "Kontaktdaten (Direkt im Feld editierbar)",
             content: (
               <ClientForm
                 client={{ id: client.id, name: client.name, address: client.address, contactInfo: client.contactInfo }}
@@ -124,11 +98,11 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
         ],
         footer: (
           <div className="grid gap-2">
-            <button type="button" className="bg-secondary text-on-secondary flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 w-full cursor-pointer" onClick={() => { close(); setActiveTab("sections", client.id); }}>
+            <button type="button" className="bg-secondary text-on-secondary flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 w-full cursor-pointer shadow-sm" onClick={() => { close(); setActiveTab("sections", client.id); }}>
               <span>{copy.viewSections}</span>
               <ArrowRight className="size-4" />
             </button>
-            <button type="button" className="border-outline-variant hover:bg-surface-container flex items-center justify-between rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors w-full cursor-pointer" onClick={() => { close(); setActiveTab("schedule"); }}>
+            <button type="button" className="border-outline-variant hover:bg-surface-container flex items-center justify-between rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors w-full cursor-pointer" onClick={() => { close(); setActiveTab("schedule"); }}>
               <span>{copy.viewSchedule}</span>
               <ArrowRight className="size-4" />
             </button>
