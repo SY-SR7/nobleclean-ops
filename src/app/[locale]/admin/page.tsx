@@ -381,8 +381,14 @@ async function StaffTab({ locale }: { locale: Locale }) {
         </p>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)]">
-        <aside className="border-outline-variant bg-surface-container-lowest h-fit rounded border p-4">
+      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
+        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
+          <span className="flex items-center gap-2">
+            <Plus className="size-4" /> {assignCopy.assignTitle}
+          </span>
+          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
+        </summary>
+        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
           <StaffAssignmentForm
             clients={data.clients}
             copy={assignCopy}
@@ -390,22 +396,23 @@ async function StaffTab({ locale }: { locale: Locale }) {
             locale={locale}
             mode="create"
           />
-        </aside>
-        <div className="grid min-w-0 gap-4">
-          {data.assignments.length === 0 ? (
-            <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
-              {t(messages, "staff.emptyAssignments")}
-            </p>
-          ) : (
-            <StaffInteractive
-              assignments={data.assignments}
-              clients={data.clients}
-              employees={data.employees}
-              locale={locale}
-              copy={interactiveCopy}
-            />
-          )}
         </div>
+      </details>
+
+      <div className="w-full">
+        {data.assignments.length === 0 ? (
+          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+            {t(messages, "staff.emptyAssignments")}
+          </p>
+        ) : (
+          <StaffInteractive
+            assignments={data.assignments}
+            clients={data.clients}
+            employees={data.employees}
+            locale={locale}
+            copy={interactiveCopy}
+          />
+        )}
       </div>
     </div>
   );
@@ -561,17 +568,24 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
         <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">{t(messages, "schedule.feedback.loadError")}</p>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)]">
-        <aside className="border-outline-variant bg-surface-container-lowest h-fit rounded border p-4">
+      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
+        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
+          <span className="flex items-center gap-2">
+            <Plus className="size-4" /> {scheduleCopy.createTitle}
+          </span>
+          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
+        </summary>
+        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
           <ScheduleForm clients={data.clients} copy={scheduleCopy} employees={data.employees} locale={locale} mode="create" />
-        </aside>
-        <div className="grid min-w-0 gap-4">
-          {data.schedules.length === 0 ? (
-            <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{t(messages, "schedule.emptySchedules")}</p>
-          ) : (
-            <ScheduleInteractive schedules={data.schedules} locale={locale} copy={interactiveCopy} />
-          )}
         </div>
+      </details>
+
+      <div className="w-full">
+        {data.schedules.length === 0 ? (
+          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">{t(messages, "schedule.emptySchedules")}</p>
+        ) : (
+          <ScheduleInteractive schedules={data.schedules} locale={locale} copy={interactiveCopy} />
+        )}
       </div>
     </div>
   );
