@@ -24,6 +24,9 @@ import {
   EscalationInteractiveCard,
   LastCleanedInteractiveCard,
   PlanInteractiveCard,
+  PlansGridContainer,
+  LastCleanedGridContainer,
+  EscalationsGridContainer,
 } from "@/features/admin/reports/ReportsInteractive";
 import { getReportsData } from "@/features/admin/reports/queries";
 import { ScheduleInteractive } from "@/features/admin/schedule/ScheduleInteractive";
@@ -660,29 +663,29 @@ async function ReportsTab({
             <MetricCard label={copy.completionRate} metadata="%" statusTone={data.completionRate === 100 ? "success" : "warning"} value={data.completionRate} />
           </div>
 
-          {/* Three columns of interactive cards */}
-          <div className="grid gap-6 xl:grid-cols-3">
-            <section className="grid h-fit gap-3">
+          {/* Three sections — each with its own Grid/List toggle */}
+          <div className="grid gap-8">
+            <section className="grid gap-3">
               <h2 className="font-heading text-primary-container text-xl font-bold">{copy.mandatoryStepEscalations}</h2>
               {data.mandatoryStepEscalations.length > 0 ? (
-                <div className="grid gap-2">
-                  {data.mandatoryStepEscalations.map((e) => (
-                    <EscalationInteractiveCard key={e.id} item={e} locale={locale} copy={{ lastPerformed: copy.lastPerformed, neverPerformed: copy.neverPerformed, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, mandatory: copy.mandatory }} />
-                  ))}
-                </div>
+                <EscalationsGridContainer
+                  items={data.mandatoryStepEscalations}
+                  locale={locale}
+                  copy={{ lastPerformed: copy.lastPerformed, neverPerformed: copy.neverPerformed, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, mandatory: copy.mandatory }}
+                />
               ) : (
                 <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyMandatoryStepEscalations}</p>
               )}
             </section>
 
-            <section className="grid h-fit gap-3">
+            <section className="grid gap-3">
               <h2 className="font-heading text-primary-container text-xl font-bold">{copy.incompletePlans}</h2>
               {data.incompletePlans.length > 0 ? (
-                <div className="grid gap-2">
-                  {data.incompletePlans.map((plan) => (
-                    <PlanInteractiveCard key={plan.id} plan={plan} locale={locale} copy={{ employee: copy.employee, workDate: copy.workDate, statusInProgress: copy.statusInProgress, statusSubmitted: copy.statusSubmitted, items: copy.items }} />
-                  ))}
-                </div>
+                <PlansGridContainer
+                  plans={data.incompletePlans}
+                  locale={locale}
+                  copy={{ employee: copy.employee, workDate: copy.workDate, statusInProgress: copy.statusInProgress, statusSubmitted: copy.statusSubmitted, items: copy.items }}
+                />
               ) : (
                 <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyIncomplete}</p>
               )}
@@ -691,11 +694,11 @@ async function ReportsTab({
             <section className="grid gap-3">
               <h2 className="font-heading text-primary-container text-xl font-bold">{copy.lastCleaned}</h2>
               {data.lastCleanedItems.length > 0 ? (
-                <div className="grid gap-2">
-                  {data.lastCleanedItems.map((item) => (
-                    <LastCleanedInteractiveCard key={item.id} item={item} locale={locale} copy={{ lastCleaned: copy.lastCleaned, neverCleaned: copy.neverCleaned, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, section: copy.section }} />
-                  ))}
-                </div>
+                <LastCleanedGridContainer
+                  items={data.lastCleanedItems}
+                  locale={locale}
+                  copy={{ lastCleaned: copy.lastCleaned, neverCleaned: copy.neverCleaned, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, section: copy.section }}
+                />
               ) : (
                 <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyLastCleaned}</p>
               )}
