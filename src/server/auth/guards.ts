@@ -106,8 +106,7 @@ async function loadAuthenticatedSession(
   if (
     assuranceError ||
     !assurance ||
-    assurance.currentLevel !== "aal2" ||
-    assurance.nextLevel !== "aal2"
+    (assurance.nextLevel === "aal2" && assurance.currentLevel !== "aal2")
   ) {
     return { status: "mfa_required" };
   }
