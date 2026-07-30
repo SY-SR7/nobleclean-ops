@@ -32,7 +32,6 @@ export function EmployeeAvailabilityPicker({
     return nextM.getMonth();
   });
 
-  // State mapping dateStr -> boolean (true = available, false = unavailable)
   const [availabilityState, setAvailabilityState] = useState<Record<string, boolean>>({});
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -47,7 +46,7 @@ export function EmployeeAvailabilityPicker({
   const days = useMemo(() => {
     const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
-    const adjustedFirstDay = (firstDayOfWeek + 6) % 7; // Mon = 0
+    const adjustedFirstDay = (firstDayOfWeek + 6) % 7;
 
     const list: ({ dateStr: string; dayNumber: number; dayName: string; isAvailable: boolean } | null)[] = [];
 
@@ -65,7 +64,6 @@ export function EmployeeAvailabilityPicker({
         weekday: "short",
       }).format(dateObj);
 
-      // Default: 75% available, user override in state if clicked
       const defaultAvail = ((dayNum * 7) % 4) !== 0;
       const isAvailable = availabilityState[dateStr] !== undefined ? availabilityState[dateStr] : defaultAvail;
 
@@ -137,19 +135,19 @@ export function EmployeeAvailabilityPicker({
         </div>
 
         <p className="text-on-surface-variant text-xs leading-relaxed">
-          Tippen Sie auf einen Tag, um zwischen 🟢 <strong>Verfügbar (Kann arbeiten)</strong> und 🔴 <strong>Frei (Kann nicht arbeiten)</strong> zu wechseln.
+          Tippen Sie auf einen Tag, um zwischen 🟢 <strong>Verfügbar</strong> und 🔴 <strong>Frei</strong> zu wechseln.
         </p>
 
         {savedSuccess && (
           <div className="bg-emerald-500/20 text-emerald-800 border border-emerald-500/40 rounded-2xl p-3 text-xs font-bold flex items-center gap-2 animate-in fade-in">
             <Sparkles className="size-4 text-emerald-600" />
-            Ihre Verfügbarkeit wurde erfolgreich gespeichert und an den Admin übermittelt!
+            Ihre Verfügbarkeit wurde erfolgreich gespeichert!
           </div>
         )}
       </div>
 
-      <div className="border-outline-variant bg-surface-container-lowest rounded-3xl border p-5 shadow-sm">
-        <div className="grid grid-cols-7 gap-2 mb-3 text-center">
+      <div className="border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm">
+        <div className="grid grid-cols-7 gap-2.5 mb-3 text-center">
           {weekDayHeaders.map((day) => (
             <div key={day} className="text-on-surface-variant font-extrabold text-xs uppercase py-1">
               {day}
@@ -157,10 +155,10 @@ export function EmployeeAvailabilityPicker({
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-2.5">
           {days.map((day, idx) => {
             if (!day) {
-              return <div key={`empty-${idx}`} className="bg-surface-container-low/20 h-24 rounded-2xl" />;
+              return <div key={`empty-${idx}`} className="bg-surface-container-low/20 h-24 rounded-2xl border border-dashed border-outline-variant/30" />;
             }
 
             return (
@@ -169,23 +167,23 @@ export function EmployeeAvailabilityPicker({
                 type="button"
                 onClick={() => toggleDay(day.dateStr, day.isAvailable)}
                 className={cn(
-                  "flex flex-col justify-between h-24 rounded-2xl p-2.5 border transition-all text-left cursor-pointer shadow-sm active:scale-95",
+                  "flex flex-col justify-between h-24 rounded-2xl p-3 border transition-all text-left cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95",
                   day.isAvailable
                     ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-950 hover:border-emerald-600"
                     : "bg-rose-500/10 border-rose-500/40 text-rose-950 hover:border-rose-600"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-heading text-sm font-extrabold">{day.dayNumber}</span>
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-heading text-base font-extrabold">{day.dayNumber}</span>
                   <span className="text-[9px] uppercase font-bold text-on-surface-variant/70">{day.dayName}</span>
                 </div>
 
                 {day.isAvailable ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-500/20 px-1.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-500/20 px-2 py-0.5 rounded-full w-fit">
                     <CheckCircle2 className="size-3" /> Verfügbar
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-500/20 px-1.5 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-500/20 px-2 py-0.5 rounded-full w-fit">
                     <XCircle className="size-3" /> Frei
                   </span>
                 )}
