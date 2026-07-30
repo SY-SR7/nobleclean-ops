@@ -177,6 +177,9 @@ function TabBar({
   );
 }
 
+import { HomeInteractive } from "@/features/admin/home/HomeInteractive";
+import { AdminSpaContainer } from "@/features/admin/AdminSpaContainer";
+
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME TAB
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -196,15 +199,11 @@ async function HomeTab({ locale }: { locale: Locale }) {
     emptyRecent: t(messages, "adminHome.emptyRecent"),
     highPriority: t(messages, "adminHome.metadata.highPriority"),
     hours: t(messages, "adminHome.metadata.hours"),
-    items: t(messages, "adminHome.recent.items"),
-    loadError: t(messages, "adminHome.feedback.loadError"),
     mandatoryEscalations: t(messages, "adminHome.metrics.mandatoryEscalations"),
     openPlans: t(messages, "adminHome.attention.openPlans"),
     recentWork: t(messages, "adminHome.recentWork"),
     sectionAttention: t(messages, "adminHome.attention.title"),
     sectionWorkflows: t(messages, "adminHome.workflows.title"),
-    statusInProgress: t(messages, "status.inProgress"),
-    statusSubmitted: t(messages, "status.submitted"),
     subtitle: t(messages, "adminHome.subtitle"),
     title: t(messages, "adminHome.title"),
     todaySchedule: t(messages, "adminHome.metrics.todaySchedule"),
@@ -226,109 +225,10 @@ async function HomeTab({ locale }: { locale: Locale }) {
     );
   }
 
-  const workflows = [
-    { id: "clients", href: `/${locale}/admin?tab=clients`, label: t(messages, "navigation.admin.clients"), description: copy.workflowClients },
-    { id: "staff", href: `/${locale}/admin?tab=staff`, label: t(messages, "navigation.admin.staff"), description: copy.workflowStaff },
-    { id: "sections", href: `/${locale}/admin?tab=sections`, label: t(messages, "navigation.admin.sectionsItems"), description: copy.workflowSectionsItems },
-    { id: "schedule", href: `/${locale}/admin?tab=schedule`, label: t(messages, "navigation.admin.schedule"), description: copy.workflowSchedule },
-    { id: "reports", href: `/${locale}/admin?tab=reports`, label: t(messages, "navigation.admin.reports"), description: copy.workflowReports },
-  ];
-
-  return (
-    <div className="grid gap-6">
-      <div className="grid gap-2">
-        <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
-        <p className="text-on-surface-variant max-w-3xl text-sm">{copy.subtitle}</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {[
-          { label: copy.activeClients, value: data.activeClientCount, meta: copy.viewClients, href: `/${locale}/admin?tab=clients` },
-          { label: copy.activeAssignments, value: data.activeAssignmentCount, meta: `${data.employeeCount} ${copy.employees}`, href: `/${locale}/admin?tab=staff` },
-          { label: copy.todaySchedule, value: data.todayScheduleCount, meta: `${formatHours(data.todayAllocatedHours, locale)} ${copy.hours}`, tone: data.todayScheduleCount > 0 ? "success" : "warning", href: `/${locale}/admin?tab=schedule` },
-          { label: copy.dueItems, value: data.dueItemCount, meta: `${data.totalLeafItemCount} ${copy.totalItems}`, tone: data.dueItemCount > 0 ? "warning" : "recent", href: `/${locale}/admin?tab=sections` },
-          { label: copy.attentionItems, value: data.attentionItemCount, meta: `${data.highPriorityItemCount} ${copy.highPriority} / ${data.complaintItemCount} ${copy.complaint}`, tone: data.attentionItemCount > 0 ? "critical" : "recent", href: `/${locale}/admin?tab=reports` },
-          { label: copy.mandatoryEscalations, value: data.mandatoryStepEscalationCount, meta: copy.viewReports, tone: data.mandatoryStepEscalationCount > 0 ? "critical" : "recent", href: `/${locale}/admin?tab=reports` },
-        ].map((card) => (
-          <Link key={card.label} href={card.href} className="block group">
-            <MetricCard
-              label={card.label}
-              metadata={card.meta}
-              statusTone={card.tone as never}
-              value={card.value}
-            />
-          </Link>
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
-        <section className="grid h-fit gap-3">
-          <h2 className="font-heading text-primary-container text-xl font-bold">{copy.recentWork}</h2>
-          {data.recentPlans.length > 0 ? (
-            <div className="grid gap-3">
-              {data.recentPlans.map((plan) => {
-                const pct = plan.totalItems > 0 ? Math.round((plan.completedItems / plan.totalItems) * 100) : 0;
-                return (
-                  <Link key={plan.id} href={`/${locale}/admin?tab=reports`} className="border-outline-variant bg-surface-container-lowest group block rounded-lg border p-4 transition-all hover:border-secondary hover:shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-on-surface group-hover:text-secondary text-sm font-semibold transition-colors">{plan.employeeName}</p>
-                        <p className="text-on-surface-variant text-xs">{plan.clientName} · {formatDate(plan.workDate, locale)}</p>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="font-heading text-secondary text-lg font-bold">{pct}%</p>
-                        <p className="text-on-surface-variant text-xs">{plan.completedItems}/{plan.totalItems}</p>
-                      </div>
-                    </div>
-                    <div className="bg-surface-container mt-3 h-1.5 w-full overflow-hidden rounded-full">
-                      <div className={pct === 100 ? "bg-status-success h-full rounded-full" : "bg-secondary h-full rounded-full"} style={{ width: `${pct}%` }} />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyRecent}</p>
-          )}
-        </section>
-
-        <section className="grid h-fit gap-3">
-          <h2 className="font-heading text-primary-container text-xl font-bold">{copy.sectionAttention}</h2>
-          {[
-            { label: copy.mandatoryEscalations, value: data.mandatoryStepEscalationCount, tone: data.mandatoryStepEscalationCount > 0 ? "critical" : "recent", href: `/${locale}/admin?tab=reports` },
-            { label: copy.openPlans, value: data.openPlanCount, tone: data.openPlanCount > 0 ? "warning" : "recent", href: `/${locale}/admin?tab=reports` },
-            { label: copy.dueItems, value: data.dueItemCount, tone: data.dueItemCount > 0 ? "warning" : "recent", href: `/${locale}/admin?tab=sections` },
-          ].map((row) => (
-            <Link key={row.label} href={row.href} className="border-outline-variant bg-surface-container-lowest group flex items-center justify-between rounded-lg border p-3 transition-all hover:border-secondary hover:shadow-sm">
-              <span className="text-on-surface group-hover:text-secondary text-sm font-medium transition-colors">{row.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-on-surface text-lg font-bold">{row.value}</span>
-                <ArrowRight className="text-on-surface-variant size-4" />
-              </div>
-            </Link>
-          ))}
-        </section>
-      </div>
-
-      <section className="grid gap-3">
-        <h2 className="font-heading text-primary-container text-xl font-bold">{copy.sectionWorkflows}</h2>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {workflows.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="border-outline-variant bg-surface-container-lowest group flex flex-col gap-2 rounded-lg border p-4 transition-all hover:border-secondary hover:shadow-md"
-            >
-              <p className="text-on-surface group-hover:text-secondary text-sm font-bold transition-colors">{item.label}</p>
-              <p className="text-on-surface-variant text-xs">{item.description}</p>
-              <ArrowRight className="text-secondary size-4 mt-auto" />
-            </Link>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+  return <HomeInteractive data={data} locale={locale} copy={copy} />;
 }
+
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CLIENTS TAB
@@ -1028,31 +928,32 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
   };
 
   return (
-    <div>
-      <TabBar locale={locale} activeTab={tab} labels={tabLabels} />
-      <Suspense fallback={<TabSkeleton />}>
-        {tab === "home" && <HomeTab locale={locale} />}
-        {tab === "clients" && <ClientsTab locale={locale} />}
-        {tab === "staff" && <StaffTab locale={locale} />}
-        {tab === "sections" && (
-          <SectionsTab
-            locale={locale}
-            clientId={firstValue(sp.clientId)}
-            sectionId={firstValue(sp.sectionId)}
-          />
-        )}
-        {tab === "schedule" && (
-          <ScheduleTab locale={locale} month={firstValue(sp.month)} />
-        )}
-        {tab === "reports" && (
-          <ReportsTab
-            locale={locale}
-            clientId={firstValue(sp.clientId)}
-            from={firstValue(sp.from)}
-            to={firstValue(sp.to)}
-          />
-        )}
-      </Suspense>
-    </div>
+    <AdminSpaContainer labels={tabLabels}>
+      {(activeTab) => (
+        <Suspense fallback={<TabSkeleton />}>
+          {activeTab === "home" && <HomeTab locale={locale} />}
+          {activeTab === "clients" && <ClientsTab locale={locale} />}
+          {activeTab === "staff" && <StaffTab locale={locale} />}
+          {activeTab === "sections" && (
+            <SectionsTab
+              locale={locale}
+              clientId={firstValue(sp.clientId)}
+              sectionId={firstValue(sp.sectionId)}
+            />
+          )}
+          {activeTab === "schedule" && (
+            <ScheduleTab locale={locale} month={firstValue(sp.month)} />
+          )}
+          {activeTab === "reports" && (
+            <ReportsTab
+              locale={locale}
+              clientId={firstValue(sp.clientId)}
+              from={firstValue(sp.from)}
+              to={firstValue(sp.to)}
+            />
+          )}
+        </Suspense>
+      )}
+    </AdminSpaContainer>
   );
 }

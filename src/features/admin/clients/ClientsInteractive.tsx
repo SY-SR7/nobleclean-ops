@@ -6,6 +6,7 @@ import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { Button, PriorityStatusBadge } from "@/components/ui";
+import { useAdminSpa } from "@/context/admin-spa-context";
 import type { AdminClientListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
@@ -50,7 +51,8 @@ function InfoRow({ label, value, icon }: { label: string; value: string; icon?: 
 }
 
 export function ClientsInteractive({ clients, locale, copy }: ClientsInteractiveProps) {
-  const { open } = useDetailDrawer();
+  const { open, close } = useDetailDrawer();
+  const { setActiveTab } = useAdminSpa();
 
   const openClientDrawer = useCallback(
     (client: AdminClientListItem) => {
@@ -95,26 +97,34 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
         ],
         footer: (
           <div className="grid gap-2">
-            <Link
-              className="bg-secondary text-on-secondary flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-              href={`/${locale}/admin?tab=sections&clientId=${client.id}`}
+            <button
+              type="button"
+              className="bg-secondary text-on-secondary flex items-center justify-between rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90 w-full cursor-pointer"
+              onClick={() => {
+                close();
+                setActiveTab("sections", client.id);
+              }}
             >
               <span>{copy.viewSections}</span>
               <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              className="border-outline-variant hover:bg-surface-container flex items-center justify-between rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors"
-              href={`/${locale}/admin?tab=schedule`}
+            </button>
+            <button
+              type="button"
+              className="border-outline-variant hover:bg-surface-container flex items-center justify-between rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors w-full cursor-pointer"
+              onClick={() => {
+                close();
+                setActiveTab("schedule");
+              }}
             >
               <span>{copy.viewSchedule}</span>
               <ArrowRight className="size-4" />
-            </Link>
+            </button>
           </div>
         ),
       };
       open(drawerConfig);
     },
-    [open, locale, copy],
+    [open, close, locale, copy, setActiveTab],
   );
 
   return (
