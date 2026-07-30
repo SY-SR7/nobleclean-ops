@@ -111,11 +111,19 @@ export function StaffInteractive({
               <EndAssignmentForm
                 assignmentId={assignment.id}
                 copy={{
-                  endDate: "Enddatum",
+                  activeEnded: "Zuweisung beendet",
+                  assignTitle: "Zuweisung",
+                  clientLabel: "Kunde",
+                  employeeLabel: "Mitarbeiter",
+                  endAction: "Zuweisung beenden",
+                  endDateLabel: "Enddatum",
                   error: "Fehler beim Beenden der Zuweisung",
                   fieldError: "Ungültige Eingabe",
-                  submit: "Zuweisung beenden",
-                  success: "Zuweisung beendet",
+                  inactiveClient: "Inaktiver Kunde",
+                  save: "Speichern",
+                  saved: "Gespeichert",
+                  startDateLabel: "Startdatum",
+                  updateTitle: "Zuweisung bearbeiten",
                 }}
                 locale={locale}
               />
