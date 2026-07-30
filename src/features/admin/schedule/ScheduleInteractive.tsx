@@ -99,7 +99,8 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                 copy={{
                   allocatedHoursLabel: "Stunden",
                   clientLabel: "Kunde",
-                  delete: "Schicht löschen",
+                  createTitle: "Schicht erstellen",
+                  deleteAction: "Schicht löschen",
                   deleted: "Schicht gelöscht",
                   employeeLabel: "Mitarbeiter",
                   error: "Fehler beim Löschen",
