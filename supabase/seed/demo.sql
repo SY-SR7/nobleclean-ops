@@ -394,7 +394,7 @@ FROM generate_series('2026-01-15'::date, '2026-07-30'::date, '1 day'::interval) 
 WHERE EXTRACT(DOW FROM d) BETWEEN 1 AND 5
 ON CONFLICT (employee_id, work_date) DO NOTHING;
 
--- Sarah: Mo–Fr, 6h/Tag ab 15.01.
+-- Stefan: Mo–Fr, 6h/Tag ab 15.01.
 INSERT INTO public.work_schedule (id, employee_id, client_id, work_date, allocated_hours)
 SELECT gen_random_uuid(),
        'e2a00000-0002-4000-8002-000000000002',
