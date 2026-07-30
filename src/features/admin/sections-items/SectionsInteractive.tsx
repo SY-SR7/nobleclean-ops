@@ -27,6 +27,7 @@ type SectionsInteractiveProps = Readonly<{
   leafItems: readonly LeafItemListItem[];
   locale: Locale;
   selectedSectionId: string | null;
+  onSelectSection?: (sectionId: string) => void;
   copy: {
     minutes: string;
     leafCount: string;
@@ -99,6 +100,7 @@ export function SectionsInteractive({
   leafItems,
   locale,
   selectedSectionId,
+  onSelectSection,
   copy,
   tagLabels,
 }: SectionsInteractiveProps) {
@@ -314,7 +316,10 @@ export function SectionsInteractive({
                 : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
             ].join(" ")}
             style={{ paddingLeft: `${(section.depth * 16) + 12}px` }}
-            onClick={() => openSectionDrawer(section)}
+            onClick={() => {
+              if (onSelectSection) onSelectSection(section.id);
+              openSectionDrawer(section);
+            }}
             type="button"
           >
             <Layers
