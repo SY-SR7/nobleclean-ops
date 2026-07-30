@@ -37,12 +37,33 @@ type AdminNavigationProps = Readonly<{
   variant?: "mobile" | "sidebar";
 }>;
 
-function isActivePath(pathname: string, item: AdminNavigationItem) {
-  if (pathname === item.href) {
-    return true;
+// Maps nav item id → the ?tab= value used for that section
+const tabParamMap: Record<string, string> = {
+  clients: "clients",
+  staff: "staff",
+  sectionsItems: "sections",
+  schedule: "schedule",
+  reports: "reports",
+};
+
+function isActivePath(
+  pathname: string,
+  item: AdminNavigationItem,
+  currentTab: string | null,
+) {
+  // Home is active when no tab param or tab is explicitly "home"
+  if (item.id === "home") {
+    return !currentTab || currentTab === "home";
   }
 
-  return item.id !== "home" && pathname.startsWith(`${item.href}/`);
+  // For other items, check if the ?tab= param matches
+  const expectedTab = tabParamMap[item.id];
+  if (expectedTab) {
+    return currentTab === expectedTab;
+  }
+
+  // Fallback: exact path match
+  return pathname === item.href;
 }
 
 export function AdminNavigation({
@@ -53,6 +74,8 @@ export function AdminNavigation({
   variant = "sidebar",
 }: AdminNavigationProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
   const isMobile = variant === "mobile";
 
   return (
@@ -67,7 +90,7 @@ export function AdminNavigation({
     >
       {items.map((item) => {
         const Icon = adminNavigationIcons[item.id];
-        const active = isActivePath(pathname, item);
+        const active = isActivePath(pathname, item, currentTab);
 
         return (
           <Link
