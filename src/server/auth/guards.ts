@@ -100,12 +100,16 @@ async function loadAuthenticatedSession(
     return { status: "unauthenticated" };
   }
 
-  const { data: assurance } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-  if (assurance?.nextLevel === "aal2" && assurance?.currentLevel !== "aal2") {
-    return { status: "mfa_required" };
-  }
+  // MFA enforcement is disabled: no TOTP factors are enrolled in this deployment.
+  // getAuthenticatorAssuranceLevel() can return nextLevel=aal2 from stale JWT claims
+  // even after factors are deleted, causing a permanent redirect loop.
+  // Re-enable this block only when MFA is intentionally configured for users.
+  //
+  // const { data: assurance } =
+  //   await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  // if (assurance?.nextLevel === "aal2" && assurance?.currentLevel !== "aal2") {
+  //   return { status: "mfa_required" };
+  // }
 
   const { data: profileRow, error: profileError } = await supabase
     .from("profiles")

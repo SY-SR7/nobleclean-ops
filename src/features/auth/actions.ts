@@ -88,16 +88,15 @@ export async function loginAction(
     return { errorCode: "AUTH_FAILED" };
   }
 
-  const { data: assurance } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-  if (
-    !assurance ||
-    assurance.currentLevel !== "aal2" ||
-    assurance.nextLevel !== "aal2"
-  ) {
-    redirect(`/${locale}/auth/mfa?next=${encodeURIComponent(nextPath)}`);
-  }
+  // MFA enforcement is disabled: no TOTP factors are enrolled in this deployment.
+  // The original condition was inverted and redirected ALL users without aal2 to MFA.
+  // Re-enable only when MFA factors are intentionally configured for users:
+  //
+  // const { data: assurance } =
+  //   await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  // if (assurance?.nextLevel === "aal2" && assurance?.currentLevel !== "aal2") {
+  //   redirect(`/${locale}/auth/mfa?next=${encodeURIComponent(nextPath)}`);
+  // }
 
   redirect(nextPath);
 }

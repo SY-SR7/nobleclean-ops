@@ -31,6 +31,7 @@ export type AdminNavigationItem = Readonly<{
 
 type AdminNavigationProps = Readonly<{
   className?: string;
+  collapsed?: boolean;
   items: readonly AdminNavigationItem[];
   navigationLabel: string;
   variant?: "mobile" | "sidebar";
@@ -46,6 +47,7 @@ function isActivePath(pathname: string, item: AdminNavigationItem) {
 
 export function AdminNavigation({
   className,
+  collapsed = false,
   items,
   navigationLabel,
   variant = "sidebar",
@@ -69,9 +71,14 @@ export function AdminNavigation({
 
         return (
           <Link
+            key={item.id}
             aria-current={active ? "page" : undefined}
+            aria-label={collapsed ? item.label : undefined}
+            title={collapsed ? item.label : undefined}
             className={cn(
-              "focus-visible:ring-secondary focus-visible:ring-offset-surface inline-flex min-h-11 items-center gap-3 rounded px-3 text-sm font-semibold whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+              "focus-visible:ring-secondary focus-visible:ring-offset-surface inline-flex min-h-11 items-center gap-3 rounded text-sm font-semibold whitespace-nowrap transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+              // collapsed sidebar: icon-only, centered
+              collapsed && !isMobile ? "justify-center px-0" : "px-3",
               active && isMobile
                 ? "bg-secondary-container text-on-secondary-container"
                 : undefined,
@@ -86,10 +93,11 @@ export function AdminNavigation({
                 : undefined,
             )}
             href={item.href}
-            key={item.id}
           >
-            <Icon aria-hidden="true" className="size-4 shrink-0" />
-            <span className="min-w-0 truncate">{item.label}</span>
+            <Icon aria-hidden="true" className="size-5 shrink-0" />
+            {!collapsed && (
+              <span className="min-w-0 truncate">{item.label}</span>
+            )}
           </Link>
         );
       })}

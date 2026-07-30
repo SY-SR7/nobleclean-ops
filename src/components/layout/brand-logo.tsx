@@ -1,30 +1,40 @@
-import Image from "next/image";
-
 import { cn } from "@/lib/cn";
 
 type BrandLogoProps = Readonly<{
-  alt: string;
   className?: string;
-  height: number;
-  priority?: boolean;
-  width: number;
+  /** "dark" = on dark sidebar bg (noble=white, clean=cyan)
+   *  "light" = on light header bg (noble=navy, clean=teal) */
+  variant?: "dark" | "light";
 }>;
 
 export function BrandLogo({
-  alt,
   className,
-  height,
-  priority = false,
-  width,
+  variant = "light",
 }: BrandLogoProps) {
+  const isDark = variant === "dark";
+
   return (
-    <Image
-      alt={alt}
-      className={cn("h-auto", className)}
-      height={height}
-      priority={priority}
-      src="/logo.png"
-      width={width}
-    />
+    <span
+      aria-label="nobleclean"
+      className={cn(
+        "select-none font-heading text-2xl font-bold tracking-tight leading-none",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          isDark ? "text-white" : "text-primary-container",
+        )}
+      >
+        noble
+      </span>
+      <span
+        className={cn(
+          isDark ? "text-secondary-container" : "text-secondary",
+        )}
+      >
+        clean
+      </span>
+    </span>
   );
 }
