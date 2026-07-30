@@ -32,6 +32,7 @@ node_modules/
 
 # Local browser automation artifacts
 .playwright-cli/
+.sync-work/
 
 # Next.js
 .next/

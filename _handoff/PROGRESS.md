@@ -582,6 +582,15 @@ Future agents that add any write path must also read `_handoff/VALIDATION_DTO_CO
   - Edge CDP smoke on unauthenticated `/de/admin` at mobile and desktop redirected to `/de/login?next=%2Fde%2Fadmin`, found no Admin dashboard text leak, no console issues, no horizontal overflow, and no local/session storage entries.
 - Follow-up production blockers remain for admin edge/network hardening and CSP nonce/hash hardening; both are tracked in Beads and require production infrastructure access or policy confirmation.
 
+## GitHub Sync Bot
+
+- Added `github-sync-bot/` as a separate local sync-bot project for NobleClean-Ops.
+- The bot provides `auto-sync.ps1`, `sync-manifest.json`, `.gitignore`, and README instructions for publishing only development-relevant project files.
+- The sync bot excludes secrets, dependency folders, local tool downloads, browser artifacts, Vercel metadata, Supabase local temp state, and build outputs.
+- `auto-sync.ps1 -DryRun` passed on 2026-07-30.
+- Actual GitHub upload is not complete because this project still has no `origin` remote and GitHub CLI is not installed/authenticated in this environment.
+- To finish upload, provide two approved GitHub remotes: one for `nobleclean-ops` and one for `nobleclean-sync-bot`, plus a working GitHub authentication method.
+
 ## Top-Level Beads Epics
 
 - `nobleclean-aw4` - Security and project foundation.

@@ -1,0 +1,62 @@
+{
+  "projectName": "NobleClean-Ops",
+  "defaultBranch": "main",
+  "qualityCommands": [
+    "npm run format:check",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run test",
+    "npm run build",
+    "npm run security:patterns"
+  ],
+  "includePaths": [
+    "_handoff/",
+    ".beads/",
+    ".editorconfig",
+    ".env.example",
+    ".gitignore",
+    ".mcp.json",
+    ".npmrc",
+    ".nvmrc",
+    ".prettierignore",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "eslint.config.mjs",
+    "github-sync-bot/",
+    "next-env.d.ts",
+    "next.config.ts",
+    "package-lock.json",
+    "package.json",
+    "postcss.config.mjs",
+    "prettier.config.mjs",
+    "public/",
+    "scripts/",
+    "src/",
+    "supabase/",
+    "tests/",
+    "tsconfig.json"
+  ],
+  "excludePaths": [
+    ".env",
+    ".env.*",
+    ".git/",
+    ".next/",
+    ".playwright-cli/",
+    ".tools/",
+    ".vercel/",
+    "build/",
+    "coverage/",
+    "dist/",
+    "node_modules/",
+    "out/",
+    "supabase/.temp/",
+    "tsconfig.tsbuildinfo"
+  ],
+  "secretNamePatterns": [
+    "*.key",
+    "*.pem",
+    "*.p12",
+    "*.pfx",
+    "*.crt"
+  ]
+}

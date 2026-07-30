@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+.sync-work/
