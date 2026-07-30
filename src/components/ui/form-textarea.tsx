@@ -33,7 +33,7 @@ export function FormTextarea({
     <div
       className={cn(
         "rounded-2xl border border-outline-variant/70 bg-surface-container-low/80 p-3.5 shadow-sm transition-all focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20",
-        error && "border-error focus-within:border-error focus-within:ring-error/20",
+        error ? "border-error focus-within:border-error focus-within:ring-error/20" : undefined,
         className,
       )}
     >
