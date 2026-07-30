@@ -6,7 +6,9 @@
 
 $repoPath = "D:\Files\Programming_Projects\nobleclean"
 $checkIntervalSeconds = 30
-$branch = "main"
+Set-Location $repoPath
+$branch = (git branch --show-current).Trim()
+if (-not $branch) { $branch = "master" }
 
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "  NoblecleanOps Auto-Sync is Running..." -ForegroundColor Green
