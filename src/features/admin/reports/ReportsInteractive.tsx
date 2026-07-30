@@ -10,10 +10,14 @@ import {
   AlertTriangle,
   Wrench,
   XCircle,
+  Save,
+  Check,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useActionState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { Button } from "@/components/ui";
+import { updatePlanProgressAction, markToolStepPerformedAction } from "./actions";
 import type {
   CompletionPlanSummary,
   LastCleanedItem,
@@ -28,6 +32,132 @@ function formatDate(value: string | null, locale: Locale, fallback: string) {
   return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
     dateStyle: "medium",
   }).format(date);
+}
+
+/* ── Inline Plan Edit Form ───────────────────────────────────────────── */
+function InlinePlanEditForm({
+  plan,
+  locale,
+}: {
+  plan: CompletionPlanSummary;
+  locale: Locale;
+}) {
+  const [state, formAction, isPending] = useActionState(updatePlanProgressAction, {
+    ok: false,
+    message: "",
+  });
+
+  return (
+    <form action={formAction} className="border-outline-variant bg-surface-container-low grid gap-3.5 rounded-xl border p-4">
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="planId" value={plan.id} />
+
+      {state.message && (
+        <div
+          className={
+            state.ok
+              ? "bg-secondary-container text-on-secondary-container rounded-lg p-2.5 text-xs font-semibold"
+              : "bg-error-container text-on-error-container rounded-lg p-2.5 text-xs font-semibold"
+          }
+        >
+          {state.message}
+        </div>
+      )}
+
+      <div>
+        <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wider block mb-1">
+          Status anpassen
+        </label>
+        <select
+          name="status"
+          defaultValue={plan.status}
+          className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-lg border px-3 text-sm outline-none"
+        >
+          <option value="in_progress">In Bearbeitung</option>
+          <option value="submitted">Abgeschlossen / Eingereicht</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wider block mb-1">
+          Abgeschlossene Objekte (von {plan.totalItems})
+        </label>
+        <input
+          type="number"
+          name="completedItems"
+          min={0}
+          max={plan.totalItems}
+          defaultValue={plan.completedItems}
+          className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-lg border px-3 text-sm outline-none"
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={isPending}
+        icon={<Save className="size-4" />}
+        className="w-full justify-center"
+      >
+        {isPending ? "Speichere..." : "Plan direkt aktualisieren"}
+      </Button>
+    </form>
+  );
+}
+
+/* ── Inline Step Mark Form ───────────────────────────────────────────── */
+function InlineStepMarkForm({
+  stepId,
+  locale,
+  buttonText,
+}: {
+  stepId: string;
+  locale: Locale;
+  buttonText: string;
+}) {
+  const [state, formAction, isPending] = useActionState(markToolStepPerformedAction, {
+    ok: false,
+    message: "",
+  });
+
+  return (
+    <form action={formAction} className="border-outline-variant bg-surface-container-low grid gap-3 rounded-xl border p-4">
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="stepId" value={stepId} />
+
+      {state.message && (
+        <div
+          className={
+            state.ok
+              ? "bg-secondary-container text-on-secondary-container rounded-lg p-2.5 text-xs font-semibold"
+              : "bg-error-container text-on-error-container rounded-lg p-2.5 text-xs font-semibold"
+          }
+        >
+          {state.message}
+        </div>
+      )}
+
+      <div>
+        <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wider block mb-1">
+          Ausführungsdatum
+        </label>
+        <input
+          type="date"
+          name="performedAt"
+          defaultValue={new Date().toISOString().slice(0, 10)}
+          className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-lg border px-3 text-sm outline-none"
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={isPending}
+        icon={<Check className="size-4" />}
+        className="w-full justify-center"
+      >
+        {isPending ? "Speichere..." : buttonText}
+      </Button>
+    </form>
+  );
 }
 
 /* ── Plan Card ─────────────────────────────────────────────────────────── */
@@ -76,7 +206,7 @@ export function PlanInteractiveCard({
                   <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                     {copy.employee}
                   </p>
-                  <p className="text-on-surface text-sm">{plan.employeeName}</p>
+                  <p className="text-on-surface text-sm font-medium">{plan.employeeName}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -85,7 +215,7 @@ export function PlanInteractiveCard({
                   <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                     {copy.workDate}
                   </p>
-                  <p className="text-on-surface text-sm">
+                  <p className="text-on-surface text-sm font-medium">
                     {formatDate(plan.workDate, locale, "")}
                   </p>
                 </div>
@@ -100,7 +230,7 @@ export function PlanInteractiveCard({
                   </span>
                   <span className="text-secondary text-sm font-bold">{pct}%</span>
                 </div>
-                <div className="bg-surface-container h-2 w-full overflow-hidden rounded-full">
+                <div className="bg-surface-container h-2.5 w-full overflow-hidden rounded-full">
                   <div
                     className={[
                       "h-full rounded-full transition-all",
@@ -113,6 +243,10 @@ export function PlanInteractiveCard({
             </div>
           ),
         },
+        {
+          label: "Direkte Bearbeitung",
+          content: <InlinePlanEditForm plan={plan} locale={locale} />,
+        },
       ],
     };
     open(config);
@@ -120,16 +254,16 @@ export function PlanInteractiveCard({
 
   return (
     <button
-      className="border-outline-variant bg-surface-container-lowest group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all hover:border-secondary hover:shadow-sm"
+      className="border-outline-variant bg-surface-container-lowest group flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all hover:border-secondary hover:shadow-md cursor-pointer select-none"
       onClick={openDrawer}
       type="button"
     >
       <div
         className={[
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold text-xs",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-xs shadow-sm border",
           plan.isComplete
-            ? "bg-status-success/10 text-status-success"
-            : "bg-status-warning/10 text-status-warning",
+            ? "bg-status-success/10 text-status-success border-status-success/30"
+            : "bg-status-warning/10 text-status-warning border-status-warning/30",
         ].join(" ")}
       >
         {pct}%
@@ -142,7 +276,7 @@ export function PlanInteractiveCard({
           {formatDate(plan.workDate, locale, "")} · {plan.completedItems}/{plan.totalItems}
         </p>
       </div>
-      <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
+      <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
     </button>
   );
 }
@@ -182,16 +316,16 @@ export function LastCleanedInteractiveCard({
           content: (
             <div className="grid gap-3">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-surface-container rounded-lg p-3">
+                <div className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/60">
                   <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                     {copy.minutes}
                   </p>
                   <p className="font-heading text-on-surface text-xl font-bold">
-                    {item.estimatedMinutes}
+                    {item.estimatedMinutes}m
                   </p>
                 </div>
                 {item.recurrenceDays && (
-                  <div className="bg-surface-container rounded-lg p-3">
+                  <div className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/60">
                     <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                       {copy.recurrenceDays}
                     </p>
@@ -201,21 +335,31 @@ export function LastCleanedInteractiveCard({
                   </div>
                 )}
               </div>
-              <div className="border-outline-variant rounded-lg border p-3">
+              <div className="border-outline-variant rounded-xl border p-3">
                 <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                   {copy.lastCleaned}
                 </p>
-                <p className="text-on-surface text-sm mt-0.5">
+                <p className="text-on-surface text-sm mt-0.5 font-medium">
                   {formatDate(item.lastCleanedAt, locale, copy.neverCleaned)}
                 </p>
               </div>
-              <div className="border-outline-variant rounded-lg border p-3">
+              <div className="border-outline-variant rounded-xl border p-3">
                 <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                   {copy.section}
                 </p>
-                <p className="text-on-surface text-sm mt-0.5">{item.sectionName}</p>
+                <p className="text-on-surface text-sm mt-0.5 font-medium">{item.sectionName}</p>
               </div>
             </div>
+          ),
+        },
+        {
+          label: "Direkte Bearbeitung",
+          content: (
+            <InlineStepMarkForm
+              stepId={item.id}
+              locale={locale}
+              buttonText="Jetzt als gereinigt markieren"
+            />
           ),
         },
       ],
@@ -225,7 +369,7 @@ export function LastCleanedInteractiveCard({
 
   return (
     <button
-      className="border-outline-variant bg-surface-container-lowest group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all hover:border-secondary hover:shadow-sm"
+      className="border-outline-variant bg-surface-container-lowest group flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all hover:border-secondary hover:shadow-md cursor-pointer select-none"
       onClick={openDrawer}
       type="button"
     >
@@ -238,7 +382,7 @@ export function LastCleanedInteractiveCard({
           {formatDate(item.lastCleanedAt, locale, copy.neverCleaned)}
         </p>
       </div>
-      <ArrowRight className="text-on-surface-variant size-4 shrink-0" />
+      <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
     </button>
   );
 }
@@ -269,23 +413,23 @@ export function EscalationInteractiveCard({
       accentColor: "critical",
       sections: [
         {
-          label: "Eskalation",
+          label: "Eskalationsdetails",
           content: (
             <div className="grid gap-3">
-              <div className="bg-error-container text-on-error-container rounded-lg px-3 py-2 text-xs font-bold flex items-center gap-2">
+              <div className="bg-error-container text-on-error-container rounded-xl px-3.5 py-2.5 text-xs font-bold flex items-center gap-2 border border-error/20">
                 <AlertTriangle className="size-4 shrink-0" />
                 {copy.mandatory} — Überfällig
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-surface-container rounded-lg p-3">
+                <div className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/60">
                   <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                     {copy.minutes}
                   </p>
                   <p className="font-heading text-on-surface text-xl font-bold">
-                    {item.estimatedMinutes}
+                    {item.estimatedMinutes}m
                   </p>
                 </div>
-                <div className="bg-surface-container rounded-lg p-3">
+                <div className="bg-surface-container-low rounded-xl p-3 border border-outline-variant/60">
                   <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                     {copy.recurrenceDays}
                   </p>
@@ -294,21 +438,31 @@ export function EscalationInteractiveCard({
                   </p>
                 </div>
               </div>
-              <div className="border-outline-variant rounded-lg border p-3">
+              <div className="border-outline-variant rounded-xl border p-3">
                 <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                   Aufgabe
                 </p>
-                <p className="text-on-surface text-sm mt-0.5">{item.leafItemName}</p>
+                <p className="text-on-surface text-sm mt-0.5 font-medium">{item.leafItemName}</p>
               </div>
-              <div className="border-outline-variant rounded-lg border p-3">
+              <div className="border-outline-variant rounded-xl border p-3">
                 <p className="text-on-surface-variant text-xs font-semibold uppercase tracking-wide">
                   {copy.lastPerformed}
                 </p>
-                <p className="text-on-surface text-sm mt-0.5">
+                <p className="text-on-surface text-sm mt-0.5 font-medium">
                   {formatDate(item.lastPerformedAt, locale, copy.neverPerformed)}
                 </p>
               </div>
             </div>
+          ),
+        },
+        {
+          label: "Eskalation beheben",
+          content: (
+            <InlineStepMarkForm
+              stepId={item.cleaningToolStepId}
+              locale={locale}
+              buttonText="Pflichtschritt als erledigt markieren"
+            />
           ),
         },
       ],
@@ -318,7 +472,7 @@ export function EscalationInteractiveCard({
 
   return (
     <button
-      className="group flex w-full items-center gap-3 rounded-lg border border-error/30 bg-error-container/30 p-3 text-left transition-all hover:border-error hover:bg-error-container/50"
+      className="group flex w-full items-center gap-3 rounded-xl border border-error/30 bg-error-container/30 p-3.5 text-left transition-all hover:border-error hover:bg-error-container/50 cursor-pointer select-none"
       onClick={openDrawer}
       type="button"
     >

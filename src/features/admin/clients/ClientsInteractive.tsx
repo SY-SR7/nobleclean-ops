@@ -6,6 +6,7 @@ import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { Button, PriorityStatusBadge } from "@/components/ui";
+import { ClientForm, ClientStatusForm } from "./ClientForm";
 import { useAdminSpa } from "@/context/admin-spa-context";
 import type { AdminClientListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -92,6 +93,54 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                   <InfoRow label={copy.updatedAt} value={updatedAt} />
                 )}
               </div>
+            ),
+          },
+          {
+            label: "Kunde bearbeiten",
+            content: (
+              <ClientForm
+                client={{
+                  id: client.id,
+                  name: client.name,
+                  address: client.address,
+                  contactInfo: client.contactInfo,
+                }}
+                copy={{
+                  addressLabel: "Adresse",
+                  contactEmailLabel: "E-Mail",
+                  contactNameLabel: "Ansprechpartner",
+                  contactNotesLabel: "Notizen",
+                  contactPhoneLabel: "Telefon",
+                  createSubmit: "Kunde anlegen",
+                  createTitle: "Neuen Kunden anlegen",
+                  errorMessage: "Fehler beim Speichern",
+                  fieldError: "Ungültiges Feld",
+                  nameLabel: "Firmenname",
+                  successCreated: "Kunde angelegt",
+                  successUpdated: "Kunde aktualisiert",
+                  updateSubmit: "Änderungen speichern",
+                  updateTitle: "Kunde bearbeiten",
+                }}
+                formIdPrefix={`modal-edit-${client.id}`}
+                locale={locale}
+                mode="update"
+              />
+            ),
+          },
+          {
+            label: "Status ändern",
+            content: (
+              <ClientStatusForm
+                clientId={client.id}
+                copy={{
+                  deactivate: "Kunde deaktivieren",
+                  errorMessage: "Fehler beim Statuswechsel",
+                  reactivate: "Kunde reaktivieren",
+                  success: "Status geändert",
+                }}
+                isCurrentlyActive={client.isActive}
+                locale={locale}
+              />
             ),
           },
         ],
