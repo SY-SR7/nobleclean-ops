@@ -14,6 +14,7 @@ import {
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { PriorityStatusBadge } from "@/components/ui";
 import type {
   SectionTreeNode,
@@ -105,6 +106,7 @@ export function SectionsInteractive({
   tagLabels,
 }: SectionsInteractiveProps) {
   const { open } = useDetailDrawer();
+  const [viewMode, setViewMode] = useViewMode("sections", "grid");
 
   const openSectionDrawer = useCallback(
     (section: SectionTreeNode) => {
@@ -154,7 +156,7 @@ export function SectionsInteractive({
                       {sectionItems.map((item) => (
                         <button
                           key={item.id}
-                          className="border-outline-variant hover:bg-surface-container group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors"
+                          className="border-outline-variant hover:bg-surface-container group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors cursor-pointer"
                           onClick={() => openLeafItemDrawer(item)}
                           type="button"
                         >
@@ -297,64 +299,138 @@ export function SectionsInteractive({
     [open, copy, locale, tagLabels],
   );
 
-  return (
-    <div className="grid gap-2">
-      {sections.map((section) => {
-        const isSelected = section.id === selectedSectionId;
-        const hasChildren = sections.some(
-          (candidate) => candidate.parentSectionId === section.id,
-        );
+  // Only top-level and direct children (depth 0 and 1)
+  const rootSections = sections.filter((s) => s.depth === 0);
 
-        return (
-          <button
-            key={section.id}
-            className={[
-              "group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all",
-              "border",
-              isSelected
-                ? "border-secondary bg-secondary/10"
-                : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
-            ].join(" ")}
-            style={{ paddingLeft: `${(section.depth * 16) + 12}px` }}
-            onClick={() => {
-              if (onSelectSection) onSelectSection(section.id);
-              openSectionDrawer(section);
-            }}
-            type="button"
-          >
-            <Layers
-              className={[
-                "size-4 shrink-0 transition-colors",
-                isSelected ? "text-secondary" : "text-on-surface-variant group-hover:text-secondary",
-              ].join(" ")}
-            />
-            <div className="min-w-0 flex-1">
-              <p
+  return (
+    <div className="grid gap-4">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-on-surface-variant text-sm">
+          {sections.length} Bereich{sections.length !== 1 ? "e" : ""}
+        </p>
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
+      </div>
+
+      {viewMode === "grid" ? (
+        /* ── Grid View ── */
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {sections.map((section) => {
+            const isSelected = section.id === selectedSectionId;
+            return (
+              <button
+                key={section.id}
+                type="button"
                 className={[
-                  "text-sm font-medium truncate transition-colors",
-                  isSelected ? "text-secondary font-semibold" : "text-on-surface group-hover:text-secondary",
+                  "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer",
+                  isSelected
+                    ? "border-secondary bg-secondary/5"
+                    : "border-outline-variant bg-surface-container-lowest hover:border-secondary",
                 ].join(" ")}
+                style={{ paddingLeft: 0 }}
+                onClick={() => {
+                  if (onSelectSection) onSelectSection(section.id);
+                  openSectionDrawer(section);
+                }}
               >
-                {section.name}
-              </p>
-              <p className="text-on-surface-variant text-xs mt-0.5">
-                {section.leafCount} {copy.leafCount} · {section.totalEstimatedMinutes} {copy.minutes}
-                {section.hasReferenceImage && (
-                  <span className="ml-1.5 inline-flex items-center gap-0.5">
-                    <ImageIcon className="size-3" />
-                  </span>
-                )}
-              </p>
-            </div>
-            <ChevronRight
-              className={[
-                "size-4 shrink-0 transition-colors",
-                isSelected ? "text-secondary" : "text-on-surface-variant",
-              ].join(" ")}
-            />
-          </button>
-        );
-      })}
+                {/* Top: icon area with depth indicator */}
+                <div className={[
+                  "flex items-center justify-between px-4 py-4",
+                  isSelected ? "bg-secondary/10" : "bg-surface-container",
+                ].join(" ")}>
+                  <div className={[
+                    "flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105",
+                    isSelected ? "bg-secondary text-on-secondary" : "bg-surface-container-highest text-secondary",
+                  ].join(" ")}>
+                    <Layers className="size-6" />
+                  </div>
+                  {section.hasReferenceImage && (
+                    <ImageIcon className="text-secondary size-4" />
+                  )}
+                </div>
+                {/* Body */}
+                <div className="flex flex-1 flex-col gap-1.5 p-4">
+                  <p className={[
+                    "font-bold text-sm leading-tight transition-colors line-clamp-2",
+                    isSelected ? "text-secondary" : "text-on-surface group-hover:text-secondary",
+                  ].join(" ")}>
+                    {section.depth > 0 && (
+                      <span className="text-on-surface-variant font-normal mr-1">{"›".repeat(section.depth)}</span>
+                    )}
+                    {section.name}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                      <CheckCircle2 className="size-3" />
+                      {section.leafCount} {copy.leafCount}
+                    </span>
+                    <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                      <Clock className="size-3" />
+                      {section.totalEstimatedMinutes} {copy.minutes}
+                    </span>
+                  </div>
+                </div>
+                <div className={["h-1 transition-colors", isSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/50"].join(" ")} />
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        /* ── List View ── */
+        <div className="grid gap-2">
+          {sections.map((section) => {
+            const isSelected = section.id === selectedSectionId;
+            return (
+              <button
+                key={section.id}
+                className={[
+                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all border cursor-pointer",
+                  isSelected
+                    ? "border-secondary bg-secondary/10"
+                    : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
+                ].join(" ")}
+                style={{ paddingLeft: `${(section.depth * 16) + 12}px` }}
+                onClick={() => {
+                  if (onSelectSection) onSelectSection(section.id);
+                  openSectionDrawer(section);
+                }}
+                type="button"
+              >
+                <Layers
+                  className={[
+                    "size-4 shrink-0 transition-colors",
+                    isSelected ? "text-secondary" : "text-on-surface-variant group-hover:text-secondary",
+                  ].join(" ")}
+                />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={[
+                      "text-sm font-medium truncate transition-colors",
+                      isSelected ? "text-secondary font-semibold" : "text-on-surface group-hover:text-secondary",
+                    ].join(" ")}
+                  >
+                    {section.name}
+                  </p>
+                  <p className="text-on-surface-variant text-xs mt-0.5">
+                    {section.leafCount} {copy.leafCount} · {section.totalEstimatedMinutes} {copy.minutes}
+                    {section.hasReferenceImage && (
+                      <span className="ml-1.5 inline-flex items-center gap-0.5">
+                        <ImageIcon className="size-3" />
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <ChevronRight
+                  className={[
+                    "size-4 shrink-0 transition-colors",
+                    isSelected ? "text-secondary" : "text-on-surface-variant",
+                  ].join(" ")}
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
