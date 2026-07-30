@@ -716,7 +716,7 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
     workDate: t(messages, "schedule.fields.workDate"),
     employees: t(messages, "staff.employees"),
     clients: t(messages, "navigation.admin.clients"),
-    allocatedHours: t(messages, "schedule.fields.hours"),
+    allocatedHours: t(messages, "schedule.fields.allocatedHours"),
   };
 
   return (
