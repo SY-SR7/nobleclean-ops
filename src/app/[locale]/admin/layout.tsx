@@ -30,6 +30,8 @@ export default async function AdminLayout({
   await requireRole(locale, "admin");
 
   const messages = getMessages(locale);
+
+  // Navigation uses ?tab= params — stays on the same /admin URL (SPA-style)
   const navigation = [
     {
       href: `/${locale}/admin`,
@@ -37,27 +39,27 @@ export default async function AdminLayout({
       label: t(messages, "navigation.admin.home"),
     },
     {
-      href: `/${locale}/admin/clients`,
+      href: `/${locale}/admin?tab=clients`,
       id: "clients",
       label: t(messages, "navigation.admin.clients"),
     },
     {
-      href: `/${locale}/admin/staff`,
+      href: `/${locale}/admin?tab=staff`,
       id: "staff",
       label: t(messages, "navigation.admin.staff"),
     },
     {
-      href: `/${locale}/admin/sections-items`,
+      href: `/${locale}/admin?tab=sections`,
       id: "sectionsItems",
       label: t(messages, "navigation.admin.sectionsItems"),
     },
     {
-      href: `/${locale}/admin/schedule`,
+      href: `/${locale}/admin?tab=schedule`,
       id: "schedule",
       label: t(messages, "navigation.admin.schedule"),
     },
     {
-      href: `/${locale}/admin/reports`,
+      href: `/${locale}/admin?tab=reports`,
       id: "reports",
       label: t(messages, "navigation.admin.reports"),
     },
