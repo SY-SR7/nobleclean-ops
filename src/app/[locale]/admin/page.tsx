@@ -929,32 +929,29 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
   };
 
   return (
-    <AdminSpaContainer labels={tabLabels}>
-      {(activeTab) => (
-        <Suspense fallback={<TabSkeleton />}>
-          {activeTab === "home" && <HomeTab locale={locale} />}
-          {activeTab === "clients" && <ClientsTab locale={locale} />}
-          {activeTab === "staff" && <StaffTab locale={locale} />}
-          {activeTab === "sections" && (
-            <SectionsTab
-              locale={locale}
-              clientId={firstValue(sp.clientId)}
-              sectionId={firstValue(sp.sectionId)}
-            />
-          )}
-          {activeTab === "schedule" && (
-            <ScheduleTab locale={locale} month={firstValue(sp.month)} />
-          )}
-          {activeTab === "reports" && (
-            <ReportsTab
-              locale={locale}
-              clientId={firstValue(sp.clientId)}
-              from={firstValue(sp.from)}
-              to={firstValue(sp.to)}
-            />
-          )}
-        </Suspense>
-      )}
-    </AdminSpaContainer>
+    <Suspense fallback={<TabSkeleton />}>
+      <AdminSpaContainer
+        labels={tabLabels}
+        homeTab={<HomeTab locale={locale} />}
+        clientsTab={<ClientsTab locale={locale} />}
+        staffTab={<StaffTab locale={locale} />}
+        sectionsTab={
+          <SectionsTab
+            locale={locale}
+            clientId={firstValue(sp.clientId)}
+            sectionId={firstValue(sp.sectionId)}
+          />
+        }
+        scheduleTab={<ScheduleTab locale={locale} month={firstValue(sp.month)} />}
+        reportsTab={
+          <ReportsTab
+            locale={locale}
+            clientId={firstValue(sp.clientId)}
+            from={firstValue(sp.from)}
+            to={firstValue(sp.to)}
+          />
+        }
+      />
+    </Suspense>
   );
 }

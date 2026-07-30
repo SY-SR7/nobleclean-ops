@@ -1,13 +1,27 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 
 type AdminSpaContainerProps = Readonly<{
   labels: Record<string, string>;
-  children: (activeTab: AdminTab) => React.ReactNode;
+  homeTab: ReactNode;
+  clientsTab: ReactNode;
+  staffTab: ReactNode;
+  sectionsTab: ReactNode;
+  scheduleTab: ReactNode;
+  reportsTab: ReactNode;
 }>;
 
-export function AdminSpaContainer({ labels, children }: AdminSpaContainerProps) {
+export function AdminSpaContainer({
+  labels,
+  homeTab,
+  clientsTab,
+  staffTab,
+  sectionsTab,
+  scheduleTab,
+  reportsTab,
+}: AdminSpaContainerProps) {
   const { activeTab, setActiveTab } = useAdminSpa();
 
   const tabs: { id: AdminTab; label: string }[] = [
@@ -46,7 +60,14 @@ export function AdminSpaContainer({ labels, children }: AdminSpaContainerProps) 
       </div>
 
       {/* Render active tab content instantly */}
-      <div>{children(activeTab)}</div>
+      <div>
+        <div className={activeTab === "home" ? "block" : "hidden"}>{homeTab}</div>
+        <div className={activeTab === "clients" ? "block" : "hidden"}>{clientsTab}</div>
+        <div className={activeTab === "staff" ? "block" : "hidden"}>{staffTab}</div>
+        <div className={activeTab === "sections" ? "block" : "hidden"}>{sectionsTab}</div>
+        <div className={activeTab === "schedule" ? "block" : "hidden"}>{scheduleTab}</div>
+        <div className={activeTab === "reports" ? "block" : "hidden"}>{reportsTab}</div>
+      </div>
     </div>
   );
 }
