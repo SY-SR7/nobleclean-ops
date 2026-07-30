@@ -175,10 +175,15 @@ export function AdminShell({
           tabIndex={-1}
         >
           <div className="mx-auto grid max-w-[var(--nc-container-max)] gap-6 lg:grid-cols-12">
-            <div className="min-w-0 lg:col-span-12">{children}</div>
+            <div className="min-w-0 lg:col-span-12">
+              <DetailDrawerProvider>
+                {children}
+              </DetailDrawerProvider>
+            </div>
           </div>
         </main>
       </div>
     </div>
   );
 }
+
