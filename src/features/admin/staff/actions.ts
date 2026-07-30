@@ -124,6 +124,7 @@ async function validateAssignmentScope(
 
 function revalidateStaff(locale: "de" | "en") {
   revalidatePath(`/${locale}/admin/staff`);
+  revalidatePath(`/${locale}/admin`);
 }
 
 export async function createStaffAssignmentAction(

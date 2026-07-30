@@ -296,6 +296,7 @@ async function validateCleaningToolStepScope(
 function revalidateSectionsItems(locale: "de" | "en", clientId: string) {
   revalidatePath(`/${locale}/admin/sections-items`);
   revalidatePath(`/${locale}/admin/sections-items?clientId=${clientId}`);
+  revalidatePath(`/${locale}/admin`);
 }
 
 export async function createSectionAction(
