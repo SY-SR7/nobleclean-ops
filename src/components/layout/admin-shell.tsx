@@ -60,19 +60,19 @@ export function AdminShell({
           <aside
             className={cn(
               "border-outline-variant bg-surface-container-lowest hidden border-r",
-              "lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden",
-              "relative transition-all duration-300 ease-in-out",
+              "lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col relative z-30",
+              "transition-all duration-300 ease-in-out",
               sidebarOpen ? "w-64" : "w-16",
             )}
           >
-            {/* Floating toggle button — sits on the right border */}
+            {/* Floating toggle button — sits perfectly on the right border */}
             <button
               aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
               className={cn(
                 "border-outline-variant bg-surface-container-lowest text-on-surface-variant",
-                "shadow-level-1 hover:bg-surface-container hover:text-secondary hover:border-secondary",
-                "absolute top-5 -right-3.5 z-50",
-                "flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200",
+                "shadow-md hover:bg-surface-container hover:text-secondary hover:border-secondary",
+                "absolute top-4 -right-3.5 z-50",
+                "flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200 cursor-pointer",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
               )}
               onClick={() => setSidebarOpen((v) => !v)}
@@ -107,13 +107,15 @@ export function AdminShell({
               )}
             </div>
 
-            {/* Navigation */}
-            <AdminNavigation
-              collapsed={!sidebarOpen}
-              items={navigation}
-              navigationLabel={navigationLabel}
-              variant="sidebar"
-            />
+            {/* Navigation container (scrollable internally) */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+              <AdminNavigation
+                collapsed={!sidebarOpen}
+                items={navigation}
+                navigationLabel={navigationLabel}
+                variant="sidebar"
+              />
+            </div>
 
             {/* Logout */}
             <form
@@ -145,7 +147,7 @@ export function AdminShell({
           </aside>
 
           {/* ── Main Content ── */}
-          <div className="min-w-0">
+          <div className="min-w-0 relative z-10">
             {/* Mobile header */}
             <header className="border-outline-variant bg-surface-container-lowest shadow-level-1 sticky top-0 z-30 border-b lg:hidden">
               <div className="px-mobile-margin flex min-h-14 items-center justify-between gap-3">
