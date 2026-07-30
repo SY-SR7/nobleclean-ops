@@ -321,13 +321,17 @@ export async function getSectionsItemsData(
       };
     }
 
-    const { data: leafRows, error: leafError } = await supabase
-      .from("leaf_items")
-      .select(
-        "id, section_id, name, quantity, estimated_minutes, recurrence_days, tag, notes, reference_image_path",
-      )
-      .eq("section_id", selectedSection.id)
-      .order("name", { ascending: true });
+    const sectionIds = sections.map((s) => s.id);
+    const { data: leafRows, error: leafError } =
+      sectionIds.length > 0
+        ? await supabase
+            .from("leaf_items")
+            .select(
+              "id, section_id, name, quantity, estimated_minutes, recurrence_days, tag, notes, reference_image_path",
+            )
+            .in("section_id", sectionIds)
+            .order("name", { ascending: true })
+        : { data: [], error: null };
 
     if (leafError) {
       return {
