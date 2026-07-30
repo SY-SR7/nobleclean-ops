@@ -199,6 +199,7 @@ async function HomeTab({ locale }: { locale: Locale }) {
     emptyRecent: t(messages, "adminHome.emptyRecent"),
     highPriority: t(messages, "adminHome.metadata.highPriority"),
     hours: t(messages, "adminHome.metadata.hours"),
+    loadError: t(messages, "adminHome.feedback.loadError"),
     mandatoryEscalations: t(messages, "adminHome.metrics.mandatoryEscalations"),
     openPlans: t(messages, "adminHome.attention.openPlans"),
     recentWork: t(messages, "adminHome.recentWork"),
