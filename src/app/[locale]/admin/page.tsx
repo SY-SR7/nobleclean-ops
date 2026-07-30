@@ -201,16 +201,16 @@ async function HomeTab({ locale }: { locale: Locale }) {
     hours: t(messages, "adminHome.metadata.hours"),
     loadError: t(messages, "adminHome.feedback.loadError"),
     mandatoryEscalations: t(messages, "adminHome.metrics.mandatoryEscalations"),
-    openPlans: t(messages, "adminHome.attention.openPlans"),
-    recentWork: t(messages, "adminHome.recentWork"),
-    sectionAttention: t(messages, "adminHome.attention.title"),
-    sectionWorkflows: t(messages, "adminHome.workflows.title"),
+    openPlans: t(messages, "adminHome.metrics.openPlans"),
+    recentWork: t(messages, "adminHome.sections.recentWork"),
+    sectionAttention: t(messages, "adminHome.sections.attention"),
+    sectionWorkflows: t(messages, "adminHome.sections.workflows"),
     subtitle: t(messages, "adminHome.subtitle"),
     title: t(messages, "adminHome.title"),
     todaySchedule: t(messages, "adminHome.metrics.todaySchedule"),
     totalItems: t(messages, "adminHome.metadata.totalItems"),
-    viewClients: t(messages, "adminHome.shortcuts.viewClients"),
-    viewReports: t(messages, "adminHome.shortcuts.viewReports"),
+    viewClients: t(messages, "adminHome.actions.viewClients"),
+    viewReports: t(messages, "adminHome.actions.viewReports"),
     workflowClients: t(messages, "adminHome.workflows.clients"),
     workflowReports: t(messages, "adminHome.workflows.reports"),
     workflowSchedule: t(messages, "adminHome.workflows.schedule"),
@@ -742,7 +742,7 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
           <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="schedule-month">{t(messages, "schedule.month")}</label>
           <input className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition" defaultValue={safeM} id="schedule-month" name="month" type="month" />
         </div>
-        <Button type="submit">{t(messages, "schedule.selectMonth")}</Button>
+        <Button type="submit">{t(messages, "schedule.actions.selectMonth")}</Button>
       </form>
 
       {!data.ok && (
