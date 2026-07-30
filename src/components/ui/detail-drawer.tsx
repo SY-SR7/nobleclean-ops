@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -56,11 +56,19 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auto-close modal immediately when active tab changes
+  // Use a ref to avoid dependency-array size mismatch between HMR cycles
+  const closeRef = useRef<() => void>(() => {
+    setIsOpen(false);
+    setConfig(null);
+  });
   useEffect(() => {
-    const handleTabChange = () => {
+    closeRef.current = () => {
       setIsOpen(false);
       setConfig(null);
     };
+  });
+  useEffect(() => {
+    const handleTabChange = () => closeRef.current();
     window.addEventListener("nc-tab-change", handleTabChange);
     return () => window.removeEventListener("nc-tab-change", handleTabChange);
   }, []);
