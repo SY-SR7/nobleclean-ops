@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import {
   Button,
+  DetailDrawerProvider,
   EmployeeMobileBottomTabs,
   type EmployeeMobileBottomTabItem,
 } from "@/components/ui";
@@ -52,7 +53,9 @@ export function EmployeeShell({
         </div>
       </header>
       <main className="px-mobile-margin md:px-desktop-margin mx-auto w-full max-w-3xl py-6">
-        {children}
+        <DetailDrawerProvider>
+          {children}
+        </DetailDrawerProvider>
       </main>
       <EmployeeMobileBottomTabs items={tabs} label={navigationLabel} />
     </div>
