@@ -62,35 +62,44 @@ export function AdminShell({
           sidebarOpen ? "w-72" : "w-[4.5rem]",
         )}
       >
-        {/* Header: logo + toggle */}
-        <div
-          className={cn(
-            "border-on-primary/15 flex min-h-[4.5rem] shrink-0 items-center border-b",
-            sidebarOpen ? "justify-between px-5" : "justify-center px-0",
+        {/* Header: two-tone — white logo area + dark toggle row */}
+        <div className="shrink-0">
+          {/* White strip: original logo colors are fully visible */}
+          {sidebarOpen ? (
+            <div className="bg-surface-container-lowest flex items-center justify-between px-5 py-4">
+              <BrandLogo
+                alt={_logoAlt}
+                className="w-36"
+                height={36}
+                priority
+                width={220}
+              />
+              <button
+                aria-label="Sidebar schließen"
+                className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+                onClick={() => setSidebarOpen(false)}
+                type="button"
+              >
+                <PanelLeftClose className="size-5" aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            /* Collapsed: show only the toggle on the dark background */
+            <div className="border-on-primary/15 flex min-h-[4.5rem] items-center justify-center border-b">
+              <button
+                aria-label="Sidebar öffnen"
+                className="text-on-primary/60 hover:bg-primary hover:text-on-primary flex h-9 w-9 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                onClick={() => setSidebarOpen(true)}
+                type="button"
+              >
+                <PanelLeftOpen className="size-5" aria-hidden="true" />
+              </button>
+            </div>
           )}
-        >
+          {/* Subtle divider between white logo and dark nav */}
           {sidebarOpen && (
-            <BrandLogo
-              alt={_logoAlt}
-              className="w-36"
-              height={36}
-              priority
-              variant="dark"
-              width={220}
-            />
+            <div className="bg-primary-container/80 h-1 w-full" />
           )}
-          <button
-            aria-label={sidebarOpen ? "Sidebar schließen" : "Sidebar öffnen"}
-            className="text-on-primary/60 hover:bg-primary hover:text-on-primary flex h-9 w-9 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-            onClick={() => setSidebarOpen((prev) => !prev)}
-            type="button"
-          >
-            {sidebarOpen ? (
-              <PanelLeftClose className="size-5" aria-hidden="true" />
-            ) : (
-              <PanelLeftOpen className="size-5" aria-hidden="true" />
-            )}
-          </button>
         </div>
 
         {/* Navigation */}
