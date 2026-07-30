@@ -4,6 +4,7 @@ import { CalendarDays, User, Building2, ArrowRight, Clock, CheckCircle2, XCircle
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { EndAssignmentForm } from "./StaffAssignmentForms";
 import type { StaffAssignmentListItem, StaffClientOption, StaffEmployeeOption } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
@@ -100,6 +101,31 @@ export function StaffInteractive({
                   </div>
                 </div>
               </div>
+            ),
+          {
+            label: "Aktion",
+            content: assignment.isActive ? (
+              <EndAssignmentForm
+                assignmentId={assignment.id}
+                copy={{
+                  activeEnded: "Zuweisung beendet",
+                  assignTitle: "Zuweisung anlegen",
+                  clientLabel: "Kunde",
+                  employeeLabel: "Mitarbeiter",
+                  endAction: "Zuweisung jetzt beenden",
+                  endDateLabel: "Enddatum",
+                  error: "Fehler beim Beenden",
+                  fieldError: "Ungültige Eingabe",
+                  inactiveClient: "Inaktiver Kunde",
+                  save: "Speichern",
+                  saved: "Gespeichert",
+                  startDateLabel: "Startdatum",
+                  updateTitle: "Zuweisung bearbeiten",
+                }}
+                locale={locale}
+              />
+            ) : (
+              <p className="text-on-surface-variant text-xs italic">Diese Zuweisung ist bereits beendet.</p>
             ),
           },
         ],

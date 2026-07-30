@@ -4,6 +4,7 @@ import { CalendarDays, User, Building2, Clock, ArrowRight } from "lucide-react";
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { DeleteScheduleForm } from "./ScheduleForms";
 import type { ScheduleListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
@@ -82,6 +83,29 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                   </div>
                 </div>
               </div>
+            ),
+          {
+            label: "Schicht löschen",
+            content: (
+              <DeleteScheduleForm
+                scheduleId={item.id}
+                copy={{
+                  allocatedHoursLabel: "Geplante Stunden",
+                  clientLabel: "Kunde",
+                  createTitle: "Schicht anlegen",
+                  deleteAction: "Schicht jetzt löschen",
+                  deleted: "Schicht gelöscht",
+                  employeeLabel: "Mitarbeiter",
+                  error: "Fehler beim Löschen",
+                  fieldError: "Ungültige Eingabe",
+                  inactiveClient: "Inaktiver Kunde",
+                  save: "Speichern",
+                  saved: "Gespeichert",
+                  updateTitle: "Schicht bearbeiten",
+                  workDateLabel: "Datum",
+                }}
+                locale={locale}
+              />
             ),
           },
         ],
