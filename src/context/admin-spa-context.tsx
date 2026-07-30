@@ -52,6 +52,9 @@ export function AdminSpaProvider({ children }: { children: ReactNode }) {
       if (sectionId !== undefined) {
         setSelectedSectionIdState(sectionId);
       }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("nc-tab-change", { detail: { tab } }));
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
     [],

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -54,6 +54,13 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
     setIsOpen(false);
     setTimeout(() => setConfig(null), 250);
   }, []);
+
+  // Auto-close modal when active tab changes
+  useEffect(() => {
+    const handleTabChange = () => close();
+    window.addEventListener("nc-tab-change", handleTabChange);
+    return () => window.removeEventListener("nc-tab-change", handleTabChange);
+  }, [close]);
 
   const accentClass = {
     primary: "border-primary text-primary",
