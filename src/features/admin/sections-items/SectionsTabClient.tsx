@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Layers, Plus, Edit2, CheckSquare } from "lucide-react";
 
 import { Button, PriorityStatusBadge, TaskItemCard, ToolStepCard } from "@/components/ui";
+import { SectionPortalTabs } from "@/components/ui/section-portal-tabs";
 import {
   DeleteToolStepForm,
   DeleteEntityForm,
@@ -75,8 +76,8 @@ function descendantIds(sections: readonly SectionTreeNode[], sectionId: string) 
 
 export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClientProps) {
   const { selectedClientId: spaClientId, selectedSectionId: spaSectionId, setSelectedSectionId, setActiveTab } = useAdminSpa();
+  const [activePortal, setActivePortal] = useState("overview");
 
-  // Active client ID and section ID in SPA state
   const selectedClientId = spaClientId || data.selectedClientId || data.clients[0]?.id || "";
   const currentSectionId = spaSectionId || data.selectedSectionId || data.sections[0]?.id || null;
 
@@ -89,7 +90,6 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
     ? data.sectionOptions.filter((option) => !blockedParentIds.has(option.id))
     : data.sectionOptions;
 
-  // Filter leaf items for currently selected section
   const currentLeafItems = selectedSection
     ? data.leafItems.filter((item) => item.sectionId === selectedSection.id)
     : data.leafItems;
@@ -99,19 +99,20 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
       <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
 
       {!data.ok && (
-        <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">
+        <p className="border-error bg-error-container text-on-error-container rounded-xl border px-4 py-3 text-sm">
           {copy.loadError}
         </p>
       )}
 
       {data.clients.length === 0 && (
-        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
+        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
           {copy.emptyClients}
         </p>
       )}
 
       {selectedClientId ? (
-        <>
+        <div className="grid gap-6">
+          {/* Client Selector */}
           <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => e.preventDefault()}>
             <input type="hidden" name="tab" value="sections" />
             <div className="grid gap-2 sm:min-w-80">
@@ -119,7 +120,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                 {copy.clientLabel}
               </label>
               <select
-                className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition"
+                className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded-xl border px-3.5 text-sm outline-none transition"
                 value={selectedClientId}
                 onChange={(e) => {
                   const newId = e.target.value;
@@ -138,248 +139,193 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
             <Button type="button" onClick={() => setActiveTab("sections", selectedClientId)}>{copy.selectClient}</Button>
           </form>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(22rem,28rem)_minmax(0,1fr)]">
-            {/* Left: Section Tree & Section Form */}
-            <div className="grid h-fit gap-6">
-              <aside className="border-outline-variant bg-surface-container-lowest rounded border p-4">
-                <SectionForm
-                  clientId={selectedClientId}
-                  copy={forms}
-                  locale={locale}
-                  mode="create"
-                  sectionOptions={data.sectionOptions}
-                />
-              </aside>
-              <section className="grid gap-3">
-                <h2 className="font-heading text-primary-container text-xl font-bold">{copy.treeTitle}</h2>
-                {data.sections.length > 0 ? (
-                  <SectionsInteractive
-                    sections={data.sections}
-                    leafItems={data.leafItems}
-                    locale={locale}
-                    selectedSectionId={selectedSection?.id ?? null}
-                    onSelectSection={(secId) => setSelectedSectionId(secId)}
-                    copy={{
-                      minutes: copy.minutes,
-                      leafCount: copy.leafCount,
-                      lastPerformed: copy.lastPerformed,
-                      neverPerformed: copy.neverPerformed,
-                      recurrenceDays: copy.recurrenceDays,
-                      optional: copy.optional,
-                      quantity: copy.quantity,
-                      toolStepsTitle: copy.toolStepsTitle,
-                      stepEstimateTotal: copy.stepEstimateTotal,
-                      hasImage: copy.hasImage,
-                      noToolSteps: copy.noToolSteps,
-                    }}
-                    tagLabels={{
-                      normal: forms.tagNormal,
-                      complaint: forms.tagComplaint,
-                      high_priority: forms.tagHighPriority,
-                    }}
-                  />
-                ) : (
-                  <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
-                    {copy.emptySections}
-                  </p>
-                )}
-              </section>
-            </div>
-
-            {/* Right: Selected Section Details & Tasks */}
-            <div className="grid min-w-0 gap-6">
-              {selectedSection && (
-                <>
-                  <section className="border-outline-variant bg-surface-container-lowest grid gap-5 rounded border p-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div>
-                        <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wide">
-                          {copy.selectedSectionTitle}
-                        </p>
-                        <h2 className="font-heading text-primary-container mt-1 text-xl font-bold">
-                          {selectedSection.name}
-                        </h2>
+          {/* Sub-Tab Portals Bar */}
+          <SectionPortalTabs
+            activeTabId={activePortal}
+            onChange={setActivePortal}
+            tabs={[
+              {
+                id: "overview",
+                label: `Bereiche & Übersicht (${data.sections.length})`,
+                icon: <Layers className="size-4" />,
+                content: (
+                  <div className="grid gap-8 w-full">
+                    {/* Full Width Sections Grid */}
+                    <section className="grid gap-4 w-full">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-heading text-primary-container text-xl font-bold">{copy.treeTitle}</h2>
+                        <button
+                          type="button"
+                          onClick={() => setActivePortal("create-section")}
+                          className="bg-secondary text-on-secondary flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover:opacity-90 cursor-pointer"
+                        >
+                          <Plus className="size-4" /> Neuer Bereich
+                        </button>
                       </div>
-                      <DeleteEntityForm
-                        clientId={selectedClientId}
-                        copy={forms}
-                        entityId={selectedSection.id}
-                        kind="section"
-                        locale={locale}
-                      />
-                    </div>
-                    <div className="grid gap-5 2xl:grid-cols-2">
-                      <SectionForm
-                        clientId={selectedClientId}
-                        copy={forms}
-                        locale={locale}
-                        mode="update"
-                        section={selectedSection}
-                        sectionOptions={editSectionOptions}
-                      />
-                      <ReferenceImageForm
-                        clientId={selectedClientId}
-                        copy={forms}
-                        entityId={selectedSection.id}
-                        kind="section"
-                        locale={locale}
-                      />
-                    </div>
-                  </section>
+                      {data.sections.length > 0 ? (
+                        <SectionsInteractive
+                          sections={data.sections}
+                          leafItems={data.leafItems}
+                          locale={locale}
+                          selectedSectionId={selectedSection?.id ?? null}
+                          onSelectSection={(secId) => setSelectedSectionId(secId)}
+                          copy={{
+                            minutes: copy.minutes,
+                            leafCount: copy.leafCount,
+                            lastPerformed: copy.lastPerformed,
+                            neverPerformed: copy.neverPerformed,
+                            recurrenceDays: copy.recurrenceDays,
+                            optional: copy.optional,
+                            quantity: copy.quantity,
+                            toolStepsTitle: copy.toolStepsTitle,
+                            stepEstimateTotal: copy.stepEstimateTotal,
+                            hasImage: copy.hasImage,
+                            noToolSteps: copy.noToolSteps,
+                          }}
+                          tagLabels={{
+                            normal: forms.tagNormal,
+                            complaint: forms.tagComplaint,
+                            high_priority: forms.tagHighPriority,
+                          }}
+                        />
+                      ) : (
+                        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+                          {copy.emptySections}
+                        </p>
+                      )}
+                    </section>
 
-                  <aside className="border-outline-variant bg-surface-container-lowest rounded border p-4">
-                    <LeafItemForm
+                    {/* Leaf Items list for selected section */}
+                    {selectedSection && (
+                      <section className="grid gap-4 w-full border-t border-outline-variant/60 pt-6">
+                        <div className="flex items-center justify-between">
+                          <h2 className="font-heading text-primary-container text-xl font-bold">
+                            {copy.leafItemsTitle} ({selectedSection.name})
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => setActivePortal("create-task")}
+                            className="bg-secondary/10 text-secondary flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all hover:bg-secondary/20 cursor-pointer"
+                          >
+                            <Plus className="size-4" /> Neue Aufgabe
+                          </button>
+                        </div>
+                        {currentLeafItems.length > 0 ? (
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {currentLeafItems.map((item) => (
+                              <div key={item.id} className="grid gap-2">
+                                <TaskItemCard
+                                  badge={
+                                    item.tag !== "normal" ? (
+                                      <PriorityStatusBadge
+                                        label={item.tag === "complaint" ? forms.tagComplaint : forms.tagHighPriority}
+                                        tone={item.tag === "complaint" ? "warning" : "critical"}
+                                      />
+                                    ) : null
+                                  }
+                                  estimatedMinutes={`${item.estimatedMinutes} ${copy.minutes}`}
+                                  lastCleaned={item.recurrenceDays ? `${copy.recurrenceDays}: ${item.recurrenceDays}` : undefined}
+                                  thumbnail={
+                                    item.hasReferenceImage ? (
+                                      <span className="text-secondary flex size-full items-center justify-center">
+                                        <ImageIcon aria-hidden="true" className="size-5" />
+                                      </span>
+                                    ) : null
+                                  }
+                                  title={item.name}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+                            {copy.emptyLeafItems}
+                          </p>
+                        )}
+                      </section>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                id: "create-section",
+                label: "Neuer Bereich",
+                icon: <Plus className="size-4" />,
+                content: (
+                  <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm">
+                    <SectionForm
                       clientId={selectedClientId}
                       copy={forms}
                       locale={locale}
                       mode="create"
                       sectionOptions={data.sectionOptions}
-                      selectedSectionId={selectedSection.id}
                     />
-                  </aside>
-                </>
-              )}
-
-              <section className="grid gap-3">
-                <h2 className="font-heading text-primary-container text-xl font-bold">{copy.leafItemsTitle}</h2>
-                {selectedSection && currentLeafItems.length > 0 ? (
-                  <div className="grid gap-3">
-                    {currentLeafItems.map((item) => (
-                      <div key={item.id} className="grid gap-2">
-                        <TaskItemCard
-                          badge={
-                            item.tag !== "normal" ? (
-                              <PriorityStatusBadge
-                                label={item.tag === "complaint" ? forms.tagComplaint : forms.tagHighPriority}
-                                tone={item.tag === "complaint" ? "warning" : "critical"}
-                              />
-                            ) : null
-                          }
-                          estimatedMinutes={`${item.estimatedMinutes} ${copy.minutes}`}
-                          lastCleaned={item.recurrenceDays ? `${copy.recurrenceDays}: ${item.recurrenceDays}` : undefined}
-                          thumbnail={
-                            item.hasReferenceImage ? (
-                              <span className="text-secondary flex size-full items-center justify-center">
-                                <ImageIcon aria-hidden="true" className="size-5" />
-                              </span>
-                            ) : null
-                          }
-                          title={item.name}
-                        />
-                        <details className="border-outline-variant bg-surface-container-lowest rounded border p-4">
-                          <summary className="text-primary-container cursor-pointer text-sm font-bold uppercase tracking-wide">
-                            {copy.edit}
-                          </summary>
-                          <div className="mt-4 grid gap-5">
-                            <LeafItemForm
+                  </div>
+                ),
+              },
+              ...(selectedSection
+                ? [
+                    {
+                      id: "edit-section",
+                      label: `Bereich bearbeiten (${selectedSection.name})`,
+                      icon: <Edit2 className="size-4" />,
+                      content: (
+                        <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest grid gap-6 rounded-3xl border p-6 shadow-sm">
+                          <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
+                            <div>
+                              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wide">{copy.selectedSectionTitle}</p>
+                              <h2 className="font-heading text-primary-container text-xl font-bold mt-0.5">{selectedSection.name}</h2>
+                            </div>
+                            <DeleteEntityForm
                               clientId={selectedClientId}
                               copy={forms}
-                              leafItem={item}
+                              entityId={selectedSection.id}
+                              kind="section"
+                              locale={locale}
+                            />
+                          </div>
+                          <div className="grid gap-6 md:grid-cols-2">
+                            <SectionForm
+                              clientId={selectedClientId}
+                              copy={forms}
                               locale={locale}
                               mode="update"
-                              sectionOptions={data.sectionOptions}
-                              selectedSectionId={selectedSection.id}
+                              section={selectedSection}
+                              sectionOptions={editSectionOptions}
                             />
                             <ReferenceImageForm
                               clientId={selectedClientId}
                               copy={forms}
-                              entityId={item.id}
-                              kind="leafItem"
+                              entityId={selectedSection.id}
+                              kind="section"
                               locale={locale}
                             />
-                            {/* Tool steps */}
-                            <section className="grid gap-4">
-                              <div>
-                                <h3 className="font-heading text-primary-container text-lg font-bold">{copy.toolStepsTitle}</h3>
-                                <p className="text-on-surface-variant mt-1 text-sm">
-                                  {copy.stepEstimateTotal}: {item.stepEstimateMinutes} {copy.minutes}
-                                </p>
-                              </div>
-                              <div className="grid gap-3">
-                                {item.toolSteps.length > 0 ? (
-                                  item.toolSteps.map((step) => (
-                                    <div key={step.id} className="grid gap-2">
-                                      <ToolStepCard
-                                        actions={
-                                          <DeleteToolStepForm
-                                            clientId={selectedClientId}
-                                            copy={forms}
-                                            leafItemId={item.id}
-                                            locale={locale}
-                                            stepId={step.id}
-                                          />
-                                        }
-                                        duration={`${step.estimatedMinutes} ${copy.minutes}`}
-                                        isMandatory={step.isMandatory}
-                                        mandatoryLabel={forms.mandatoryLabel}
-                                        notes={
-                                          <span className="grid gap-1">
-                                            <span>
-                                              {copy.lastPerformed}:{" "}
-                                              {step.lastPerformedAt
-                                                ? new Date(step.lastPerformedAt).toLocaleDateString(
-                                                    locale === "de" ? "de-DE" : "en-GB",
-                                                  )
-                                                : copy.neverPerformed}
-                                            </span>
-                                            {step.notes ? <span>{step.notes}</span> : null}
-                                          </span>
-                                        }
-                                        optionalLabel={forms.optionalLabel}
-                                        recurrence={`${copy.recurrenceDays}: ${step.recurrenceDays}`}
-                                        sequenceOrder={step.sequenceOrder}
-                                        title={step.toolName}
-                                      />
-                                      <details className="border-outline-variant bg-surface-container-lowest rounded border p-4">
-                                        <summary className="text-primary-container cursor-pointer text-sm font-bold uppercase tracking-wide">
-                                          {copy.edit}
-                                        </summary>
-                                        <div className="mt-4">
-                                          <ToolStepForm
-                                            clientId={selectedClientId}
-                                            copy={forms}
-                                            leafItemId={item.id}
-                                            locale={locale}
-                                            mode="update"
-                                            step={step}
-                                          />
-                                        </div>
-                                      </details>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-5 text-sm">
-                                    {copy.noToolSteps}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="border-outline-variant bg-surface-container-low rounded border p-4">
-                                <ToolStepForm
-                                  clientId={selectedClientId}
-                                  copy={forms}
-                                  leafItemId={item.id}
-                                  locale={locale}
-                                  mode="create"
-                                  nextSequenceOrder={
-                                    item.toolSteps.reduce((max, s) => Math.max(max, s.sequenceOrder), 0) + 1
-                                  }
-                                />
-                              </div>
-                            </section>
                           </div>
-                        </details>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
-                    {copy.emptyLeafItems}
-                  </p>
-                )}
-              </section>
-            </div>
-          </div>
-        </>
+                        </div>
+                      ),
+                    },
+                    {
+                      id: "create-task",
+                      label: "Neue Aufgabe",
+                      icon: <CheckSquare className="size-4" />,
+                      content: (
+                        <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm">
+                          <LeafItemForm
+                            clientId={selectedClientId}
+                            copy={forms}
+                            locale={locale}
+                            mode="create"
+                            sectionOptions={data.sectionOptions}
+                            selectedSectionId={selectedSection.id}
+                          />
+                        </div>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </div>
       ) : null}
     </div>
   );

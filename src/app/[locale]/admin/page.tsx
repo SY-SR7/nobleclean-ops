@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Image as ImageIcon, ArrowRight } from "lucide-react";
+import { Image as ImageIcon, ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -297,23 +297,30 @@ async function ClientsTab({ locale }: { locale: Locale }) {
         </dl>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)]">
-        <aside className="border-outline-variant bg-surface-container-lowest h-fit rounded border p-4">
+      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
+        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
+          <span className="flex items-center gap-2">
+            <Plus className="size-4" /> {formCopy.createTitle}
+          </span>
+          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
+        </summary>
+        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
           <ClientForm copy={formCopy} formIdPrefix="new-client" locale={locale} mode="create" />
-        </aside>
-        <div className="grid min-w-0 gap-4">
-          {!result.ok && (
-            <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">
-              {t(messages, "adminClients.feedback.loadError")}
-            </p>
-          )}
-          {result.ok && result.clients.length === 0 && (
-            <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">
-              {t(messages, "adminClients.empty")}
-            </p>
-          )}
-          <ClientsInteractive clients={result.clients} locale={locale} copy={interactiveCopy} />
         </div>
+      </details>
+
+      <div className="w-full">
+        {!result.ok && (
+          <p className="border-error bg-error-container text-on-error-container rounded-xl border px-4 py-3 text-sm">
+            {t(messages, "adminClients.feedback.loadError")}
+          </p>
+        )}
+        {result.ok && result.clients.length === 0 && (
+          <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+            {t(messages, "adminClients.empty")}
+          </p>
+        )}
+        <ClientsInteractive clients={result.clients} locale={locale} copy={interactiveCopy} />
       </div>
     </div>
   );
