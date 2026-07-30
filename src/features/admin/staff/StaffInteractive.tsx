@@ -75,20 +75,7 @@ export function StaffInteractive({
         ],
         sections: [
           {
-            label: "Zuweisungsdetails",
-            content: (
-              <InfoGrid
-                items={[
-                  { icon: <User className="size-4" />, label: copy.employees, value: assignment.employeeName },
-                  { icon: <Building2 className="size-4" />, label: copy.clients, value: assignment.clientName },
-                  { icon: <CalendarDays className="size-4" />, label: "Startdatum", value: formatDate(assignment.startDate, locale) },
-                  { icon: <Clock className="size-4" />, label: "Enddatum", value: assignment.endDate ? formatDate(assignment.endDate, locale) : "Aktiv" },
-                ]}
-              />
-            ),
-          },
-          {
-            label: "Zuweisung beenden",
+            label: "Zuweisung bearbeiten / beenden",
             content: (
               <EndAssignmentForm
                 assignmentId={assignment.id}

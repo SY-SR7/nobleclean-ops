@@ -58,19 +58,6 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
         ],
         sections: [
           {
-            label: "Schichtdetails",
-            content: (
-              <InfoGrid
-                items={[
-                  { icon: <User className="size-4" />, label: copy.employees, value: item.employeeName },
-                  { icon: <Building2 className="size-4" />, label: copy.clients, value: item.clientName },
-                  { icon: <CalendarDays className="size-4" />, label: copy.workDate, value: formatDateShort(item.workDate, locale) },
-                  { icon: <Clock className="size-4" />, label: copy.allocatedHours, value: `${item.allocatedHours} Std.` },
-                ]}
-              />
-            ),
-          },
-          {
             label: "Schicht bearbeiten / löschen",
             content: (
               <DeleteScheduleForm
