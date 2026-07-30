@@ -112,8 +112,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
 
       {selectedClientId ? (
         <>
-          {/* Client select form */}
-          <form className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => e.preventDefault()}>
             <input type="hidden" name="tab" value="sections" />
             <div className="grid gap-2 sm:min-w-80">
               <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="sections-client">
@@ -121,7 +120,11 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
               </label>
               <select
                 className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition"
-                defaultValue={selectedClientId}
+                value={selectedClientId}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setActiveTab("sections", newId, "");
+                }}
                 id="sections-client"
                 name="clientId"
               >
@@ -132,7 +135,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                 ))}
               </select>
             </div>
-            <Button type="submit">{copy.selectClient}</Button>
+            <Button type="button" onClick={() => setActiveTab("sections", selectedClientId)}>{copy.selectClient}</Button>
           </form>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(22rem,28rem)_minmax(0,1fr)]">
