@@ -17,8 +17,10 @@ import {
   type DrawerConfig,
 } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import { InlineEditField, useToast } from "@/components/ui";
 import { EmployeeAvailabilityCalendar } from "./EmployeeAvailabilityCalendar";
 import { EndAssignmentForm } from "./StaffAssignmentForms";
+import { updateEmployeeProfileAction } from "./employee-detail/actions";
 import type {
   StaffAssignmentListItem,
   StaffClientOption,
@@ -73,11 +75,30 @@ export function StaffInteractive({
   copy,
 }: StaffInteractiveProps) {
   const { open } = useDetailDrawer();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useViewMode("staff", "grid");
   const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{
     id: string;
     name: string;
   } | null>(null);
+
+  /** Inline rename employee helper */
+  async function renameEmployeeInline(
+    employeeId: string,
+    next: string,
+  ): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("locale", locale);
+    fd.append("employeeId", employeeId);
+    fd.append("fullName", next);
+    const result = await updateEmployeeProfileAction(undefined, fd);
+    if (result.status === "success") {
+      toast("Gespeichert", "success");
+      return null;
+    }
+    toast("Fehler beim Speichern", "error");
+    return "Fehler";
+  }
 
   const openAssignmentDrawer = useCallback(
     (assignment: StaffAssignmentListItem) => {
@@ -209,10 +230,12 @@ export function StaffInteractive({
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 text-2xl font-bold text-white backdrop-blur-sm">
                     {initials}
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-bold text-white drop-shadow group-hover/header:underline">
-                      {name}
-                    </p>
+                  <div className="text-center" onClick={(e) => e.stopPropagation()}>
+                    <InlineEditField
+                      value={name}
+                      displayClassName="text-sm font-bold text-white drop-shadow"
+                      onSave={(next) => renameEmployeeInline(empId, next)}
+                    />
                     <p className="mt-0.5 text-xs text-white/80">
                       {activeCount} aktiv · {items.length} gesamt
                     </p>
@@ -302,10 +325,12 @@ export function StaffInteractive({
                         .slice(0, 2)
                         .toUpperCase()}
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-white drop-shadow group-hover/header:underline">
-                        {name}
-                      </p>
+                    <div className="min-w-0" onClick={(e) => e.stopPropagation()}>
+                      <InlineEditField
+                        value={name}
+                        displayClassName="truncate text-sm font-semibold text-white drop-shadow"
+                        onSave={(next) => renameEmployeeInline(empId, next)}
+                      />
                       <p className="text-xs text-white/80">
                         {items.filter((i) => i.isActive).length} aktive
                         Zuweisung(en)
