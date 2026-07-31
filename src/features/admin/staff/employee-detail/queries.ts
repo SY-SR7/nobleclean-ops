@@ -36,6 +36,7 @@ export type EmployeeDetailData = Readonly<{
     fullName: string;
     role: "admin" | "employee";
     defaultDailyHours: number | null;
+    avatarPath: string | null;
   }> | null;
   weeklyAvailability: readonly EmployeeWeeklyAvailabilityDay[];
   assignmentHistory: readonly EmployeeAssignmentHistoryItem[];
