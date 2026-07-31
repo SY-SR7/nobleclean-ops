@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import type { Locale } from "@/i18n/routing";
+import { AvatarUpload, EntityLink } from "@/components/ui";
 import type {
   ClientAssignedEmployee,
   ClientDetailData,
@@ -32,6 +33,10 @@ export type ClientDetailCopy = Readonly<{
   contactNotesLabel: string;
   statusActive: string;
   statusInactive: string;
+  avatarChangeLabel: string;
+  avatarUploadLabel: string;
+  avatarSavedLabel: string;
+  avatarErrorLabel: string;
   assignedEmployeesTitle: string;
   emptyAssignedEmployees: string;
   recentPlansTitle: string;
@@ -327,10 +332,20 @@ export function ClientDetailInteractive({
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="bg-secondary/10 text-secondary flex size-14 shrink-0 items-center justify-center rounded-2xl">
-          <Building2 className="size-7" />
-        </div>
-        <div>
+        <AvatarUpload
+          currentAvatarPath={client.avatarPath}
+          entityId={client.id}
+          entityName={client.name}
+          locale={locale}
+          variant="client"
+          copy={{
+            changeLabel: copy.avatarChangeLabel,
+            uploadLabel: copy.avatarUploadLabel,
+            savedLabel: copy.avatarSavedLabel,
+            errorLabel: copy.avatarErrorLabel,
+          }}
+        />
+        <div className="min-w-0 flex-1">
           <h1 className="font-heading text-primary-container text-2xl font-bold">
             {client.name}
           </h1>

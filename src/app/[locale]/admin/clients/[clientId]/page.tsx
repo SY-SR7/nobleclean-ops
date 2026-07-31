@@ -76,6 +76,10 @@ export default async function AdminClientDetailPage({ params }: PageProps) {
     statusInactive: t(messages, "adminClients.status.inactive"),
     title: t(messages, "adminClients.clientDetail.title"),
     viewEmployee: t(messages, "adminClients.clientDetail.viewEmployee"),
+    avatarChangeLabel: t(messages, "adminClients.clientDetail.avatar.change"),
+    avatarUploadLabel: t(messages, "adminClients.clientDetail.avatar.upload"),
+    avatarSavedLabel: t(messages, "adminClients.clientDetail.avatar.saved"),
+    avatarErrorLabel: t(messages, "adminClients.clientDetail.avatar.error"),
   };
 
   return (
