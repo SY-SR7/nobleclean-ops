@@ -5,9 +5,10 @@ import { useCallback, useState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
-import { EntityLink } from "@/components/ui";
+import { EntityLink, InlineEditField, useToast } from "@/components/ui";
 import { EmployeeAvailabilityCalendar } from "@/features/admin/staff/EmployeeAvailabilityCalendar";
 import { DeleteScheduleForm } from "./ScheduleForms";
+import { quickUpdateScheduleHoursAction } from "./actions";
 import type { ScheduleListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
@@ -32,8 +33,23 @@ function formatDateShort(value: string, locale: Locale) {
 
 export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInteractiveProps) {
   const { open } = useDetailDrawer();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useViewMode("schedule", "grid");
   const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{ id: string; name: string } | null>(null);
+
+  /** Inline update allocated hours */
+  async function saveHours(scheduleId: string, next: string): Promise<string | null> {
+    const hours = parseFloat(next);
+    if (Number.isNaN(hours) || hours < 0.5 || hours > 24) return "Ungültig (0.5 – 24)";
+    const fd = new FormData();
+    fd.append("scheduleId", scheduleId);
+    fd.append("locale", locale);
+    fd.append("allocatedHours", String(hours));
+    const result = await quickUpdateScheduleHoursAction(fd);
+    if (result.ok) { toast("Gespeichert", "success"); return null; }
+    toast("Fehler beim Speichern", "error");
+    return "Fehler";
+  }
 
   // Extract unique clients for availability calendar modal
   const uniqueClients = Array.from(
@@ -142,9 +158,18 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                     <CalendarDays className="size-4" />
                     {formatDateShort(item.workDate, locale)}
                   </span>
-                  <span className="bg-secondary-container text-on-secondary-container rounded-full px-2.5 py-0.5 text-xs font-bold">
-                    {item.allocatedHours} Std.
-                  </span>
+                  {/* Inline-editable hours badge */}
+                  <div
+                    className="bg-secondary-container text-on-secondary-container rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <InlineEditField
+                      value={String(item.allocatedHours)}
+                      displayClassName="text-xs font-bold text-on-secondary-container"
+                      onSave={(next) => saveHours(item.id, next)}
+                    />
+                    <span className="text-on-secondary-container/70">Std.</span>
+                  </div>
                 </div>
                 {/* Body */}
                 <div className="flex items-center gap-3 p-4">
@@ -200,8 +225,16 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                     <span className="flex items-center gap-1"><CalendarDays className="size-3" />{formatDateShort(item.workDate, locale)}</span>
                   </p>
                 </div>
-                <span className="bg-secondary-container text-on-secondary-container shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold">
-                  {item.allocatedHours} Std.
+                <span
+                  className="bg-secondary-container text-on-secondary-container shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold flex items-center gap-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <InlineEditField
+                    value={String(item.allocatedHours)}
+                    displayClassName="text-xs font-bold text-on-secondary-container"
+                    onSave={(next) => saveHours(item.id, next)}
+                  />
+                  <span className="text-on-secondary-container/70">Std.</span>
                 </span>
                 <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
               </button>
