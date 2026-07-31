@@ -275,6 +275,14 @@ async function ClientsTab({ locale }: { locale: Locale }) {
     viewSections: t(messages, "navigation.admin.sectionsItems"),
     viewSchedule: t(messages, "navigation.admin.schedule"),
     viewDetails: t(messages, "adminClients.viewDetails"),
+    deleteLabel: "Löschen",
+    deleteConfirmTitle: "Kunde löschen?",
+    deleteConfirmBody: "Der Kunde wird unwiderruflich gelöscht. Nur möglich, wenn keine Abschnitte vorhanden sind.",
+    deleteConfirmLabel: "Löschen",
+    cancelLabel: "Abbrechen",
+    savedLabel: "Gespeichert",
+    errorLabel: "Fehler beim Speichern",
+    deleteBlockedLabel: "Kunde hat noch Abschnitte – zuerst löschen",
   };
 
   const activeCount = result.clients.filter((c) => c.isActive).length;

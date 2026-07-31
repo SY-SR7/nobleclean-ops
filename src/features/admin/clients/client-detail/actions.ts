@@ -51,7 +51,7 @@ function revalidateClient(locale: Locale, clientId: string) {
 export async function updateClientNameAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["clientId", "locale", "name"]);
   } catch {
@@ -89,7 +89,7 @@ export async function updateClientNameAction(
 export async function updateClientAddressAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["clientId", "locale", "address"]);
   } catch {
@@ -127,7 +127,7 @@ export async function updateClientAddressAction(
 export async function updateClientContactFieldAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["clientId", "locale", "field", "value"]);
   } catch {
@@ -183,7 +183,7 @@ export async function updateClientContactFieldAction(
 export async function toggleClientStatusAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["clientId", "locale", "nextIsActive"]);
   } catch {
@@ -223,7 +223,7 @@ export async function toggleClientStatusAction(
 export async function deleteClientAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["clientId", "locale"]);
   } catch {
@@ -269,7 +269,7 @@ export async function addClientAssignmentAction(
   _prev: unknown,
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, [
       "clientId",
@@ -321,7 +321,7 @@ export async function addClientAssignmentAction(
 export async function endClientAssignmentAction(
   formData: FormData,
 ): Promise<ClientDetailActionResult> {
-  let raw: Record<string, string>;
+  let raw: Record<string, string | undefined>;
   try {
     raw = pickFormData(formData, ["assignmentId", "clientId", "locale"]);
   } catch {
