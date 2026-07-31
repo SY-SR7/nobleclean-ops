@@ -159,68 +159,52 @@ export async function getEmployeeDetailData(
         .limit(20),
     ]);
 
-    if (availabilityError || assignmentError || planError) {
-      return emptyData();
-    }
-
-    const availability = z
-      .array(AvailabilityRowSchema)
-      .safeParse(availabilityRows);
-    const assignments = z.array(AssignmentRowSchema).safeParse(assignmentRows);
-    const plans = z.array(PlanRowSchema).safeParse(planRows);
-
-    if (!availability.success || !assignments.success || !plans.success) {
-      return emptyData();
-    }
+    const availabilityData = !availabilityError && availabilityRows
+      ? (z.array(AvailabilityRowSchema).safeParse(availabilityRows).data ?? [])
+      : [];
+    const assignments = !assignmentError && assignmentRows
+      ? (z.array(AssignmentRowSchema).safeParse(assignmentRows).data ?? [])
+      : [];
+    const plans = !planError && planRows
+      ? (z.array(PlanRowSchema).safeParse(planRows).data ?? [])
+      : [];
 
     const clientIds = Array.from(
       new Set([
-        ...assignments.data.map((row) => row.client_id),
-        ...plans.data.map((row) => row.client_id),
+        ...assignments.map((row) => row.client_id),
+        ...plans.map((row) => row.client_id),
       ]),
     );
 
-    const { data: clientRows, error: clientError } = clientIds.length
+    const { data: clientRows } = clientIds.length
       ? await supabase.from("clients").select("id, name").in("id", clientIds)
-      : { data: [], error: null };
+      : { data: [] };
 
-    if (clientError) {
-      return emptyData();
-    }
-
-    const clients = z.array(ClientRowSchema).safeParse(clientRows ?? []);
-
-    if (!clients.success) {
-      return emptyData();
-    }
+    const clients = clientRows
+      ? (z.array(ClientRowSchema).safeParse(clientRows).data ?? [])
+      : [];
 
     const clientMap = new Map(
-      clients.data.map((client) => [client.id, client.name]),
+      clients.map((client) => [client.id, client.name]),
     );
 
-    const planIds = plans.data.map((row) => row.id);
-    const { data: planItemRows, error: planItemError } = planIds.length
+    const planIds = plans.map((row) => row.id);
+    const { data: planItemRows } = planIds.length
       ? await supabase
           .from("daily_plan_items")
           .select("daily_plan_id, is_completed")
           .in("daily_plan_id", planIds)
-      : { data: [], error: null };
+      : { data: [] };
 
-    if (planItemError) {
-      return emptyData();
-    }
-
-    const planItems = z.array(PlanItemRowSchema).safeParse(planItemRows ?? []);
-
-    if (!planItems.success) {
-      return emptyData();
-    }
+    const planItems = planItemRows
+      ? (z.array(PlanItemRowSchema).safeParse(planItemRows).data ?? [])
+      : [];
 
     const itemCountsByPlan = new Map<
       string,
       { total: number; completed: number }
     >();
-    planItems.data.forEach((item) => {
+    planItems.forEach((item) => {
       const existing = itemCountsByPlan.get(item.daily_plan_id) ?? {
         completed: 0,
         total: 0,
@@ -231,7 +215,7 @@ export async function getEmployeeDetailData(
     });
 
     return {
-      assignmentHistory: assignments.data.map((row) => ({
+      assignmentHistory: assignments.map((row) => ({
         clientId: row.client_id,
         clientName: clientMap.get(row.client_id) ?? "",
         endDate: row.end_date ?? null,
@@ -247,7 +231,7 @@ export async function getEmployeeDetailData(
         role: profile.data.role,
       },
       ok: true,
-      recentPlans: plans.data.map((row) => {
+      recentPlans: plans.map((row) => {
         const counts = itemCountsByPlan.get(row.id) ?? {
           completed: 0,
           total: 0,
@@ -263,10 +247,9 @@ export async function getEmployeeDetailData(
           workDate: row.work_date,
         };
       }),
-      weeklyAvailability: fullWeekTemplate(availability.data),
+      weeklyAvailability: fullWeekTemplate(availabilityData),
     };
-  } catch (err) {
-    console.error("[getEmployeeDetailData] Exception:", err);
+  } catch {
     return emptyData();
   }
 }

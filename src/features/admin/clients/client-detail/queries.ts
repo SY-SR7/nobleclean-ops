@@ -140,6 +140,7 @@ export async function getClientDetailData(
   const parsedId = z.string().uuid().safeParse(clientId);
 
   if (!parsedId.success) {
+    console.log("[getClientDetailData] invalid uuid parsedId:", clientId);
     return emptyData();
   }
 
@@ -153,12 +154,14 @@ export async function getClientDetailData(
       .maybeSingle();
 
     if (clientError || !clientRow) {
+      console.log("[getClientDetailData] clientError or !clientRow:", { clientError, hasClientRow: Boolean(clientRow) });
       return emptyData();
     }
 
     const client = ClientRowSchema.safeParse(clientRow);
 
     if (!client.success) {
+      console.log("[getClientDetailData] ClientRowSchema safeParse failed:", client.error.format());
       return emptyData();
     }
 
