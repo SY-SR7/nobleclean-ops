@@ -10,7 +10,7 @@ import {
   User,
 } from "lucide-react";
 
-import { Button, FormInput } from "@/components/ui";
+import { Button, FormInput, AvatarUpload } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 
 import {
@@ -45,6 +45,10 @@ export type EmployeeDetailCopy = Readonly<{
   defaultDailyHoursSaved: string;
   defaultDailyHoursError: string;
   defaultDailyHoursHint: string;
+  avatarChangeLabel: string;
+  avatarUploadLabel: string;
+  avatarSavedLabel: string;
+  avatarErrorLabel: string;
   availabilityTitle: string;
   availabilityHint: string;
   weekdayLabels: readonly string[];
@@ -369,10 +373,20 @@ export function EmployeeDetailInteractive({
         </Link>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="bg-secondary/10 text-secondary flex size-12 shrink-0 items-center justify-center rounded-2xl">
-          <User className="size-6" />
-        </div>
+      <div className="flex items-center gap-4">
+        <AvatarUpload
+          currentAvatarPath={employee.avatarPath}
+          entityId={employee.id}
+          entityName={employee.fullName}
+          locale={locale}
+          variant="employee"
+          copy={{
+            changeLabel: copy.avatarChangeLabel,
+            uploadLabel: copy.avatarUploadLabel,
+            savedLabel: copy.avatarSavedLabel,
+            errorLabel: copy.avatarErrorLabel,
+          }}
+        />
         <div>
           <h1 className="font-heading text-primary-container text-2xl font-bold">
             {employee.fullName}
