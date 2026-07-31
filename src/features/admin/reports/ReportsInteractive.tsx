@@ -17,7 +17,7 @@ import { useCallback, useActionState } from "react";
 
 import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
-import { Button } from "@/components/ui";
+import { Button, EntityLink } from "@/components/ui";
 import { updatePlanProgressAction, markToolStepPerformedAction } from "./actions";
 import type {
   CompletionPlanSummary,
@@ -148,7 +148,14 @@ export function PlanInteractiveCard({ plan, locale, copy }: {
         {pct}%
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-on-surface group-hover:text-secondary text-sm font-semibold truncate transition-colors">{plan.employeeName}</p>
+        <EntityLink
+          id={plan.employeeId}
+          name={plan.employeeName}
+          type="employee"
+          locale={locale}
+          showInitials
+          className="text-sm"
+        />
         <p className="text-on-surface-variant text-xs mt-0.5">{formatDate(plan.workDate, locale, "")} · {plan.completedItems}/{plan.totalItems}</p>
       </div>
       <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />

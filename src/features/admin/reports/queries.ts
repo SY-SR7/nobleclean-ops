@@ -14,6 +14,7 @@ export type ReportsClientOption = Readonly<{
 
 export type CompletionPlanSummary = Readonly<{
   completedItems: number;
+  employeeId: string;
   employeeName: string;
   id: string;
   isComplete: boolean;
@@ -184,6 +185,7 @@ function buildPlanSummaries(
 
     return {
       completedItems: counts.completed,
+      employeeId: plan.employee_id,
       employeeName: profiles.get(plan.employee_id) ?? "",
       id: plan.id,
       isComplete,
