@@ -1,0 +1,142 @@
+المطلوب حاليا:
+
+
+$ProjectPath = "D:\Files\Programming_Projects\nobleclean"
+Set-Location -Path $ProjectPath
+
+$PromptPath = Join-Path $ProjectPath "_handoff\ADMIN_360_TASK_PROMPT.txt"
+
+@'
+You are continuing implementation work on NobleClean-Ops. Before writing
+any code, read _handoff/PROGRESS.md, _handoff/NobleClean-Ops_PRD.md,
+_handoff/DESIGN.md, _handoff/SECURITY_RULES.md, and
+_handoff/VALIDATION_DTO_CONVENTIONS.md end to end. This project uses bd
+(beads) for ALL task tracking per AGENTS.md and CLAUDE.md; do not use
+TodoWrite, TaskCreate, or markdown TODO lists. Start with `bd prime` and
+`bd ready`.
+
+I audited this repository directly and confirmed six concrete gaps
+between the current implementation and the owner's requirements. None of
+the six are implemented yet as of the audit. File a new Beads epic named
+"Admin 360 Drilldown and Media" with one child issue per gap below,
+ordered by dependency, and implement each child issue fully before
+moving to the next, exactly the way every closed issue in
+_handoff/PROGRESS.md was implemented: strict Zod schemas, normalized
+command DTOs, explicit Supabase mutation objects, allowlisted response
+DTOs, server-side admin authorization, same-origin checks on every
+mutation, RLS on every new table, pgTAP coverage under supabase/tests,
+unit tests under tests/unit, German and English message keys with no
+hardcoded UI copy and no Arabic UI text, and no service-role/secret-key
+usage anywhere in application code.
+
+GAP 1: Employee detail page and real weekly availability.
+There is no /admin/staff/[employeeId] route today. Add one. Every place
+an employee name appears in the admin UI (staff list, schedule grid,
+reports, daily plan history) must link to this page.
+EmployeeAvailabilityCalendar.tsx currently fabricates availability with
+getDeterministicAvailability, a hash function with no real data behind
+it; this must be replaced entirely, not patched. Add a real
+employee_weekly_availability table keyed on employee_id and weekday
+(0-6) with an is_available boolean, so the admin can tick which days of
+the week this employee normally works. Keep work_schedule as the
+existing per-date allocation/override table. The employee detail page
+must allow editing full_name and role, editing weekly availability,
+and must display that employee's client assignment history and recent
+daily plans.
+
+GAP 2: Default daily working hours per employee.
+Add a constrained numeric default_daily_hours value for employee
+profiles (greater than 0, less than or equal to 24), editable from the
+employee detail page. When the admin creates a new work_schedule row
+for that employee, pre-fill allocated_hours from this default while
+still allowing a per-date override.
+
+GAP 3: Employee and client photos.
+Add nullable avatar_path columns to profiles and clients following the
+exact private-storage pattern already used for
+sections.reference_image_path and leaf_items.reference_image_path in
+supabase/migrations/20260729002000_reference_image_storage.sql: private
+bucket, strict jpeg/png/webp MIME allowlist, file size limit, RLS-scoped
+random object naming with no user-provided filenames, and server-side
+magic-byte validation. Design an equivalent safe object-naming scheme
+scoped to profile/client avatars and document it in _handoff the same
+way the original storage migration is documented. Every place a client
+or employee name renders anywhere in the admin UI must show their
+avatar with an initials-based fallback when unset. Add upload/change
+controls to the client form and the new employee detail page.
+
+GAP 4: Client detail page.
+There is no /admin/clients/[clientId] route today, only a flat list.
+Add one; every client name anywhere in the admin UI must link to it.
+This page must show in one place: client profile fields and photo, the
+full section/sub-section tree for that client with images at every
+depth, assigned employees current and historical, that client's recent
+and upcoming schedule, recent daily plans and completion stats, and any
+overdue mandatory tool-step escalations, reusing the existing
+src/features/admin/reports read layer instead of duplicating query
+logic. Every employee, section, and leaf item name shown here must
+itself link to its own detail view per GAP 6.
+
+GAP 5: Properly designed unlimited nested sub-sections.
+The section self-reference and cycle-prevention constraints in
+supabase/migrations/20260728233000_initial_schema.sql already support
+unlimited depth; do not weaken them. Audit the section tree UI in
+src/app/[locale]/admin/sections-items. If it renders as flat, shallow,
+cramped, or visually stacked, redesign it using existing
+src/components/ui primitives and Operational Clarity tokens so
+arbitrarily deep nesting is visually clear: consistent per-depth
+indentation, a breadcrumb trail when drilled into a subsection, section
+thumbnail images at every depth, and generous spacing on both desktop
+and mobile widths.
+
+GAP 6: Global click-through navigation and edit-from-anywhere.
+Add one shared client component used everywhere a client, employee,
+section, or leaf item name/avatar renders across the admin surface,
+that always navigates to that entity's own detail location regardless
+of which admin page the click happened on. Where inline mutation
+without leaving the current screen is appropriate and already
+consistent with the PRD and SECURITY_RULES.md (for example toggling an
+assignment, editing a leaf item tag, or adjusting allocated_hours from
+the client detail page), implement it as a Server Action following the
+same conventions as existing src/features/admin/*/actions.ts files. Do
+not weaken any RLS policy or role guard; all navigation still passes
+through the existing admin layout role guard.
+
+After each child issue: run `supabase db reset --local` if migrations
+changed, then `npm run quality:full`, and report exact pass/fail counts
+the same way every existing PROGRESS.md entry does. Update
+_handoff/PROGRESS.md with one new dated section per completed child
+issue in the same style as existing entries; do not create a separate
+tasks.md file. Close each Beads issue only after its local quality
+gates pass.
+
+When every child issue is closed, run `bd stats` and `bd ready`, print a
+summary of everything changed, then follow the Session Completion
+workflow defined in CLAUDE.md: file follow-up issues for anything left,
+run quality gates, close finished issues, and attempt `git pull --rebase`
+then `git push`. If no git remote is configured, stop before the push
+step and say so clearly instead of failing silently, exactly as
+_handoff/PROGRESS.md already documents for the existing nobleclean-xex
+blocker. Work fully autonomously end to end without waiting for further
+human input; only stop early if a genuine external blocker (missing
+credentials, missing remote, ambiguous product decision not answerable
+from the handoff docs) makes further progress impossible, and document
+that blocker clearly in PROGRESS.md exactly like nobleclean-xex.
+'@ | Set-Content -Path $PromptPath -Encoding utf8
+
+Write-Host "Committing current state as a safety checkpoint..." -ForegroundColor Cyan
+git add -A
+git commit -m "checkpoint before Admin 360 gap closure" --allow-empty | Out-Null
+
+Write-Host "Starting Claude Code (full autonomous run)..." -ForegroundColor Cyan
+Write-Host "This can take a long time. Do not close this window." -ForegroundColor Yellow
+
+claude --permission-mode bypassPermissions -p "$(Get-Content -Path $PromptPath -Raw)"
+
+Write-Host ""
+Write-Host "Claude Code run finished." -ForegroundColor Green
+Write-Host "Review _handoff/PROGRESS.md, run 'bd stats', and check 'git log' for what changed." -ForegroundColor Green
+
+
+
+
