@@ -316,6 +316,12 @@
         "label": "Default daily hours",
         "hint": "Pre-fills allocated hours when creating a schedule entry for this employee."
       },
+      "avatar": {
+        "change": "Change photo",
+        "upload": "Upload photo",
+        "saved": "Photo updated.",
+        "error": "Photo could not be uploaded. Use JPEG, PNG or WebP under 3 MB."
+      },
       "availabilityTitle": "Weekly availability",
       "availabilityHint": "Set which weekdays this employee normally works.",
       "weekdays": {

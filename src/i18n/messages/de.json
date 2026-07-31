@@ -316,6 +316,12 @@
         "label": "Standard-Tagesstunden",
         "hint": "Wird beim Erstellen eines Schichteintrags als Standard für diesen Mitarbeiter vorausgefüllt."
       },
+      "avatar": {
+        "change": "Foto ändern",
+        "upload": "Foto hochladen",
+        "saved": "Foto aktualisiert.",
+        "error": "Foto konnte nicht hochgeladen werden. Bitte JPEG, PNG oder WebP unter 3 MB verwenden."
+      },
       "availabilityTitle": "Wöchentliche Verfügbarkeit",
       "availabilityHint": "Legen Sie fest, an welchen Wochentagen dieser Mitarbeiter normalerweise arbeitet.",
       "weekdays": {
