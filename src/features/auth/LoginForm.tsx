@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 
 import { Button, FormInput } from "@/components/ui";
-import { loginAction, type LoginActionState } from "@/features/auth/actions";
+import { loginAction } from "@/features/auth/actions";
+import { initialLoginActionState, type LoginActionState } from "@/features/auth/schema";
 import type { Locale } from "@/i18n/routing";
 
 type LoginFormCopy = Readonly<{
@@ -19,9 +20,7 @@ type LoginFormProps = Readonly<{
   nextPath: string;
 }>;
 
-const initialState: LoginActionState = {
-  errorCode: null,
-};
+const initialState: LoginActionState = initialLoginActionState;
 
 export function LoginForm({ copy, locale, nextPath }: LoginFormProps) {
   const [state, formAction, isPending] = useActionState(

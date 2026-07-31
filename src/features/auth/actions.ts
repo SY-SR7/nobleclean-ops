@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import { isLocale } from "@/i18n/routing";
 import { checkRequestRateLimit } from "@/lib/security/rate-limit";
@@ -9,32 +8,15 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasSameOriginRequest } from "@/lib/security/request-origin";
 import { safeLocalizedRedirectPath } from "@/lib/security/redirects";
 import { pickFormData } from "@/lib/validation/form-data";
-
-export type LoginActionState = Readonly<{
-  errorCode: "AUTH_FAILED" | "VALIDATION_FAILED" | null;
-}>;
-
-const initialState: LoginActionState = {
-  errorCode: null,
-};
-
-const LoginInputSchema = z
-  .object({
-    email: z.string().trim().email().max(254),
-    password: z.string().min(1).max(1024),
-    locale: z.enum(["de", "en"]),
-    next: z.string().max(2048).optional(),
-  })
-  .strict();
-
-const LogoutInputSchema = z
-  .object({
-    locale: z.enum(["de", "en"]),
-  })
-  .strict();
+import {
+  initialLoginActionState,
+  LoginInputSchema,
+  LogoutInputSchema,
+  type LoginActionState,
+} from "./schema";
 
 export async function loginAction(
-  _previousState: LoginActionState = initialState,
+  _previousState: LoginActionState = initialLoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
   void _previousState;
@@ -87,16 +69,6 @@ export async function loginAction(
   if (error) {
     return { errorCode: "AUTH_FAILED" };
   }
-
-  // MFA enforcement is disabled: no TOTP factors are enrolled in this deployment.
-  // The original condition was inverted and redirected ALL users without aal2 to MFA.
-  // Re-enable only when MFA factors are intentionally configured for users:
-  //
-  // const { data: assurance } =
-  //   await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  // if (assurance?.nextLevel === "aal2" && assurance?.currentLevel !== "aal2") {
-  //   redirect(`/${locale}/auth/mfa?next=${encodeURIComponent(nextPath)}`);
-  // }
 
   redirect(nextPath);
 }
