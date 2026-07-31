@@ -57,14 +57,14 @@ const ClientRowSchema = z.object({
   address: z.string(),
   contact_info: z.unknown(),
   is_active: z.boolean(),
-  avatar_path: z.string().nullable(),
+  avatar_path: z.string().nullable().optional(),
 });
 
 const AssignmentRowSchema = z.object({
   id: z.string().uuid(),
   employee_id: z.string().uuid(),
   start_date: z.string(),
-  end_date: z.string().nullable(),
+  end_date: z.string().nullable().optional(),
 });
 
 const ProfileRowSchema = z.object({
@@ -87,9 +87,9 @@ const PlanItemRowSchema = z.object({
 const SectionRowSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  parent_section_id: z.string().uuid().nullable(),
+  parent_section_id: z.string().uuid().nullable().optional(),
   sort_order: z.number().int(),
-  reference_image_path: z.string().nullable(),
+  reference_image_path: z.string().nullable().optional(),
 });
 
 function parseContactInfo(raw: unknown): {
@@ -153,12 +153,14 @@ export async function getClientDetailData(
       .maybeSingle();
 
     if (clientError || !clientRow) {
+      console.error("[getClientDetailData] Client fetch error or not found:", clientError, { clientId });
       return emptyData();
     }
 
     const client = ClientRowSchema.safeParse(clientRow);
 
     if (!client.success) {
+      console.error("[getClientDetailData] ClientRowSchema parse error:", client.error.format());
       return emptyData();
     }
 
@@ -186,6 +188,7 @@ export async function getClientDetailData(
     ]);
 
     if (assignmentError || planError || sectionError) {
+      console.error("[getClientDetailData] Subquery error:", { assignmentError, planError, sectionError });
       return emptyData();
     }
 
@@ -196,6 +199,11 @@ export async function getClientDetailData(
     const sections = z.array(SectionRowSchema).safeParse(sectionRows ?? []);
 
     if (!assignments.success || !plans.success || !sections.success) {
+      console.error("[getClientDetailData] Zod parse error on subqueries:", {
+        assignments: assignments.success ? null : assignments.error.format(),
+        plans: plans.success ? null : plans.error.format(),
+        sections: sections.success ? null : sections.error.format(),
+      });
       return emptyData();
     }
 
@@ -215,12 +223,14 @@ export async function getClientDetailData(
       : { data: [], error: null };
 
     if (profileError) {
+      console.error("[getClientDetailData] Profile fetch error:", profileError);
       return emptyData();
     }
 
     const profiles = z.array(ProfileRowSchema).safeParse(profileRows ?? []);
 
     if (!profiles.success) {
+      console.error("[getClientDetailData] ProfileRowSchema parse error:", profiles.error.format());
       return emptyData();
     }
 
@@ -238,6 +248,7 @@ export async function getClientDetailData(
       : { data: [], error: null };
 
     if (planItemError) {
+      console.error("[getClientDetailData] Plan items fetch error:", planItemError);
       return emptyData();
     }
 
@@ -246,6 +257,7 @@ export async function getClientDetailData(
       .safeParse(planItemRows ?? []);
 
     if (!planItems.success) {
+      console.error("[getClientDetailData] PlanItemRowSchema parse error:", planItems.error.format());
       return emptyData();
     }
 
@@ -269,9 +281,9 @@ export async function getClientDetailData(
       assignedEmployees: assignments.data.map((row) => ({
         employeeId: row.employee_id,
         employeeName: employeeMap.get(row.employee_id) ?? "",
-        endDate: row.end_date,
+        endDate: row.end_date ?? null,
         id: row.id,
-        isActive: isActiveAssignment(row.start_date, row.end_date),
+        isActive: isActiveAssignment(row.start_date, row.end_date ?? null),
         startDate: row.start_date,
       })),
       client: {
@@ -304,12 +316,13 @@ export async function getClientDetailData(
       sections: sections.data.map((row) => ({
         id: row.id,
         name: row.name,
-        parentSectionId: row.parent_section_id,
-        referenceImagePath: row.reference_image_path,
+        parentSectionId: row.parent_section_id ?? null,
+        referenceImagePath: row.reference_image_path ?? null,
         sortOrder: row.sort_order,
       })),
     };
-  } catch {
+  } catch (err) {
+    console.error("[getClientDetailData] Unexpected exception:", err);
     return emptyData();
   }
 }

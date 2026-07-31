@@ -47,8 +47,8 @@ const ProfileRowSchema = z.object({
   id: z.string().uuid(),
   full_name: z.string(),
   role: z.enum(["admin", "employee"]),
-  default_daily_hours: z.number().nullable(),
-  avatar_path: z.string().nullable(),
+  default_daily_hours: z.number().nullable().optional(),
+  avatar_path: z.string().nullable().optional(),
 });
 
 const AvailabilityRowSchema = z.object({
@@ -60,7 +60,7 @@ const AssignmentRowSchema = z.object({
   id: z.string().uuid(),
   client_id: z.string().uuid(),
   start_date: z.string(),
-  end_date: z.string().nullable(),
+  end_date: z.string().nullable().optional(),
 });
 
 const ClientRowSchema = z.object({
@@ -73,7 +73,7 @@ const PlanRowSchema = z.object({
   client_id: z.string().uuid(),
   work_date: z.string(),
   status: z.enum(["in_progress", "submitted"]),
-  submitted_at: z.string().nullable(),
+  submitted_at: z.string().nullable().optional(),
 });
 
 const PlanItemRowSchema = z.object({
