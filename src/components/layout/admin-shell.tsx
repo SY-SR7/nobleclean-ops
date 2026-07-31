@@ -9,7 +9,7 @@ import {
   type AdminNavigationItem,
 } from "@/components/layout/admin-navigation";
 import { BrandLogo } from "@/components/layout/brand-logo";
-import { Button, DetailDrawerProvider } from "@/components/ui";
+import { Button, DetailDrawerProvider, ToastProvider } from "@/components/ui";
 import { AdminSpaProvider } from "@/context/admin-spa-context";
 import { logoutAction } from "@/features/auth/actions";
 import { cn } from "@/lib/cn";
@@ -37,8 +37,9 @@ export function AdminShell({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <AdminSpaProvider>
-      <DetailDrawerProvider>
+    <ToastProvider>
+      <AdminSpaProvider>
+        <DetailDrawerProvider>
         <div
           className={cn(
             "bg-surface text-on-surface min-h-screen lg:grid",
@@ -184,7 +185,8 @@ export function AdminShell({
             </main>
           </div>
         </div>
-      </DetailDrawerProvider>
-    </AdminSpaProvider>
+        </DetailDrawerProvider>
+      </AdminSpaProvider>
+    </ToastProvider>
   );
 }
