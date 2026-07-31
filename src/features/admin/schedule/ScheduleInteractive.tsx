@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import { EntityLink } from "@/components/ui";
 import { EmployeeAvailabilityCalendar } from "@/features/admin/staff/EmployeeAvailabilityCalendar";
 import { DeleteScheduleForm } from "./ScheduleForms";
 import type { ScheduleListItem } from "./queries";
@@ -159,9 +160,14 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                     {initials}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-heading text-on-surface group-hover:text-secondary text-sm font-bold transition-colors truncate">
-                      {item.employeeName}
-                    </h3>
+                    <EntityLink
+                      id={item.employeeId}
+                      name={item.employeeName}
+                      type="employee"
+                      locale={locale}
+                      showInitials
+                      className="text-sm font-bold"
+                    />
                     <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5 truncate">
                       <Building2 className="size-3 shrink-0" />
                       {item.clientName}
@@ -188,9 +194,14 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-on-surface group-hover:text-secondary font-semibold text-sm transition-colors truncate">
-                    {item.employeeName}
-                  </p>
+                  <EntityLink
+                    id={item.employeeId}
+                    name={item.employeeName}
+                    type="employee"
+                    locale={locale}
+                    showInitials
+                    className="text-sm"
+                  />
                   <p className="text-on-surface-variant text-xs flex items-center gap-2 mt-0.5">
                     <span className="flex items-center gap-1"><Building2 className="size-3" />{item.clientName}</span>
                     <span>•</span>
