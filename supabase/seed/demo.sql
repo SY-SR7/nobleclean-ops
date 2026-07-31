@@ -18,6 +18,15 @@ INSERT INTO auth.users (
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
   created_at, updated_at, is_super_admin
 ) VALUES
+  ('a0a00000-0000-4000-8000-000000000000',
+   '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated',
+   'admin@nobleclean.de',
+   crypt('Demo@2026!', gen_salt('bf')),
+   '2026-01-10 08:00:00+00',
+   '{"provider":"email","providers":["email"]}', '{}',
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true),
+
   ('e1a00000-0001-4000-8001-000000000001',
    '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated',
@@ -59,6 +68,10 @@ INSERT INTO auth.identities (
   id, provider_id, user_id, identity_data, provider,
   last_sign_in_at, created_at, updated_at
 ) VALUES
+  (gen_random_uuid(), 'admin@nobleclean.de',
+   'a0a00000-0000-4000-8000-000000000000',
+   '{"sub":"a0a00000-0000-4000-8000-000000000000","email":"admin@nobleclean.de","email_verified":true}',
+   'email', '2026-01-15 07:00:00+00', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
   (gen_random_uuid(), 'thomas.mueller@demo.nobleclean.de',
    'e1a00000-0001-4000-8001-000000000001',
    '{"sub":"e1a00000-0001-4000-8001-000000000001","email":"thomas.mueller@demo.nobleclean.de","email_verified":true}',
@@ -81,10 +94,11 @@ ON CONFLICT DO NOTHING;
    SCHRITT 2 — Profile
    ───────────────────────────────────────────────────────────────────────── */
 INSERT INTO public.profiles (id, full_name, role, created_at, updated_at) VALUES
-  ('e1a00000-0001-4000-8001-000000000001', 'Thomas Müller',  'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
-  ('e2a00000-0002-4000-8002-000000000002', 'Stefan Schmidt', 'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
-  ('e3a00000-0003-4000-8003-000000000003', 'Marcel Braun',   'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
-  ('e4a00000-0004-4000-8004-000000000004', 'Lisa Weber',     'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00')
+  ('a0a00000-0000-4000-8000-000000000000', 'Administrator', 'admin',    '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
+  ('e1a00000-0001-4000-8001-000000000001', 'Thomas Müller', 'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
+  ('e2a00000-0002-4000-8002-000000000002', 'Stefan Schmidt','employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
+  ('e3a00000-0003-4000-8003-000000000003', 'Marcel Braun',  'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
+  ('e4a00000-0004-4000-8004-000000000004', 'Lisa Weber',    'employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00')
 ON CONFLICT (id) DO NOTHING;
 
 /* ─────────────────────────────────────────────────────────────────────────
