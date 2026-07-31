@@ -168,6 +168,12 @@
       "feedback": {
         "loadError": "Die Kundendetails konnten nicht geladen werden.",
         "notFound": "Kunde nicht gefunden."
+      },
+      "avatar": {
+        "change": "Foto ändern",
+        "upload": "Foto hochladen",
+        "saved": "Foto aktualisiert.",
+        "error": "Foto konnte nicht hochgeladen werden. Bitte JPEG, PNG oder WebP unter 3 MB verwenden."
       }
     }
   },
