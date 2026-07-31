@@ -146,11 +146,23 @@ export async function getClientDetailData(
   try {
     const supabase = await createSupabaseServerClient();
 
-    const { data: clientRow, error: clientError } = await supabase
+    let { data: clientRow, error: clientError } = await supabase
       .from("clients")
       .select("id, name, address, contact_info, is_active, avatar_path")
       .eq("id", parsedId.data)
       .maybeSingle();
+
+    if (clientError) {
+      const fallback = await supabase
+        .from("clients")
+        .select("id, name, address, contact_info, is_active")
+        .eq("id", parsedId.data)
+        .maybeSingle();
+      clientRow = fallback.data
+        ? { ...fallback.data, avatar_path: null }
+        : null;
+      clientError = fallback.error;
+    }
 
     if (clientError || !clientRow) {
       return emptyData();

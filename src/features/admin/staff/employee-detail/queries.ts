@@ -121,11 +121,27 @@ export async function getEmployeeDetailData(
   try {
     const supabase = await createSupabaseServerClient();
 
-    const { data: profileRow, error: profileError } = await supabase
+    let { data: profileRow, error: profileError } = await supabase
       .from("profiles")
       .select("id, full_name, role, default_daily_hours, avatar_path")
       .eq("id", parsedId.data)
       .maybeSingle();
+
+    if (profileError) {
+      const fallback = await supabase
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("id", parsedId.data)
+        .maybeSingle();
+      profileRow = fallback.data
+        ? {
+            ...fallback.data,
+            avatar_path: null,
+            default_daily_hours: null,
+          }
+        : null;
+      profileError = fallback.error;
+    }
 
     if (profileError || !profileRow) {
       return emptyData();
