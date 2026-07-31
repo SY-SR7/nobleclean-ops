@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,7 +9,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 
-import { Button, FormInput, AvatarUpload } from "@/components/ui";
+import { AvatarUpload, InlineEditField, useToast } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 
 import {
@@ -18,9 +18,7 @@ import {
   setDefaultDailyHoursAction,
 } from "./actions";
 import {
-  initialEmployeeProfileActionState,
   initialWeeklyAvailabilityActionState,
-  initialDefaultDailyHoursActionState,
 } from "./schema";
 import type {
   EmployeeAssignmentHistoryItem,
@@ -62,6 +60,8 @@ export type EmployeeDetailCopy = Readonly<{
   planStatusInProgress: string;
   planStatusSubmitted: string;
   planItemsCompletedLabel: string;
+  savedLabel: string;
+  errorLabel: string;
 }>;
 
 type EmployeeDetailInteractiveProps = Readonly<{
@@ -79,7 +79,8 @@ function formatDate(value: string | null, locale: Locale) {
   }).format(date);
 }
 
-function EmployeeProfileForm({
+/* Inline name editor — replaces the old EmployeeProfileForm */
+function InlineNameField({
   employeeId,
   fullName,
   locale,
@@ -90,45 +91,34 @@ function EmployeeProfileForm({
   locale: Locale;
   copy: EmployeeDetailCopy;
 }>) {
-  const [state, formAction, isPending] = useActionState(
-    updateEmployeeProfileAction,
-    initialEmployeeProfileActionState,
-  );
+  const { toast } = useToast();
+
+  async function handleSave(next: string): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("locale", locale);
+    fd.append("employeeId", employeeId);
+    fd.append("fullName", next);
+    const result = await updateEmployeeProfileAction(undefined, fd);
+    if (result.status === "success") {
+      toast(copy.savedLabel ?? copy.profileSaved, "success");
+      return null;
+    }
+    toast(copy.errorLabel ?? copy.profileError, "error");
+    return copy.profileError;
+  }
 
   return (
-    <form action={formAction} className="grid gap-4" noValidate>
-      <input name="locale" type="hidden" value={locale} />
-      <input name="employeeId" type="hidden" value={employeeId} />
-
-      <FormInput
-        defaultValue={fullName}
-        error={state.fieldErrors?.fullName ? copy.profileError : undefined}
-        id="employee-detail-full-name"
-        label={copy.fullNameLabel}
-        name="fullName"
-        required
-      />
-
-      <div className="flex items-center gap-3">
-        <Button disabled={isPending} isLoading={isPending} type="submit">
-          {copy.saveProfile}
-        </Button>
-        {state.status === "success" && (
-          <p className="text-sm font-semibold text-emerald-600" role="status">
-            {copy.profileSaved}
-          </p>
-        )}
-        {state.status === "error" && !state.fieldErrors?.fullName && (
-          <p className="text-error text-sm font-semibold" role="alert">
-            {copy.profileError}
-          </p>
-        )}
-      </div>
-    </form>
+    <div className="border-outline-variant bg-surface-container rounded-xl border px-4 py-3">
+      <p className="text-on-surface-variant text-xs font-medium mb-1">
+        {copy.fullNameLabel}
+      </p>
+      <InlineEditField value={fullName} onSave={handleSave} />
+    </div>
   );
 }
 
-function DefaultDailyHoursForm({
+/* Inline daily hours editor — replaces DefaultDailyHoursForm */
+function InlineDailyHoursField({
   employeeId,
   defaultDailyHours,
   locale,
@@ -139,49 +129,38 @@ function DefaultDailyHoursForm({
   locale: Locale;
   copy: EmployeeDetailCopy;
 }>) {
-  const [state, formAction, isPending] = useActionState(
-    setDefaultDailyHoursAction,
-    initialDefaultDailyHoursActionState,
-  );
+  const { toast } = useToast();
+
+  async function handleSave(next: string): Promise<string | null> {
+    const num = parseFloat(next);
+    if (next !== "" && (Number.isNaN(num) || num < 0.5 || num > 24)) {
+      return copy.defaultDailyHoursError;
+    }
+    const fd = new FormData();
+    fd.append("locale", locale);
+    fd.append("employeeId", employeeId);
+    fd.append("defaultDailyHours", next);
+    const result = await setDefaultDailyHoursAction(undefined, fd);
+    if (result.status === "success") {
+      toast(copy.savedLabel ?? copy.defaultDailyHoursSaved, "success");
+      return null;
+    }
+    toast(copy.errorLabel ?? copy.defaultDailyHoursError, "error");
+    return copy.defaultDailyHoursError;
+  }
 
   return (
-    <form action={formAction} className="grid gap-4" noValidate>
-      <input name="locale" type="hidden" value={locale} />
-      <input name="employeeId" type="hidden" value={employeeId} />
-
-      <FormInput
-        defaultValue={defaultDailyHours?.toString() ?? ""}
-        error={
-          state.fieldErrors?.defaultDailyHours
-            ? copy.defaultDailyHoursError
-            : undefined
-        }
-        helpText={copy.defaultDailyHoursHint}
-        id="employee-detail-default-hours"
-        label={copy.defaultDailyHoursLabel}
-        max={24}
-        min={0.5}
-        name="defaultDailyHours"
-        step={0.5}
-        type="number"
+    <div className="border-outline-variant bg-surface-container rounded-xl border px-4 py-3">
+      <p className="text-on-surface-variant text-xs font-medium mb-1">
+        {copy.defaultDailyHoursLabel}
+      </p>
+      <InlineEditField
+        value={defaultDailyHours?.toString() ?? ""}
+        placeholder="—"
+        onSave={handleSave}
       />
-
-      <div className="flex items-center gap-3">
-        <Button disabled={isPending} isLoading={isPending} type="submit">
-          {copy.saveProfile}
-        </Button>
-        {state.status === "success" && (
-          <p className="text-sm font-semibold text-emerald-600" role="status">
-            {copy.defaultDailyHoursSaved}
-          </p>
-        )}
-        {state.status === "error" && !state.fieldErrors?.defaultDailyHours && (
-          <p className="text-error text-sm font-semibold" role="alert">
-            {copy.defaultDailyHoursError}
-          </p>
-        )}
-      </div>
-    </form>
+      <p className="text-on-surface-variant text-xs mt-1">{copy.defaultDailyHoursHint}</p>
+    </div>
   );
 }
 
@@ -388,11 +367,21 @@ export function EmployeeDetailInteractive({
             errorLabel: copy.avatarErrorLabel,
           }}
         />
-        <div>
-          <h1 className="font-heading text-primary-container text-2xl font-bold">
-            {employee.fullName}
-          </h1>
-          <p className="text-on-surface-variant text-sm">
+        <div className="min-w-0 flex-1">
+          <InlineEditField
+            value={employee.fullName}
+            displayClassName="font-heading text-primary-container text-2xl font-bold"
+            onSave={async (next) => {
+              const fd = new FormData();
+              fd.append("locale", locale);
+              fd.append("employeeId", employee.id);
+              fd.append("fullName", next);
+              const result = await updateEmployeeProfileAction(undefined, fd);
+              if (result.status === "success") return null;
+              return copy.profileError;
+            }}
+          />
+          <p className="text-on-surface-variant text-sm mt-0.5">
             {employee.role === "admin" ? copy.roleAdmin : copy.roleEmployee}
           </p>
         </div>
@@ -402,14 +391,14 @@ export function EmployeeDetailInteractive({
         <h2 className="font-heading text-primary-container text-lg font-bold">
           {copy.profileTitle}
         </h2>
-        <EmployeeProfileForm
-          copy={copy}
-          employeeId={employee.id}
-          fullName={employee.fullName}
-          locale={locale}
-        />
-        <div className="border-outline-variant border-t pt-4">
-          <DefaultDailyHoursForm
+        <div className="grid gap-3 sm:grid-cols-2">
+          <InlineNameField
+            copy={copy}
+            employeeId={employee.id}
+            fullName={employee.fullName}
+            locale={locale}
+          />
+          <InlineDailyHoursField
             copy={copy}
             defaultDailyHours={employee.defaultDailyHours}
             employeeId={employee.id}
