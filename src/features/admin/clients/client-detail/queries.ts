@@ -185,75 +185,57 @@ export async function getClientDetailData(
         .order("sort_order", { ascending: true }),
     ]);
 
-    if (assignmentError || planError || sectionError) {
-      return emptyData();
-    }
-
-    const assignments = z
-      .array(AssignmentRowSchema)
-      .safeParse(assignmentRows ?? []);
-    const plans = z.array(PlanRowSchema).safeParse(planRows ?? []);
-    const sections = z.array(SectionRowSchema).safeParse(sectionRows ?? []);
-
-    if (!assignments.success || !plans.success || !sections.success) {
-      return emptyData();
-    }
+    const assignments = !assignmentError && assignmentRows
+      ? (z.array(AssignmentRowSchema).safeParse(assignmentRows).data ?? [])
+      : [];
+    const plans = !planError && planRows
+      ? (z.array(PlanRowSchema).safeParse(planRows).data ?? [])
+      : [];
+    const sections = !sectionError && sectionRows
+      ? (z.array(SectionRowSchema).safeParse(sectionRows).data ?? [])
+      : [];
 
     // Fetch employee names for assignments and plans
     const employeeIds = Array.from(
       new Set([
-        ...assignments.data.map((row) => row.employee_id),
-        ...plans.data.map((row) => row.employee_id),
+        ...assignments.map((row) => row.employee_id),
+        ...plans.map((row) => row.employee_id),
       ]),
     );
 
-    const { data: profileRows, error: profileError } = employeeIds.length
+    const { data: profileRows } = employeeIds.length
       ? await supabase
           .from("profiles")
           .select("id, full_name")
           .in("id", employeeIds)
-      : { data: [], error: null };
+      : { data: [] };
 
-    if (profileError) {
-      return emptyData();
-    }
-
-    const profiles = z.array(ProfileRowSchema).safeParse(profileRows ?? []);
-
-    if (!profiles.success) {
-      return emptyData();
-    }
+    const profiles = profileRows
+      ? (z.array(ProfileRowSchema).safeParse(profileRows).data ?? [])
+      : [];
 
     const employeeMap = new Map(
-      profiles.data.map((p) => [p.id, p.full_name]),
+      profiles.map((p) => [p.id, p.full_name]),
     );
 
     // Fetch plan item counts
-    const planIds = plans.data.map((row) => row.id);
-    const { data: planItemRows, error: planItemError } = planIds.length
+    const planIds = plans.map((row) => row.id);
+    const { data: planItemRows } = planIds.length
       ? await supabase
           .from("daily_plan_items")
           .select("daily_plan_id, is_completed")
           .in("daily_plan_id", planIds)
-      : { data: [], error: null };
+      : { data: [] };
 
-    if (planItemError) {
-      return emptyData();
-    }
-
-    const planItems = z
-      .array(PlanItemRowSchema)
-      .safeParse(planItemRows ?? []);
-
-    if (!planItems.success) {
-      return emptyData();
-    }
+    const planItems = planItemRows
+      ? (z.array(PlanItemRowSchema).safeParse(planItemRows).data ?? [])
+      : [];
 
     const itemCountsByPlan = new Map<
       string,
       { total: number; completed: number }
     >();
-    planItems.data.forEach((item) => {
+    planItems.forEach((item) => {
       const existing = itemCountsByPlan.get(item.daily_plan_id) ?? {
         completed: 0,
         total: 0,
@@ -266,7 +248,7 @@ export async function getClientDetailData(
     const contactInfo = parseContactInfo(client.data.contact_info);
 
     return {
-      assignedEmployees: assignments.data.map((row) => ({
+      assignedEmployees: assignments.map((row) => ({
         employeeId: row.employee_id,
         employeeName: employeeMap.get(row.employee_id) ?? "",
         endDate: row.end_date ?? null,
@@ -286,7 +268,7 @@ export async function getClientDetailData(
         name: client.data.name,
       },
       ok: true,
-      recentPlans: plans.data.map((row) => {
+      recentPlans: plans.map((row) => {
         const counts = itemCountsByPlan.get(row.id) ?? {
           completed: 0,
           total: 0,
@@ -301,7 +283,7 @@ export async function getClientDetailData(
           workDate: row.work_date,
         };
       }),
-      sections: sections.data.map((row) => ({
+      sections: sections.map((row) => ({
         id: row.id,
         name: row.name,
         parentSectionId: row.parent_section_id ?? null,
