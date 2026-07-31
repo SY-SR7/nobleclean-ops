@@ -48,6 +48,7 @@ const ProfileRowSchema = z.object({
   full_name: z.string(),
   role: z.enum(["admin", "employee"]),
   default_daily_hours: z.number().nullable(),
+  avatar_path: z.string().nullable(),
 });
 
 const AvailabilityRowSchema = z.object({
@@ -122,7 +123,7 @@ export async function getEmployeeDetailData(
 
     const { data: profileRow, error: profileError } = await supabase
       .from("profiles")
-      .select("id, full_name, role, default_daily_hours")
+      .select("id, full_name, role, default_daily_hours, avatar_path")
       .eq("id", parsedId.data)
       .maybeSingle();
 
@@ -239,6 +240,7 @@ export async function getEmployeeDetailData(
         startDate: row.start_date,
       })),
       employee: {
+        avatarPath: profile.data.avatar_path,
         defaultDailyHours: profile.data.default_daily_hours,
         fullName: profile.data.full_name,
         id: profile.data.id,
