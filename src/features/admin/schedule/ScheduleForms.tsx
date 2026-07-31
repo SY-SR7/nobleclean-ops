@@ -117,6 +117,18 @@ export function ScheduleForm({
   );
   const formIdPrefix = mode === "create" ? "new-schedule" : schedule?.id;
 
+  // Pre-fill hours from employee default when creating
+  const employeeMap = new Map(
+    employees.map((e) => [e.id, e.defaultDailyHours]),
+  );
+  const [selectedEmployeeId, setSelectedEmployeeId] = React.useState(
+    schedule?.employeeId ?? "",
+  );
+  const prefillHours =
+    mode === "create" && selectedEmployeeId
+      ? (employeeMap.get(selectedEmployeeId) ?? schedule?.allocatedHours ?? "")
+      : (schedule?.allocatedHours ?? "");
+
   return (
     <form action={formAction} className="grid gap-4" noValidate>
       <input name="locale" type="hidden" value={locale} />
@@ -132,6 +144,7 @@ export function ScheduleForm({
         id={`${formIdPrefix}-employee`}
         label={copy.employeeLabel}
         name="employeeId"
+        onChange={(e) => setSelectedEmployeeId(e.target.value)}
         required
       >
         <option value="" />
@@ -181,7 +194,8 @@ export function ScheduleForm({
           required
           step={0.25}
           type="number"
-          defaultValue={schedule?.allocatedHours ?? ""}
+          key={String(prefillHours)}
+          defaultValue={String(prefillHours)}
         />
       </div>
 
