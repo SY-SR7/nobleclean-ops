@@ -16,6 +16,11 @@ import {
   initialEmployeeProfileActionState,
   initialWeeklyAvailabilityActionState,
   weeklyAvailabilityFieldErrors,
+  DefaultDailyHoursFormDataKeys,
+  SetDefaultDailyHoursInputSchema,
+  defaultDailyHoursFieldErrors,
+  initialDefaultDailyHoursActionState,
+  type DefaultDailyHoursActionState,
   type EmployeeProfileActionState,
   type WeeklyAvailabilityActionState,
 } from "./schema";
@@ -163,6 +168,59 @@ export async function setWeeklyAvailabilityAction(
     },
     { onConflict: "employee_id,weekday" },
   );
+
+  if (error) {
+    return { code: "SAVE_FAILED", status: "error" };
+  }
+
+  revalidateEmployeeDetail(dto.locale, dto.employeeId);
+  return { code: "SAVED", status: "success" };
+}
+
+export async function setDefaultDailyHoursAction(
+  _previousState: DefaultDailyHoursActionState = initialDefaultDailyHoursActionState,
+  formData: FormData,
+): Promise<DefaultDailyHoursActionState> {
+  void _previousState;
+
+  let raw;
+
+  try {
+    raw = pickFormData(formData, DefaultDailyHoursFormDataKeys);
+  } catch {
+    return { code: "VALIDATION_FAILED", status: "error" };
+  }
+
+  const parsed = SetDefaultDailyHoursInputSchema.safeParse(raw);
+
+  if (!parsed.success) {
+    return {
+      code: "VALIDATION_FAILED",
+      fieldErrors: defaultDailyHoursFieldErrors(parsed.error),
+      status: "error",
+    };
+  }
+
+  const dto = parsed.data;
+  const supabase = await getAdminMutationClient(dto.locale);
+
+  if (!supabase) {
+    return { code: "AUTH_FAILED", status: "error" };
+  }
+
+  if (!(await employeeExists(supabase, dto.employeeId))) {
+    return {
+      code: "VALIDATION_FAILED",
+      fieldErrors: { employeeId: "invalid" },
+      status: "error",
+    };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ default_daily_hours: dto.defaultDailyHours ?? null })
+    .eq("id", dto.employeeId)
+    .eq("role", "employee");
 
   if (error) {
     return { code: "SAVE_FAILED", status: "error" };

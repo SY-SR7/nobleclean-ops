@@ -35,6 +35,7 @@ export type EmployeeDetailData = Readonly<{
     id: string;
     fullName: string;
     role: "admin" | "employee";
+    defaultDailyHours: number | null;
   }> | null;
   weeklyAvailability: readonly EmployeeWeeklyAvailabilityDay[];
   assignmentHistory: readonly EmployeeAssignmentHistoryItem[];
@@ -45,6 +46,7 @@ const ProfileRowSchema = z.object({
   id: z.string().uuid(),
   full_name: z.string(),
   role: z.enum(["admin", "employee"]),
+  default_daily_hours: z.number().nullable(),
 });
 
 const AvailabilityRowSchema = z.object({
@@ -119,7 +121,7 @@ export async function getEmployeeDetailData(
 
     const { data: profileRow, error: profileError } = await supabase
       .from("profiles")
-      .select("id, full_name, role")
+      .select("id, full_name, role, default_daily_hours")
       .eq("id", parsedId.data)
       .maybeSingle();
 
@@ -236,6 +238,7 @@ export async function getEmployeeDetailData(
         startDate: row.start_date,
       })),
       employee: {
+        defaultDailyHours: profile.data.default_daily_hours,
         fullName: profile.data.full_name,
         id: profile.data.id,
         role: profile.data.role,
