@@ -1,7 +1,7 @@
 "use client";
 
 import { Save, Trash2 } from "lucide-react";
-import type { ReactNode, SelectHTMLAttributes } from "react";
+import React, { type ReactNode, type SelectHTMLAttributes } from "react";
 import { useActionState } from "react";
 
 import { Button, FormInput, FormSelect } from "@/components/ui";
