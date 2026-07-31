@@ -22,7 +22,7 @@ INSERT INTO auth.users (
    '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated',
    'nobleclean.private@gmail.com',
-   crypt('Demo@2026!', gen_salt('bf')),
+   crypt('NobleClean2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
    '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true),
