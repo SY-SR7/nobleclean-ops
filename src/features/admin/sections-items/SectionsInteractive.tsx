@@ -3,6 +3,7 @@
 import {
   Clock,
   ArrowRight,
+  Home,
   Layers,
   Image as ImageIcon,
   CheckCircle2,
@@ -79,6 +80,67 @@ function formatTimestamp(value: string | null, locale: Locale, fallback: string)
   return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
     dateStyle: "medium",
   }).format(date);
+}
+
+// ── Breadcrumb ────────────────────────────────────────────────────────────────
+
+type BreadcrumbStep = Readonly<{ id: string; name: string }>;
+
+function buildBreadcrumb(
+  sections: readonly SectionTreeNode[],
+  selectedId: string | null,
+): readonly BreadcrumbStep[] {
+  if (!selectedId) return [];
+  const byId = new Map(sections.map((s) => [s.id, s]));
+  const path: BreadcrumbStep[] = [];
+  let current = byId.get(selectedId);
+  while (current) {
+    path.unshift({ id: current.id, name: current.name });
+    current = current.parentSectionId ? byId.get(current.parentSectionId) : undefined;
+  }
+  return path;
+}
+
+function SectionBreadcrumb({
+  sections,
+  selectedSectionId,
+  onSelectSection,
+}: Readonly<{
+  sections: readonly SectionTreeNode[];
+  selectedSectionId: string | null;
+  onSelectSection?: (id: string) => void;
+}>) {
+  const crumbs = buildBreadcrumb(sections, selectedSectionId);
+  if (crumbs.length <= 1) return null;
+
+  return (
+    <nav className="flex items-center gap-1 flex-wrap text-xs font-semibold mb-1">
+      <button
+        type="button"
+        className="inline-flex items-center gap-1 text-on-surface-variant hover:text-secondary transition-colors"
+        onClick={() => onSelectSection?.(sections.find((s) => s.parentSectionId === null)?.id ?? "")}
+      >
+        <Home className="size-3" />
+        <span>Root</span>
+      </button>
+      {crumbs.map((crumb, i) => (
+        <span key={crumb.id} className="inline-flex items-center gap-1">
+          <ChevronRight className="size-3 text-on-surface-variant/40" />
+          {i === crumbs.length - 1 ? (
+            <span className="text-secondary">{crumb.name}</span>
+          ) : (
+            <button
+              type="button"
+              className="text-on-surface-variant hover:text-secondary transition-colors"
+              onClick={() => onSelectSection?.(crumb.id)}
+            >
+              {crumb.name}
+            </button>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
 }
 
 function ToolStepDetail({
@@ -297,6 +359,13 @@ export function SectionsInteractive({
 
   return (
     <div className="grid gap-4">
+      {/* Breadcrumb */}
+      <SectionBreadcrumb
+        sections={sections}
+        selectedSectionId={selectedSectionId}
+        onSelectSection={onSelectSection}
+      />
+
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3">
         <p className="text-on-surface-variant text-sm">
@@ -306,72 +375,119 @@ export function SectionsInteractive({
       </div>
 
       {viewMode === "grid" ? (
-        /* ── Grid View with real section photos ── */
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sections.map((section) => {
-            const isSelected = section.id === selectedSectionId;
-            const sectionImg = getSectionImage(section.name);
-            return (
-              <button
-                key={section.id}
-                type="button"
-                className={[
-                  "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-0.5 cursor-pointer",
-                  isSelected
-                    ? "border-secondary ring-2 ring-secondary/30"
-                    : "border-outline-variant hover:border-secondary",
-                ].join(" ")}
-                onClick={() => {
-                  if (onSelectSection) onSelectSection(section.id);
-                  openSectionDrawer(section);
-                }}
-              >
-                {/* Photo area */}
-                <div className="relative h-32 w-full overflow-hidden bg-surface-container">
-                  {sectionImg && (
-                    <Image
-                      src={sectionImg}
-                      alt={section.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  {/* depth badge */}
-                  {section.depth > 0 && (
-                    <span className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm">
-                      {"›".repeat(section.depth)} Unterbereich
-                    </span>
-                  )}
-                  {section.hasReferenceImage && (
-                    <div className="absolute top-2 right-2 bg-secondary/80 text-on-secondary rounded-full p-1 backdrop-blur-sm">
-                      <ImageIcon className="size-3" />
+        /* ── Grid View: root sections with their children grouped below ── */
+        <div className="grid gap-6">
+          {sections
+            .filter((s) => s.parentSectionId === null)
+            .map((root) => {
+              const children = sections.filter((s) => s.parentSectionId === root.id);
+              const isRootSelected = root.id === selectedSectionId;
+              const rootImg = getSectionImage(root.name);
+              return (
+                <div key={root.id} className="grid gap-2">
+                  {/* Root card */}
+                  <button
+                    type="button"
+                    className={[
+                      "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-0.5 cursor-pointer",
+                      isRootSelected
+                        ? "border-secondary ring-2 ring-secondary/30"
+                        : "border-outline-variant hover:border-secondary",
+                    ].join(" ")}
+                    onClick={() => {
+                      if (onSelectSection) onSelectSection(root.id);
+                      openSectionDrawer(root);
+                    }}
+                  >
+                    <div className="relative h-36 w-full overflow-hidden bg-surface-container">
+                      {rootImg && (
+                        <Image
+                          src={rootImg}
+                          alt={root.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      {root.hasReferenceImage && (
+                        <div className="absolute top-2 right-2 bg-secondary/80 text-on-secondary rounded-full p-1 backdrop-blur-sm">
+                          <ImageIcon className="size-3" />
+                        </div>
+                      )}
+                      <p className="absolute bottom-3 left-4 text-white text-base font-extrabold drop-shadow">{root.name}</p>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-container-lowest">
+                      <div className="flex items-center gap-3">
+                        <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                          <CheckCircle2 className="size-3" />
+                          {root.leafCount} {copy.leafCount}
+                        </span>
+                        <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {root.totalEstimatedMinutes} {copy.minutes}
+                        </span>
+                      </div>
+                      {children.length > 0 && (
+                        <span className="text-on-surface-variant text-xs">
+                          {children.length} Unterbereiche
+                        </span>
+                      )}
+                    </div>
+                    <div className={["h-1 transition-colors", isRootSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
+                  </button>
+
+                  {/* Children sub-grid */}
+                  {children.length > 0 && (
+                    <div className="ml-4 pl-3 border-l-2 border-secondary/20 grid gap-2 sm:grid-cols-2">
+                      {children.map((child) => {
+                        const isChildSelected = child.id === selectedSectionId;
+                        const childImg = getSectionImage(child.name);
+                        return (
+                          <button
+                            key={child.id}
+                            type="button"
+                            className={[
+                              "group flex flex-col overflow-hidden rounded-xl border text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer",
+                              isChildSelected
+                                ? "border-secondary ring-2 ring-secondary/20"
+                                : "border-outline-variant hover:border-secondary",
+                            ].join(" ")}
+                            onClick={() => {
+                              if (onSelectSection) onSelectSection(child.id);
+                              openSectionDrawer(child);
+                            }}
+                          >
+                            <div className="relative h-24 w-full overflow-hidden bg-surface-container">
+                              {childImg && (
+                                <Image
+                                  src={childImg}
+                                  alt={child.name}
+                                  fill
+                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+                              <p className="absolute bottom-2 left-3 text-white text-sm font-bold drop-shadow">{child.name}</p>
+                            </div>
+                            <div className="flex items-center gap-3 px-3 py-2 bg-surface-container-lowest">
+                              <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                                <CheckCircle2 className="size-3" />
+                                {child.leafCount}
+                              </span>
+                              <span className="text-on-surface-variant text-xs flex items-center gap-1">
+                                <Clock className="size-3" />
+                                {child.totalEstimatedMinutes} {copy.minutes}
+                              </span>
+                            </div>
+                            <div className={["h-0.5 transition-colors", isChildSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
-                {/* Body */}
-                <div className="flex flex-col gap-1.5 p-4 bg-surface-container-lowest flex-1">
-                  <p className={[
-                    "font-bold text-sm leading-tight transition-colors",
-                    isSelected ? "text-secondary" : "text-on-surface group-hover:text-secondary",
-                  ].join(" ")}>
-                    {section.name}
-                  </p>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                      <CheckCircle2 className="size-3" />
-                      {section.leafCount} {copy.leafCount}
-                    </span>
-                    <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                      <Clock className="size-3" />
-                      {section.totalEstimatedMinutes} {copy.minutes}
-                    </span>
-                  </div>
-                </div>
-                <div className={["h-1 transition-colors", isSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
-              </button>
-            );
-          })}
+              );
+            })}
         </div>
       ) : (
         /* ── List View ── */
