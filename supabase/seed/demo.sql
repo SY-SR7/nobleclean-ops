@@ -16,7 +16,10 @@ BEGIN;
 INSERT INTO auth.users (
   id, instance_id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-  created_at, updated_at, is_super_admin
+  created_at, updated_at, is_super_admin,
+  confirmation_token, recovery_token, email_change_token_new,
+  email_change, email_change_token_current, phone_change,
+  phone_change_token, reauthentication_token
 ) VALUES
   ('a0a00000-0000-4000-8000-000000000099',
    '00000000-0000-0000-0000-000000000000',
@@ -25,7 +28,8 @@ INSERT INTO auth.users (
    crypt('NobleClean2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true),
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true,
+   '', '', '', '', '', '', '', ''),
 
   ('a0a00000-0000-4000-8000-000000000000',
    '00000000-0000-0000-0000-000000000000',
@@ -34,7 +38,8 @@ INSERT INTO auth.users (
    crypt('Demo@2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true),
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true,
+   '', '', '', '', '', '', '', ''),
 
   ('e1a00000-0001-4000-8001-000000000001',
    '00000000-0000-0000-0000-000000000000',
@@ -43,7 +48,8 @@ INSERT INTO auth.users (
    crypt('Demo@2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false),
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false,
+   '', '', '', '', '', '', '', ''),
 
   ('e2a00000-0002-4000-8002-000000000002',
    '00000000-0000-0000-0000-000000000000',
@@ -52,7 +58,8 @@ INSERT INTO auth.users (
    crypt('Demo@2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false),
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false,
+   '', '', '', '', '', '', '', ''),
 
   ('e3a00000-0003-4000-8003-000000000003',
    '00000000-0000-0000-0000-000000000000',
@@ -61,7 +68,8 @@ INSERT INTO auth.users (
    crypt('Demo@2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false),
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false,
+   '', '', '', '', '', '', '', ''),
 
   ('e4a00000-0004-4000-8004-000000000004',
    '00000000-0000-0000-0000-000000000000',
@@ -70,7 +78,8 @@ INSERT INTO auth.users (
    crypt('Demo@2026!', gen_salt('bf')),
    '2026-01-10 08:00:00+00',
    '{"provider":"email","providers":["email"]}', '{}',
-   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false)
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', false,
+   '', '', '', '', '', '', '', '')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO auth.identities (
