@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Upload } from "lucide-react";
+import { Camera } from "lucide-react";
 import Image from "next/image";
 import { useActionState, useRef } from "react";
 

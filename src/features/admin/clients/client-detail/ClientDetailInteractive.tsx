@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  Building2,
   CalendarCheck,
   ClipboardList,
   Layers,
@@ -163,12 +162,14 @@ function AssignedEmployeesList({
         >
           <UserCheck className="text-on-surface-variant size-4 shrink-0" />
           <div className="min-w-0 flex-1">
-            <Link
-              className="text-on-surface hover:text-secondary truncate text-sm font-semibold transition-colors"
-              href={`/${locale}/admin/staff/${item.employeeId}`}
-            >
-              {item.employeeName}
-            </Link>
+            <EntityLink
+              id={item.employeeId}
+              name={item.employeeName}
+              type="employee"
+              locale={locale}
+              showInitials
+              className="text-sm font-semibold"
+            />
             <p className="text-on-surface-variant text-xs">
               {formatDate(item.startDate, locale)}
               {" – "}
@@ -216,12 +217,14 @@ function RecentPlansList({
         >
           <ClipboardList className="text-on-surface-variant size-4 shrink-0" />
           <div className="min-w-0 flex-1">
-            <Link
-              className="text-on-surface hover:text-secondary truncate text-sm font-semibold transition-colors"
-              href={`/${locale}/admin/staff/${item.employeeId}`}
-            >
-              {item.employeeName}
-            </Link>
+            <EntityLink
+              id={item.employeeId}
+              name={item.employeeName}
+              type="employee"
+              locale={locale}
+              showInitials
+              className="text-sm font-semibold"
+            />
             <p className="text-on-surface-variant text-xs">
               {formatDate(item.workDate, locale)}
               {" · "}
