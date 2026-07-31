@@ -145,6 +145,30 @@
       "statusUpdated": "Status updated.",
       "error": "The change could not be saved.",
       "loadError": "The client list could not be loaded."
+    },
+    "viewDetails": "View details",
+    "clientDetail": {
+      "title": "Client details",
+      "backToClients": "Back to clients",
+      "profileTitle": "Client profile",
+      "assignedEmployeesTitle": "Assigned employees",
+      "emptyAssignedEmployees": "No employees assigned to this client.",
+      "recentPlansTitle": "Recent daily plans",
+      "emptyRecentPlans": "No daily plans recorded yet.",
+      "sectionsTitle": "Sections",
+      "emptySections": "No sections configured for this client.",
+      "planStatus": {
+        "in_progress": "In progress",
+        "submitted": "Submitted"
+      },
+      "planItemsCompleted": "{completed} of {total} tasks completed",
+      "notAvailable": "Not provided",
+      "viewEmployee": "View employee",
+      "rootSection": "Top level",
+      "feedback": {
+        "loadError": "The client details could not be loaded.",
+        "notFound": "Client not found."
+      }
     }
   },
   "sectionsItems": {
