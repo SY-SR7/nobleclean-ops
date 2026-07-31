@@ -15,7 +15,12 @@ import Image from "next/image";
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
+import { InlineEditField, useToast } from "@/components/ui";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import {
+  quickRenameSectionAction,
+  quickRenameLeafItemAction,
+} from "./actions";
 import type {
   SectionTreeNode,
   LeafItemListItem,
@@ -27,6 +32,7 @@ type SectionsInteractiveProps = Readonly<{
   sections: readonly SectionTreeNode[];
   leafItems: readonly LeafItemListItem[];
   locale: Locale;
+  clientId: string;
   selectedSectionId: string | null;
   onSelectSection?: (sectionId: string) => void;
   copy: {
@@ -191,13 +197,41 @@ export function SectionsInteractive({
   sections,
   leafItems,
   locale,
+  clientId,
   selectedSectionId,
   onSelectSection,
   copy,
   tagLabels,
 }: SectionsInteractiveProps) {
   const { open } = useDetailDrawer();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useViewMode("sections", "grid");
+
+  /** Quick rename helper for sections */
+  async function renameSectionInline(sectionId: string, next: string): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("sectionId", sectionId);
+    fd.append("clientId", clientId);
+    fd.append("locale", locale);
+    fd.append("name", next);
+    const result = await quickRenameSectionAction(fd);
+    if (result.ok) { toast("Gespeichert", "success"); return null; }
+    toast("Fehler beim Speichern", "error");
+    return "Fehler";
+  }
+
+  /** Quick rename helper for leaf items */
+  async function renameLeafItemInline(leafItemId: string, next: string): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("leafItemId", leafItemId);
+    fd.append("clientId", clientId);
+    fd.append("locale", locale);
+    fd.append("name", next);
+    const result = await quickRenameLeafItemAction(fd);
+    if (result.ok) { toast("Gespeichert", "success"); return null; }
+    toast("Fehler beim Speichern", "error");
+    return "Fehler";
+  }
 
   const openLeafItemDrawer = useCallback(
     (item: LeafItemListItem) => {
@@ -495,23 +529,25 @@ export function SectionsInteractive({
             const isSelected = section.id === selectedSectionId;
             const sectionImg = getSectionImage(section.name);
             return (
-              <button
+              <div
                 key={section.id}
                 className={[
-                  "group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all border cursor-pointer",
+                  "group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all border",
                   isSelected
                     ? "border-secondary bg-secondary/10"
                     : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
                 ].join(" ")}
                 style={{ paddingLeft: `${(section.depth * 16) + 12}px` }}
-                onClick={() => {
-                  if (onSelectSection) onSelectSection(section.id);
-                  openSectionDrawer(section);
-                }}
-                type="button"
               >
-                {/* Thumbnail */}
-                <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+                {/* Thumbnail — click to open drawer */}
+                <button
+                  type="button"
+                  className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-surface-container cursor-pointer"
+                  onClick={() => {
+                    if (onSelectSection) onSelectSection(section.id);
+                    openSectionDrawer(section);
+                  }}
+                >
                   {sectionImg ? (
                     <Image src={sectionImg} alt={section.name} fill className="object-cover" />
                   ) : (
@@ -519,17 +555,35 @@ export function SectionsInteractive({
                       <Layers className="size-5 text-secondary" />
                     </div>
                   )}
-                </div>
+                </button>
+
+                {/* Inline-editable name + meta */}
                 <div className="min-w-0 flex-1">
-                  <p className={["text-sm font-semibold truncate transition-colors", isSelected ? "text-secondary" : "text-on-surface group-hover:text-secondary"].join(" ")}>
-                    {section.name}
-                  </p>
+                  <InlineEditField
+                    value={section.name}
+                    displayClassName={[
+                      "text-sm font-semibold truncate transition-colors",
+                      isSelected ? "text-secondary" : "text-on-surface",
+                    ].join(" ")}
+                    onSave={(next) => renameSectionInline(section.id, next)}
+                  />
                   <p className="text-on-surface-variant text-xs mt-0.5">
                     {section.leafCount} {copy.leafCount} · {section.totalEstimatedMinutes} {copy.minutes}
                   </p>
                 </div>
-                <ChevronRight className={["size-4 shrink-0", isSelected ? "text-secondary" : "text-on-surface-variant"].join(" ")} />
-              </button>
+
+                {/* Arrow — click to open drawer */}
+                <button
+                  type="button"
+                  className="cursor-pointer p-1 rounded-lg hover:bg-surface-container transition-colors"
+                  onClick={() => {
+                    if (onSelectSection) onSelectSection(section.id);
+                    openSectionDrawer(section);
+                  }}
+                >
+                  <ChevronRight className={["size-4 shrink-0", isSelected ? "text-secondary" : "text-on-surface-variant"].join(" ")} />
+                </button>
+              </div>
             );
           })}
         </div>

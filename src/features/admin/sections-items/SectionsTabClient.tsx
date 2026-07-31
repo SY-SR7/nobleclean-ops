@@ -167,6 +167,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                           sections={data.sections}
                           leafItems={data.leafItems}
                           locale={locale}
+                          clientId={selectedClientId}
                           selectedSectionId={selectedSection?.id ?? null}
                           onSelectSection={(secId) => setSelectedSectionId(secId)}
                           copy={{
