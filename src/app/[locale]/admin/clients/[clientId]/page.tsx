@@ -18,24 +18,15 @@ export default async function AdminClientDetailPage({ params }: PageProps) {
   const { locale: rawLocale, clientId } = await params;
 
   if (!isLocale(rawLocale)) {
-    console.log("[AdminClientDetailPage] Invalid locale:", rawLocale);
     notFound();
   }
 
   const locale = rawLocale;
-
-  try {
-    await requireRole(locale, "admin");
-  } catch (err) {
-    console.log("[AdminClientDetailPage] requireRole failed for user:", err);
-    throw err;
-  }
+  await requireRole(locale, "admin");
 
   const data = await getClientDetailData(locale, clientId);
-  console.log("[AdminClientDetailPage] data result:", { ok: data.ok, hasClient: Boolean(data.client) });
 
   if (!data.ok || !data.client) {
-    console.log("[AdminClientDetailPage] data.ok or data.client failed -> triggering notFound()");
     notFound();
   }
 
