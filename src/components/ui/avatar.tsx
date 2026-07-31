@@ -7,9 +7,11 @@ import { useActionState, useRef } from "react";
 import {
   attachEmployeeAvatarAction,
   attachClientAvatarAction,
-  type AvatarActionState,
-  initialAvatarActionState,
 } from "@/features/admin/avatars/actions";
+import {
+  initialAvatarActionState,
+  type AvatarActionState,
+} from "@/features/admin/avatars/schema";
 import type { Locale } from "@/i18n/routing";
 
 // ── EntityAvatar ─────────────────────────────────────────────────────────────

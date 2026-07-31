@@ -10,19 +10,11 @@ import { hasSameOriginRequest } from "@/lib/security/request-origin";
 import { requireRole } from "@/server/auth/guards";
 import { z } from "zod";
 
+import { initialAvatarActionState, type AvatarActionState } from "./schema";
+
 type SupabaseServerClient = Awaited<
   ReturnType<typeof createSupabaseServerClient>
 >;
-
-export type AvatarActionState = Readonly<{
-  code: "AUTH_FAILED" | "AVATAR_ATTACHED" | "SAVE_FAILED" | "VALIDATION_FAILED" | null;
-  status: "error" | "idle" | "success";
-}>;
-
-export const initialAvatarActionState: AvatarActionState = {
-  code: null,
-  status: "idle",
-};
 
 // ── Image type validation (same as reference-images) ─────────────────────────
 
