@@ -61,7 +61,7 @@ export type EmployeeDetailCopy = Readonly<{
   statusInactive: string;
   planStatusInProgress: string;
   planStatusSubmitted: string;
-  planItemsCompleted: (completed: number, total: number) => string;
+  planItemsCompletedLabel: string;
 }>;
 
 type EmployeeDetailInteractiveProps = Readonly<{
@@ -329,7 +329,9 @@ function RecentPlansList({
             <p className="text-on-surface-variant text-xs">
               {formatDate(item.workDate, locale)}
               {" · "}
-              {copy.planItemsCompleted(item.completedItems, item.totalItems)}
+              {copy.planItemsCompletedLabel
+                .replace("{completed}", String(item.completedItems))
+                .replace("{total}", String(item.totalItems))}
             </p>
           </div>
           <span
