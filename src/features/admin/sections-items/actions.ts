@@ -946,3 +946,100 @@ export async function attachReferenceImageAction(
   revalidateSectionsItems(dto.locale, dto.clientId);
   return { code: "IMAGE_ATTACHED", status: "success" };
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Quick Rename — lightweight single-field update for inline editing
+   ───────────────────────────────────────────────────────────────────────── */
+
+export type QuickRenameResult = Readonly<{
+  ok: boolean;
+  error?: string;
+}>;
+
+/**
+ * Renames a section in-place without touching other fields.
+ * Accepts: sectionId, clientId, locale, name (via FormData)
+ */
+export async function quickRenameSectionAction(
+  formData: FormData,
+): Promise<QuickRenameResult> {
+  if (!(await hasSameOriginRequest())) return { ok: false, error: "AUTH_FAILED" };
+
+  const sectionId = formData.get("sectionId");
+  const clientId  = formData.get("clientId");
+  const locale    = formData.get("locale");
+  const name      = formData.get("name");
+
+  if (
+    typeof sectionId !== "string" ||
+    typeof clientId  !== "string" ||
+    typeof locale    !== "string" ||
+    typeof name      !== "string" ||
+    name.trim().length === 0 ||
+    name.trim().length > 160
+  ) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  try {
+    await requireRole(locale as "de" | "en", "admin");
+  } catch {
+    return { ok: false, error: "AUTH_FAILED" };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("sections")
+    .update({ name: name.trim() })
+    .eq("id", sectionId)
+    .eq("client_id", clientId);
+
+  if (error) return { ok: false, error: "SAVE_FAILED" };
+
+  revalidateSectionsItems(locale as "de" | "en", clientId);
+  return { ok: true };
+}
+
+/**
+ * Renames a leaf item in-place without touching other fields.
+ * Accepts: leafItemId, clientId, locale, name (via FormData)
+ */
+export async function quickRenameLeafItemAction(
+  formData: FormData,
+): Promise<QuickRenameResult> {
+  if (!(await hasSameOriginRequest())) return { ok: false, error: "AUTH_FAILED" };
+
+  const leafItemId = formData.get("leafItemId");
+  const clientId   = formData.get("clientId");
+  const locale     = formData.get("locale");
+  const name       = formData.get("name");
+
+  if (
+    typeof leafItemId !== "string" ||
+    typeof clientId   !== "string" ||
+    typeof locale     !== "string" ||
+    typeof name       !== "string" ||
+    name.trim().length === 0 ||
+    name.trim().length > 160
+  ) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  try {
+    await requireRole(locale as "de" | "en", "admin");
+  } catch {
+    return { ok: false, error: "AUTH_FAILED" };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("leaf_items")
+    .update({ name: name.trim() })
+    .eq("id", leafItemId);
+
+  if (error) return { ok: false, error: "SAVE_FAILED" };
+
+  revalidateSectionsItems(locale as "de" | "en", clientId);
+  return { ok: true };
+}
+
