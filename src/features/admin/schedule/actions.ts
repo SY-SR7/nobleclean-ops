@@ -218,3 +218,52 @@ export async function deleteScheduleAction(
   revalidateSchedule(dto.locale);
   return { code: "DELETED", status: "success" };
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Quick update allocated hours — for inline editing on schedule cards
+   ───────────────────────────────────────────────────────────────────────── */
+export type QuickScheduleResult = Readonly<{
+  ok: boolean;
+  error?: string;
+}>;
+
+export async function quickUpdateScheduleHoursAction(
+  formData: FormData,
+): Promise<QuickScheduleResult> {
+  if (!(await hasSameOriginRequest())) return { ok: false, error: "AUTH_FAILED" };
+
+  const scheduleId    = formData.get("scheduleId");
+  const locale        = formData.get("locale");
+  const hoursStr      = formData.get("allocatedHours");
+
+  if (
+    typeof scheduleId !== "string" ||
+    typeof locale     !== "string" ||
+    typeof hoursStr   !== "string"
+  ) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  const hours = parseFloat(hoursStr);
+  if (Number.isNaN(hours) || hours < 0.5 || hours > 24) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  try {
+    await requireRole(locale as "de" | "en", "admin");
+  } catch {
+    return { ok: false, error: "AUTH_FAILED" };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("work_schedule")
+    .update({ allocated_hours: hours })
+    .eq("id", scheduleId);
+
+  if (error) return { ok: false, error: "SAVE_FAILED" };
+
+  revalidateSchedule(locale as "de" | "en");
+  return { ok: true };
+}
+
