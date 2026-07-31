@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import type { Locale } from "@/i18n/routing";
