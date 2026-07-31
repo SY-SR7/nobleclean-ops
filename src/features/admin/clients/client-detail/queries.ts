@@ -13,6 +13,7 @@ export type ClientDetailProfile = Readonly<{
   contactPhone: string;
   contactNotes: string;
   isActive: boolean;
+  avatarPath: string | null;
 }>;
 
 export type ClientAssignedEmployee = Readonly<{
@@ -56,6 +57,7 @@ const ClientRowSchema = z.object({
   address: z.string(),
   contact_info: z.unknown(),
   is_active: z.boolean(),
+  avatar_path: z.string().nullable(),
 });
 
 const AssignmentRowSchema = z.object({
@@ -146,7 +148,7 @@ export async function getClientDetailData(
 
     const { data: clientRow, error: clientError } = await supabase
       .from("clients")
-      .select("id, name, address, contact_info, is_active")
+      .select("id, name, address, contact_info, is_active, avatar_path")
       .eq("id", parsedId.data)
       .maybeSingle();
 
@@ -274,6 +276,7 @@ export async function getClientDetailData(
       })),
       client: {
         address: client.data.address,
+        avatarPath: typeof client.data.avatar_path === "string" ? client.data.avatar_path : null,
         contactEmail: contactInfo.contactEmail,
         contactName: contactInfo.contactName,
         contactNotes: contactInfo.contactNotes,
