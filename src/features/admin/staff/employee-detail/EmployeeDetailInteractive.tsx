@@ -125,6 +125,63 @@ function EmployeeProfileForm({
   );
 }
 
+function DefaultDailyHoursForm({
+  employeeId,
+  defaultDailyHours,
+  locale,
+  copy,
+}: Readonly<{
+  employeeId: string;
+  defaultDailyHours: number | null;
+  locale: Locale;
+  copy: EmployeeDetailCopy;
+}>) {
+  const [state, formAction, isPending] = useActionState(
+    setDefaultDailyHoursAction,
+    initialDefaultDailyHoursActionState,
+  );
+
+  return (
+    <form action={formAction} className="grid gap-4" noValidate>
+      <input name="locale" type="hidden" value={locale} />
+      <input name="employeeId" type="hidden" value={employeeId} />
+
+      <FormInput
+        defaultValue={defaultDailyHours?.toString() ?? ""}
+        error={
+          state.fieldErrors?.defaultDailyHours
+            ? copy.defaultDailyHoursError
+            : undefined
+        }
+        helpText={copy.defaultDailyHoursHint}
+        id="employee-detail-default-hours"
+        label={copy.defaultDailyHoursLabel}
+        max={24}
+        min={0.5}
+        name="defaultDailyHours"
+        step={0.5}
+        type="number"
+      />
+
+      <div className="flex items-center gap-3">
+        <Button disabled={isPending} isLoading={isPending} type="submit">
+          {copy.saveProfile}
+        </Button>
+        {state.status === "success" && (
+          <p className="text-sm font-semibold text-emerald-600" role="status">
+            {copy.defaultDailyHoursSaved}
+          </p>
+        )}
+        {state.status === "error" && !state.fieldErrors?.defaultDailyHours && (
+          <p className="text-error text-sm font-semibold" role="alert">
+            {copy.defaultDailyHoursError}
+          </p>
+        )}
+      </div>
+    </form>
+  );
+}
+
 function WeekdayToggle({
   employeeId,
   locale,
@@ -336,6 +393,14 @@ export function EmployeeDetailInteractive({
           fullName={employee.fullName}
           locale={locale}
         />
+        <div className="border-outline-variant border-t pt-4">
+          <DefaultDailyHoursForm
+            copy={copy}
+            defaultDailyHours={employee.defaultDailyHours}
+            employeeId={employee.id}
+            locale={locale}
+          />
+        </div>
       </section>
 
       <section className="border-outline-variant bg-surface-container-lowest grid gap-4 rounded-2xl border p-5">

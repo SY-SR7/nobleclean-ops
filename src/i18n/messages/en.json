@@ -307,8 +307,14 @@
       "feedback": {
         "profileSaved": "Profile saved.",
         "profileError": "The profile could not be saved.",
+        "defaultDailyHoursSaved": "Default hours saved.",
+        "defaultDailyHoursError": "The default hours could not be saved.",
         "loadError": "The employee details could not be loaded.",
         "notFound": "Employee not found."
+      },
+      "defaultDailyHours": {
+        "label": "Default daily hours",
+        "hint": "Pre-fills allocated hours when creating a schedule entry for this employee."
       },
       "availabilityTitle": "Weekly availability",
       "availabilityHint": "Set which weekdays this employee normally works.",
