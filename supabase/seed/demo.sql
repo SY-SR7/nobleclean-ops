@@ -18,6 +18,15 @@ INSERT INTO auth.users (
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
   created_at, updated_at, is_super_admin
 ) VALUES
+  ('a0a00000-0000-4000-8000-000000000099',
+   '00000000-0000-0000-0000-000000000000',
+   'authenticated', 'authenticated',
+   'nobleclean.private@gmail.com',
+   crypt('Demo@2026!', gen_salt('bf')),
+   '2026-01-10 08:00:00+00',
+   '{"provider":"email","providers":["email"]}', '{}',
+   '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00', true),
+
   ('a0a00000-0000-4000-8000-000000000000',
    '00000000-0000-0000-0000-000000000000',
    'authenticated', 'authenticated',
@@ -68,6 +77,10 @@ INSERT INTO auth.identities (
   id, provider_id, user_id, identity_data, provider,
   last_sign_in_at, created_at, updated_at
 ) VALUES
+  (gen_random_uuid(), 'nobleclean.private@gmail.com',
+   'a0a00000-0000-4000-8000-000000000099',
+   '{"sub":"a0a00000-0000-4000-8000-000000000099","email":"nobleclean.private@gmail.com","email_verified":true}',
+   'email', '2026-01-15 07:00:00+00', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
   (gen_random_uuid(), 'admin@nobleclean.de',
    'a0a00000-0000-4000-8000-000000000000',
    '{"sub":"a0a00000-0000-4000-8000-000000000000","email":"admin@nobleclean.de","email_verified":true}',
@@ -94,6 +107,7 @@ ON CONFLICT DO NOTHING;
    SCHRITT 2 — Profile
    ───────────────────────────────────────────────────────────────────────── */
 INSERT INTO public.profiles (id, full_name, role, created_at, updated_at) VALUES
+  ('a0a00000-0000-4000-8000-000000000099', 'NobleClean Admin', 'admin',    '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
   ('a0a00000-0000-4000-8000-000000000000', 'Administrator', 'admin',    '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
   ('e1a00000-0001-4000-8001-000000000001', 'Thomas Müller', 'admin',    '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
   ('e2a00000-0002-4000-8002-000000000002', 'Stefan Schmidt','employee', '2026-01-10 08:00:00+00', '2026-01-10 08:00:00+00'),
