@@ -234,14 +234,14 @@ export async function getEmployeeDetailData(
       assignmentHistory: assignments.data.map((row) => ({
         clientId: row.client_id,
         clientName: clientMap.get(row.client_id) ?? "",
-        endDate: row.end_date,
+        endDate: row.end_date ?? null,
         id: row.id,
-        isActive: isActiveAssignment(row.start_date, row.end_date),
+        isActive: isActiveAssignment(row.start_date, row.end_date ?? null),
         startDate: row.start_date,
       })),
       employee: {
-        avatarPath: profile.data.avatar_path,
-        defaultDailyHours: profile.data.default_daily_hours,
+        avatarPath: profile.data.avatar_path ?? null,
+        defaultDailyHours: profile.data.default_daily_hours ?? null,
         fullName: profile.data.full_name,
         id: profile.data.id,
         role: profile.data.role,
@@ -258,14 +258,15 @@ export async function getEmployeeDetailData(
           completedItems: counts.completed,
           id: row.id,
           status: row.status,
-          submittedAt: row.submitted_at,
+          submittedAt: row.submitted_at ?? null,
           totalItems: counts.total,
           workDate: row.work_date,
         };
       }),
       weeklyAvailability: fullWeekTemplate(availability.data),
     };
-  } catch {
+  } catch (err) {
+    console.error("[getEmployeeDetailData] Exception:", err);
     return emptyData();
   }
 }
