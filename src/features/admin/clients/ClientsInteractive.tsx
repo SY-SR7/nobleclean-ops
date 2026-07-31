@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, MapPin, Phone, Mail, User, FileText, ArrowRight } from "lucide-react";
+import { Building2, MapPin, Phone, Mail, User, FileText, ArrowRight, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useCallback } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
@@ -25,6 +26,7 @@ type ClientsInteractiveProps = Readonly<{
     notAvailable: string;
     viewSections: string;
     viewSchedule: string;
+    viewDetails: string;
   };
 }>;
 
@@ -131,22 +133,23 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
             const gradient = getClientGradient(client.name);
             const initials = client.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
             return (
-              <button
+              <div
                 key={client.id}
-                type="button"
-                className="group flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest text-left shadow-sm transition-all hover:border-secondary hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-                onClick={() => openClientDrawer(client)}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-sm transition-all hover:border-secondary hover:shadow-xl hover:-translate-y-1"
               >
-                {/* Gradient header with initials */}
-                <div className={`relative flex items-center justify-center bg-gradient-to-br ${gradient} px-4 py-8`}>
+                {/* Gradient header with initials — click opens detail page */}
+                <Link
+                  href={`/${locale}/admin/clients/${client.id}`}
+                  className={`relative flex items-center justify-center bg-gradient-to-br ${gradient} px-4 py-8`}
+                >
                   <span className="text-white font-bold text-3xl drop-shadow-md">{initials}</span>
                   {/* Status dot */}
                   <span className={["absolute top-3 right-3 h-2.5 w-2.5 rounded-full border-2 border-white shadow", client.isActive ? "bg-green-400" : "bg-gray-400"].join(" ")} />
-                </div>
+                </Link>
                 {/* Card body */}
                 <div className="flex flex-col gap-2 p-4 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-heading text-on-surface group-hover:text-secondary text-base font-bold transition-colors leading-tight line-clamp-2">
+                    <h3 className="font-heading text-on-surface text-base font-bold leading-tight line-clamp-2">
                       {client.name}
                     </h3>
                     <span className={
@@ -169,8 +172,25 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                       <span className="truncate">{client.contactInfo.email}</span>
                     </p>
                   )}
+                  <div className="mt-auto pt-2 flex gap-2">
+                    <Link
+                      href={`/${locale}/admin/clients/${client.id}`}
+                      className="bg-secondary text-on-secondary flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition hover:opacity-90"
+                    >
+                      <ExternalLink className="size-3.5" />
+                      {copy.viewDetails}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => openClientDrawer(client)}
+                      className="bg-secondary/10 hover:bg-secondary/20 text-secondary flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition cursor-pointer"
+                    >
+                      <FileText className="size-3.5" />
+                      Bearbeiten
+                    </button>
+                  </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -181,19 +201,23 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
             const gradient = getClientGradient(client.name);
             const initials = client.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
             return (
-              <button
+              <div
                 key={client.id}
-                type="button"
-                className="group flex w-full items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 text-left shadow-sm transition-all hover:border-secondary hover:shadow-md cursor-pointer"
-                onClick={() => openClientDrawer(client)}
+                className="group flex w-full items-center gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest px-4 py-3 shadow-sm transition-all hover:border-secondary hover:shadow-md"
               >
-                <div className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm text-white bg-gradient-to-br ${gradient}`}>
+                <Link
+                  href={`/${locale}/admin/clients/${client.id}`}
+                  className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center font-bold text-sm text-white bg-gradient-to-br ${gradient}`}
+                >
                   {initials}
-                </div>
+                </Link>
                 <div className="min-w-0 flex-1">
-                  <p className="text-on-surface group-hover:text-secondary font-semibold text-sm transition-colors truncate">
+                  <Link
+                    href={`/${locale}/admin/clients/${client.id}`}
+                    className="text-on-surface hover:text-secondary font-semibold text-sm transition-colors truncate block"
+                  >
                     {client.name}
-                  </p>
+                  </Link>
                   {client.address && (
                     <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
                       <MapPin className="size-3 shrink-0" />{client.address}
@@ -207,8 +231,24 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                 }>
                   {client.isActive ? copy.active : copy.inactive}
                 </span>
-                <ArrowRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
-              </button>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <Link
+                    href={`/${locale}/admin/clients/${client.id}`}
+                    className="flex items-center gap-1 rounded-xl border border-outline-variant px-3 py-1.5 text-xs font-bold text-on-surface-variant transition hover:bg-surface-container"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    {copy.viewDetails}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => openClientDrawer(client)}
+                    className="flex items-center gap-1 rounded-xl border border-outline-variant px-3 py-1.5 text-xs font-bold text-on-surface-variant transition hover:bg-surface-container cursor-pointer"
+                  >
+                    <FileText className="size-3.5" />
+                    Bearbeiten
+                  </button>
+                </div>
+              </div>
             );
           })}
         </div>
