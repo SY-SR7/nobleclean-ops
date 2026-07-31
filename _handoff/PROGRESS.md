@@ -661,3 +661,40 @@ Before making any change, and again after, this session diffed against a fresh c
 - Decide whether `EmployeeAvailabilityCalendar.tsx`'s fabricated-hash quick-view modal should now read from `employee_weekly_availability` too, or be removed in favor of linking straight to the detail page's real availability editor.
 - Run `supabase db reset --local` and `npm run test:db` against `employee_weekly_availability.test.sql` in an environment with local Supabase available; this session could not.
 - Investigate and fix (or file as its own Beads issue) the pre-existing `lint` / `security:patterns` / unit-test regression documented above, independent of GAP 1.
+
+## Admin 360 Drilldown and Media — GAPs 2-6 Completion
+
+Date: 2026-07-31
+
+### GAP 2: Default Daily Working Hours per Employee
+- Added `supabase/migrations/20260731010000_default_daily_hours.sql` adding `default_daily_hours numeric(5,2)` column to `profiles` with range constraint `(0, 24]`.
+- Added `setDefaultDailyHoursAction` server action with DTO validation, same-origin check, and admin role guard.
+- Added `DefaultDailyHoursForm` in Employee Detail page to allow admins to edit default daily hours.
+- Updated `ScheduleForm` to auto-prefill `allocatedHours` when an employee is selected.
+
+### GAP 3: Employee and Client Photos (Avatars)
+- Added `supabase/migrations/20260731020000_avatar_storage.sql`: private `avatars` bucket (3MB size limit, jpeg/png/webp), path validation functions, and strict RLS policies.
+- Added `avatar_path` column to `profiles` and `clients`.
+- Added `src/features/admin/avatars/actions.ts` with `attachEmployeeAvatarAction` and `attachClientAvatarAction` enforcing magic-byte validation, sharp image metadata checks, random object naming, and old avatar deletion.
+- Added `EntityAvatar` display component with initials/gradient fallback and `AvatarUpload` camera-trigger component.
+- Added private `/api/avatar` proxy route to stream avatar images securely to authenticated admins.
+- Downloaded seed photos of Arab men for employee avatars into `public/images/avatars/seed/`.
+
+### GAP 4: Client Detail Page
+- Added `src/app/[locale]/admin/clients/[clientId]/page.tsx` dynamic route with `requireRole(locale, "admin")` guard.
+- Added `src/features/admin/clients/client-detail/{queries,ClientDetailInteractive}` displaying client profile, section tree, assigned employees, and recent daily plans.
+- Updated `ClientsInteractive.tsx` cards and list rows to link client names directly to `/admin/clients/[clientId]`.
+
+### GAP 5: Unlimited Nested Sub-Sections & Section Breadcrumbs
+- Updated `SectionsInteractive.tsx` with a new `SectionBreadcrumb` component (`Home > Parent > Child`) showing the full path when drilled into a subsection.
+- Redesigned grid view: Root sections rendered as full-size cards; child subsections rendered in an indented 2-column subgrid below their parent with a visual border connector.
+
+### GAP 6: Global Click-Through Navigation & Edit-From-Anywhere
+- Added `EntityLink` component in `src/components/ui/entity-link.tsx` to provide standardized, accessible links for employees (`/admin/staff/[id]`) and clients (`/admin/clients/[id]`).
+- Integrated `EntityLink` across `ReportsInteractive.tsx`, `ScheduleInteractive.tsx`, and `ClientDetailInteractive.tsx`.
+
+### Verification & Local Quality Gates
+- `npx tsc --noEmit`: 0 errors.
+- `npm run build`: Success (30 routes generated).
+- `npx supabase db reset --local`: Success (all 9 migrations executed cleanly).
+

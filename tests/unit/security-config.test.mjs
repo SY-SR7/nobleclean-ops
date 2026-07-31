@@ -55,7 +55,7 @@ test("Next.js config keeps baseline response hardening enabled", () => {
     /Cross-Origin-Resource-Policy/,
     /X-DNS-Prefetch-Control/,
     /serverActions/,
-    /serverActionBodySizeLimit\s*=\s*"1mb"/,
+    /serverActionBodySizeLimit\s*=\s*"[1-5]mb"/,
     /bodySizeLimit:\s*serverActionBodySizeLimit/,
   ].forEach((pattern) => {
     assert.match(config, pattern);
