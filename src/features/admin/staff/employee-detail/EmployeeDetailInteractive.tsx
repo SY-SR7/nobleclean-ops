@@ -7,7 +7,6 @@ import {
   Building2,
   CalendarCheck,
   ClipboardList,
-  User,
 } from "lucide-react";
 
 import { Button, FormInput, AvatarUpload } from "@/components/ui";

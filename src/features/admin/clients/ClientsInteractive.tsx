@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, MapPin, Phone, Mail, User, FileText, ArrowRight, ExternalLink } from "lucide-react";
+import { Building2, MapPin, Mail, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useCallback } from "react";
 

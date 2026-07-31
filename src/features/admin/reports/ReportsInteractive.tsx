@@ -3,13 +3,10 @@
 import {
   BarChart3,
   CheckCircle2,
-  Clock,
   User,
   CalendarDays,
   ArrowRight,
   AlertTriangle,
-  Wrench,
-  XCircle,
   Save,
   Check,
 } from "lucide-react";
@@ -306,12 +303,9 @@ export function PlansGridContainer({ plans, locale, copy }: {
       </div>
       {viewMode === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {plans.map((plan) => {
-            const pct = plan.totalItems > 0 ? Math.round((plan.completedItems / plan.totalItems) * 100) : 0;
-            return (
-              <PlanInteractiveCard key={plan.id} plan={plan} locale={locale} copy={copy} />
-            );
-          })}
+          {plans.map((plan) => (
+            <PlanInteractiveCard key={plan.id} plan={plan} locale={locale} copy={copy} />
+          ))}
         </div>
       ) : (
         <div className="grid gap-2">

@@ -2,7 +2,6 @@
 
 import {
   Clock,
-  ArrowRight,
   Home,
   Layers,
   Image as ImageIcon,

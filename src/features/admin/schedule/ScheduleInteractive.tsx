@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, User, Building2, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { CalendarDays, Building2, ArrowRight, Sparkles } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
@@ -21,14 +21,6 @@ type ScheduleInteractiveProps = Readonly<{
     allocatedHours: string;
   };
 }>;
-
-function formatDate(value: string, locale: Locale) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
-    dateStyle: "full",
-  }).format(date);
-}
 
 function formatDateShort(value: string, locale: Locale) {
   const date = new Date(value);
