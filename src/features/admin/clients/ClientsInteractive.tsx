@@ -1,12 +1,14 @@
 "use client";
 
-import { Building2, MapPin, Mail, FileText, ArrowRight, ExternalLink } from "lucide-react";
+import { Building2, MapPin, Mail, FileText, ArrowRight, ExternalLink, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useCallback } from "react";
+import { useCallback, useState, useTransition } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { ConfirmDeleteModal, useToast } from "@/components/ui";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { ClientForm, ClientStatusForm } from "./ClientForm";
+import { deleteClientAction } from "./client-detail/actions";
 import { useAdminSpa } from "@/context/admin-spa-context";
 import type { AdminClientListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -27,6 +29,14 @@ type ClientsInteractiveProps = Readonly<{
     viewSections: string;
     viewSchedule: string;
     viewDetails: string;
+    deleteLabel: string;
+    deleteConfirmTitle: string;
+    deleteConfirmBody: string;
+    deleteConfirmLabel: string;
+    cancelLabel: string;
+    savedLabel: string;
+    errorLabel: string;
+    deleteBlockedLabel: string;
   };
 }>;
 
@@ -49,7 +59,33 @@ function getClientGradient(name: string): string {
 export function ClientsInteractive({ clients, locale, copy }: ClientsInteractiveProps) {
   const { open, close } = useDetailDrawer();
   const { setActiveTab } = useAdminSpa();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useViewMode("clients", "grid");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isPendingDelete, startDeleteTransition] = useTransition();
+
+  const deleteTargetName =
+    clients.find((c) => c.id === deleteTargetId)?.name ?? "";
+
+  function handleDeleteClick(clientId: string) {
+    setDeleteTargetId(clientId);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTargetId) return;
+    const fd = new FormData();
+    fd.append("clientId", deleteTargetId);
+    fd.append("locale", locale);
+    const result = await deleteClientAction(fd);
+    setDeleteTargetId(null);
+    if (result.ok) {
+      toast(copy.savedLabel, "success");
+    } else if (result.error === "HAS_SECTIONS") {
+      toast(copy.deleteBlockedLabel, "error");
+    } else {
+      toast(copy.errorLabel, "error");
+    }
+  }
 
   const openClientDrawer = useCallback(
     (client: AdminClientListItem) => {
@@ -190,6 +226,14 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                       <FileText className="size-3.5" />
                       Bearbeiten
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClick(client.id)}
+                      className="flex items-center justify-center rounded-xl border border-outline-variant px-2 py-2 text-xs text-on-surface-variant transition hover:border-error hover:bg-error/10 hover:text-error cursor-pointer"
+                      title={copy.deleteLabel}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -249,12 +293,32 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                     <FileText className="size-3.5" />
                     Bearbeiten
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClick(client.id)}
+                    className="flex items-center justify-center rounded-xl border border-outline-variant px-2 py-1.5 text-on-surface-variant transition hover:border-error hover:bg-error/10 hover:text-error cursor-pointer"
+                    title={copy.deleteLabel}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmDeleteModal
+        open={deleteTargetId !== null}
+        entityName={deleteTargetName}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTargetId(null)}
+        title={copy.deleteConfirmTitle}
+        body={copy.deleteConfirmBody}
+        confirmLabel={copy.deleteConfirmLabel}
+        cancelLabel={copy.cancelLabel}
+      />
     </div>
   );
 }
