@@ -76,7 +76,7 @@ const PlanRowSchema = z.object({
   id: z.string().uuid(),
   employee_id: z.string().uuid(),
   work_date: z.string(),
-  status: z.enum(["in_progress", "submitted"]),
+  status: z.string(),
 });
 
 const PlanItemRowSchema = z.object({
@@ -296,7 +296,7 @@ export async function getClientDetailData(
           employeeId: row.employee_id,
           employeeName: employeeMap.get(row.employee_id) ?? "",
           id: row.id,
-          status: row.status,
+          status: row.status === "submitted" ? "submitted" : "in_progress",
           totalItems: counts.total,
           workDate: row.work_date,
         };
