@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ClientDetailInteractive } from "@/features/admin/clients/client-detail/ClientDetailInteractive";
 import { getClientDetailData } from "@/features/admin/clients/client-detail/queries";
+import { getStaffAssignmentsData } from "@/features/admin/staff/queries";
 import { getMessages } from "@/i18n/messages";
 import { isLocale } from "@/i18n/routing";
 import { t } from "@/i18n/translate";
@@ -24,7 +25,10 @@ export default async function AdminClientDetailPage({ params }: PageProps) {
   const locale = rawLocale;
   await requireRole(locale, "admin");
 
-  const data = await getClientDetailData(locale, clientId);
+  const [data, staffData] = await Promise.all([
+    getClientDetailData(locale, clientId),
+    getStaffAssignmentsData(locale),
+  ]);
 
   if (!data.ok || !data.client) {
     notFound();
@@ -80,6 +84,22 @@ export default async function AdminClientDetailPage({ params }: PageProps) {
     avatarUploadLabel: t(messages, "adminClients.clientDetail.avatar.upload"),
     avatarSavedLabel: t(messages, "adminClients.clientDetail.avatar.saved"),
     avatarErrorLabel: t(messages, "adminClients.clientDetail.avatar.error"),
+    // Inline-edit UI strings — fall back to hard-coded defaults if missing
+    savedLabel: "Gespeichert",
+    errorLabel: "Fehler beim Speichern",
+    endAssignmentLabel: "Beenden",
+    endAssignmentConfirmTitle: "Zuweisung beenden?",
+    endAssignmentConfirmBody:
+      "Die Zuweisung dieses Mitarbeiters wird zum heutigen Datum beendet.",
+    confirmLabel: "Beenden",
+    cancelLabel: "Abbrechen",
+    addAssignmentLabel: "Zuweisung hinzufügen",
+    employeeLabel: "Mitarbeiter",
+    startDateLabel: "Von",
+    endDateLabel: "Bis (optional)",
+    saveLabel: "Speichern",
+    // Employee list for the assignment form
+    employees: staffData.employees,
   };
 
   return (
