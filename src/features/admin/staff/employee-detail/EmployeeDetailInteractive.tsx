@@ -16,10 +16,12 @@ import type { Locale } from "@/i18n/routing";
 import {
   setWeeklyAvailabilityAction,
   updateEmployeeProfileAction,
+  setDefaultDailyHoursAction,
 } from "./actions";
 import {
   initialEmployeeProfileActionState,
   initialWeeklyAvailabilityActionState,
+  initialDefaultDailyHoursActionState,
 } from "./schema";
 import type {
   EmployeeAssignmentHistoryItem,
@@ -39,6 +41,10 @@ export type EmployeeDetailCopy = Readonly<{
   saveProfile: string;
   profileSaved: string;
   profileError: string;
+  defaultDailyHoursLabel: string;
+  defaultDailyHoursSaved: string;
+  defaultDailyHoursError: string;
+  defaultDailyHoursHint: string;
   availabilityTitle: string;
   availabilityHint: string;
   weekdayLabels: readonly string[];
