@@ -274,6 +274,7 @@ async function ClientsTab({ locale }: { locale: Locale }) {
     notAvailable: t(messages, "adminClients.notAvailable"),
     viewSections: t(messages, "navigation.admin.sectionsItems"),
     viewSchedule: t(messages, "navigation.admin.schedule"),
+    viewDetails: t(messages, "adminClients.viewDetails"),
   };
 
   const activeCount = result.clients.filter((c) => c.isActive).length;
