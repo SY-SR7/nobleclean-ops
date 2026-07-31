@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Image as ImageIcon, Layers, Plus, Edit2, CheckSquare } from "lucide-react";
 
-import { Button, PriorityStatusBadge, TaskItemCard, ToolStepCard } from "@/components/ui";
+import { Button, PriorityStatusBadge, TaskItemCard, ToolStepCard, InlineEditField, useToast } from "@/components/ui";
 import { SectionPortalTabs } from "@/components/ui/section-portal-tabs";
 import {
   DeleteToolStepForm,
@@ -15,6 +15,7 @@ import {
   type SectionsItemsFormCopy,
 } from "./SectionsItemsForms";
 import { SectionsInteractive } from "./SectionsInteractive";
+import { quickRenameLeafItemAction } from "./actions";
 import type {
   SectionsItemsData,
   LeafItemListItem,
@@ -77,9 +78,22 @@ function descendantIds(sections: readonly SectionTreeNode[], sectionId: string) 
 export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClientProps) {
   const { selectedClientId: spaClientId, selectedSectionId: spaSectionId, setSelectedSectionId, setActiveTab } = useAdminSpa();
   const [activePortal, setActivePortal] = useState("overview");
+  const { toast } = useToast();
 
   const selectedClientId = spaClientId || data.selectedClientId || data.clients[0]?.id || "";
   const currentSectionId = spaSectionId || data.selectedSectionId || data.sections[0]?.id || null;
+
+  async function renameLeafItem(leafItemId: string, next: string): Promise<string | null> {
+    const fd = new FormData();
+    fd.append("leafItemId", leafItemId);
+    fd.append("clientId", selectedClientId);
+    fd.append("locale", locale);
+    fd.append("name", next);
+    const result = await quickRenameLeafItemAction(fd);
+    if (result.ok) { toast("Gespeichert", "success"); return null; }
+    toast("Fehler beim Speichern", "error");
+    return "Fehler";
+  }
 
   const selectedSection = data.sections.find((s) => s.id === currentSectionId) || data.sections[0] || null;
 
@@ -233,7 +247,13 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                                       </span>
                                     ) : null
                                   }
-                                  title={item.name}
+                                  title={
+                                    <InlineEditField
+                                      value={item.name}
+                                      displayClassName="font-heading text-on-surface text-base font-semibold"
+                                      onSave={(next) => renameLeafItem(item.id, next)}
+                                    />
+                                  }
                                 />
                               </div>
                             ))}
