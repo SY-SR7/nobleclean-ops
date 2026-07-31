@@ -50,10 +50,10 @@ export default async function AdminEmployeeDetailPage({ params }: PageProps) {
     ),
     emptyRecentPlans: t(messages, "staff.employeeDetail.emptyRecentPlans"),
     fullNameLabel: t(messages, "staff.employeeDetail.fields.fullName"),
-    planItemsCompleted: (completed: number, total: number) =>
-      t(messages, "staff.employeeDetail.planItemsCompleted")
-        .replace("{completed}", String(completed))
-        .replace("{total}", String(total)),
+    planItemsCompletedLabel: t(
+      messages,
+      "staff.employeeDetail.planItemsCompleted",
+    ),
     planStatusInProgress: t(
       messages,
       "staff.employeeDetail.planStatus.in_progress",

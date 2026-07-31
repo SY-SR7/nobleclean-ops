@@ -44,7 +44,7 @@ export type ClientDetailCopy = Readonly<{
   emptySections: string;
   planStatusInProgress: string;
   planStatusSubmitted: string;
-  planItemsCompleted: (completed: number, total: number) => string;
+  planItemsCompletedLabel: string;
   notAvailable: string;
   viewEmployee: string;
   rootSection: string;
@@ -228,7 +228,9 @@ function RecentPlansList({
             <p className="text-on-surface-variant text-xs">
               {formatDate(item.workDate, locale)}
               {" · "}
-              {copy.planItemsCompleted(item.completedItems, item.totalItems)}
+              {copy.planItemsCompletedLabel
+                .replace("{completed}", String(item.completedItems))
+                .replace("{total}", String(item.totalItems))}
             </p>
           </div>
           <span

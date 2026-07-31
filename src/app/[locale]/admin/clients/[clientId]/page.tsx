@@ -53,10 +53,10 @@ export default async function AdminClientDetailPage({ params }: PageProps) {
     ),
     emptySections: t(messages, "adminClients.clientDetail.emptySections"),
     notAvailable: t(messages, "adminClients.clientDetail.notAvailable"),
-    planItemsCompleted: (completed: number, total: number) =>
-      t(messages, "adminClients.clientDetail.planItemsCompleted")
-        .replace("{completed}", String(completed))
-        .replace("{total}", String(total)),
+    planItemsCompletedLabel: t(
+      messages,
+      "adminClients.clientDetail.planItemsCompleted",
+    ),
     planStatusInProgress: t(
       messages,
       "adminClients.clientDetail.planStatus.in_progress",
