@@ -153,14 +153,12 @@ export async function getClientDetailData(
       .maybeSingle();
 
     if (clientError || !clientRow) {
-      console.error("[getClientDetailData] Client fetch error or not found:", clientError, { clientId });
       return emptyData();
     }
 
     const client = ClientRowSchema.safeParse(clientRow);
 
     if (!client.success) {
-      console.error("[getClientDetailData] ClientRowSchema parse error:", client.error.format());
       return emptyData();
     }
 
@@ -188,7 +186,6 @@ export async function getClientDetailData(
     ]);
 
     if (assignmentError || planError || sectionError) {
-      console.error("[getClientDetailData] Subquery error:", { assignmentError, planError, sectionError });
       return emptyData();
     }
 
@@ -199,11 +196,6 @@ export async function getClientDetailData(
     const sections = z.array(SectionRowSchema).safeParse(sectionRows ?? []);
 
     if (!assignments.success || !plans.success || !sections.success) {
-      console.error("[getClientDetailData] Zod parse error on subqueries:", {
-        assignments: assignments.success ? null : assignments.error.format(),
-        plans: plans.success ? null : plans.error.format(),
-        sections: sections.success ? null : sections.error.format(),
-      });
       return emptyData();
     }
 
@@ -223,14 +215,12 @@ export async function getClientDetailData(
       : { data: [], error: null };
 
     if (profileError) {
-      console.error("[getClientDetailData] Profile fetch error:", profileError);
       return emptyData();
     }
 
     const profiles = z.array(ProfileRowSchema).safeParse(profileRows ?? []);
 
     if (!profiles.success) {
-      console.error("[getClientDetailData] ProfileRowSchema parse error:", profiles.error.format());
       return emptyData();
     }
 
@@ -248,7 +238,6 @@ export async function getClientDetailData(
       : { data: [], error: null };
 
     if (planItemError) {
-      console.error("[getClientDetailData] Plan items fetch error:", planItemError);
       return emptyData();
     }
 
@@ -257,7 +246,6 @@ export async function getClientDetailData(
       .safeParse(planItemRows ?? []);
 
     if (!planItems.success) {
-      console.error("[getClientDetailData] PlanItemRowSchema parse error:", planItems.error.format());
       return emptyData();
     }
 
@@ -321,8 +309,7 @@ export async function getClientDetailData(
         sortOrder: row.sort_order,
       })),
     };
-  } catch (err) {
-    console.error("[getClientDetailData] Unexpected exception:", err);
+  } catch {
     return emptyData();
   }
 }
