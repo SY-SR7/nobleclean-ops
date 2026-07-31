@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export type EmployeeProfileField = "employeeId" | "fullName" | "locale";
 
+export type DefaultDailyHoursField = "defaultDailyHours" | "employeeId" | "locale";
+
 export type EmployeeProfileActionState = Readonly<{
   code: "AUTH_FAILED" | "SAVED" | "SAVE_FAILED" | "VALIDATION_FAILED" | null;
   fieldErrors?: Partial<Record<EmployeeProfileField, "invalid">>;
@@ -98,6 +100,61 @@ export function weeklyAvailabilityFieldErrors(
 
     if (typeof field === "string") {
       fieldErrors[field as WeeklyAvailabilityField] = "invalid";
+    }
+  });
+
+  return fieldErrors;
+}
+
+// ── Default daily hours ──────────────────────────────────────────────────────
+
+export type DefaultDailyHoursActionState = Readonly<{
+  code: "AUTH_FAILED" | "SAVED" | "SAVE_FAILED" | "VALIDATION_FAILED" | null;
+  fieldErrors?: Partial<Record<DefaultDailyHoursField, "invalid">>;
+  status: "error" | "idle" | "success";
+}>;
+
+export const initialDefaultDailyHoursActionState: DefaultDailyHoursActionState =
+  {
+    code: null,
+    status: "idle",
+  };
+
+export const DefaultDailyHoursFormDataKeys = [
+  "employeeId",
+  "locale",
+  "defaultDailyHours",
+] as const;
+
+export const SetDefaultDailyHoursInputSchema = z
+  .object({
+    defaultDailyHours: z.coerce
+      .number()
+      .min(0.5)
+      .max(24)
+      .multipleOf(0.5)
+      .nullable()
+      .optional()
+      .transform((v) => (v === 0 || v === undefined ? null : v)),
+    employeeId: z.string().uuid(),
+    locale: z.enum(["de", "en"]),
+  })
+  .strict();
+
+export type SetDefaultDailyHoursCommandDto = z.infer<
+  typeof SetDefaultDailyHoursInputSchema
+>;
+
+export function defaultDailyHoursFieldErrors(
+  error: z.ZodError,
+): Partial<Record<DefaultDailyHoursField, "invalid">> {
+  const fieldErrors: Partial<Record<DefaultDailyHoursField, "invalid">> = {};
+
+  error.issues.forEach((issue) => {
+    const [field] = issue.path;
+
+    if (typeof field === "string") {
+      fieldErrors[field as DefaultDailyHoursField] = "invalid";
     }
   });
 
