@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useActionState, useState, useTransition, useCallback } from "react";
 import {
   ArrowLeft,
   CalendarCheck,
@@ -9,19 +10,40 @@ import {
   Mail,
   MapPin,
   Phone,
+  Plus,
   User,
   UserCheck,
+  X,
+  Loader2,
 } from "lucide-react";
 
 import type { Locale } from "@/i18n/routing";
-import { AvatarUpload, EntityLink } from "@/components/ui";
+import {
+  AvatarUpload,
+  EntityLink,
+  InlineEditField,
+  InlineStatusToggle,
+  ConfirmDeleteModal,
+  useToast,
+} from "@/components/ui";
 import type {
   ClientAssignedEmployee,
   ClientDetailData,
   ClientRecentPlan,
   ClientSectionSummary,
 } from "./queries";
+import {
+  updateClientNameAction,
+  updateClientAddressAction,
+  updateClientContactFieldAction,
+  toggleClientStatusAction,
+  endClientAssignmentAction,
+  addClientAssignmentAction,
+} from "./actions";
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Copy type
+   ───────────────────────────────────────────────────────────────────────── */
 export type ClientDetailCopy = Readonly<{
   backToClients: string;
   profileTitle: string;
@@ -48,6 +70,19 @@ export type ClientDetailCopy = Readonly<{
   notAvailable: string;
   viewEmployee: string;
   rootSection: string;
+  savedLabel: string;
+  errorLabel: string;
+  endAssignmentLabel: string;
+  endAssignmentConfirmTitle: string;
+  endAssignmentConfirmBody: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  addAssignmentLabel: string;
+  employeeLabel: string;
+  startDateLabel: string;
+  endDateLabel: string;
+  saveLabel: string;
+  employees: readonly { id: string; fullName: string }[];
 }>;
 
 type ClientDetailInteractiveProps = Readonly<{
@@ -56,6 +91,9 @@ type ClientDetailInteractiveProps = Readonly<{
   copy: ClientDetailCopy;
 }>;
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Helpers
+   ───────────────────────────────────────────────────────────────────────── */
 function formatDate(value: string | null, locale: Locale) {
   if (!value) return "—";
   const date = new Date(value);
@@ -65,35 +103,71 @@ function formatDate(value: string | null, locale: Locale) {
   }).format(date);
 }
 
+function makeFormData(fields: Record<string, string>): FormData {
+  const fd = new FormData();
+  Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+  return fd;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ProfileSection — all fields editable inline
+   ───────────────────────────────────────────────────────────────────────── */
 function ProfileSection({
   client,
+  locale,
   copy,
 }: Readonly<{
   client: ClientDetailData["client"];
+  locale: Locale;
   copy: ClientDetailCopy;
 }>) {
+  const { toast } = useToast();
   if (!client) return null;
 
-  const fields = [
+  async function saveField(
+    action: (fd: FormData) => Promise<{ ok: boolean }>,
+    fields: Record<string, string>,
+  ): Promise<string | null> {
+    const result = await action(makeFormData(fields));
+    if (result.ok) {
+      toast(copy.savedLabel, "success");
+      return null;
+    }
+    toast(copy.errorLabel, "error");
+    return copy.errorLabel;
+  }
+
+  const contactFields: {
+    key: "contactName" | "email" | "phone" | "notes";
+    label: string;
+    icon: React.ReactNode;
+    value: string;
+    multiline?: boolean;
+  }[] = [
     {
-      icon: <MapPin className="size-4" />,
-      label: copy.addressLabel,
-      value: client.address || "—",
-    },
-    {
-      icon: <User className="size-4" />,
+      key: "contactName",
       label: copy.contactNameLabel,
-      value: client.contactName || "—",
+      icon: <User className="size-4" />,
+      value: client.contactName,
     },
     {
-      icon: <Mail className="size-4" />,
+      key: "email",
       label: copy.contactEmailLabel,
-      value: client.contactEmail || "—",
+      icon: <Mail className="size-4" />,
+      value: client.contactEmail,
     },
     {
-      icon: <Phone className="size-4" />,
+      key: "phone",
       label: copy.contactPhoneLabel,
-      value: client.contactPhone || "—",
+      icon: <Phone className="size-4" />,
+      value: client.contactPhone,
+    },
+    {
+      key: "notes",
+      label: copy.contactNotesLabel,
+      icon: <MapPin className="size-4" />,
+      value: client.contactNotes,
+      multiline: true,
     },
   ];
 
@@ -102,59 +176,217 @@ function ProfileSection({
       <h2 className="font-heading text-primary-container text-lg font-bold">
         {copy.profileTitle}
       </h2>
+
+      {/* Address */}
+      <div className="border-outline-variant bg-surface-container flex items-start gap-3 rounded-xl border px-4 py-3">
+        <span className="text-on-surface-variant mt-0.5 shrink-0">
+          <MapPin className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-on-surface-variant text-xs font-medium mb-1">
+            {copy.addressLabel}
+          </p>
+          <InlineEditField
+            value={client.address}
+            placeholder="—"
+            onSave={(val) =>
+              saveField(updateClientAddressAction, {
+                clientId: client.id,
+                locale,
+                address: val,
+              })
+            }
+          />
+        </div>
+      </div>
+
+      {/* Contact fields */}
       <div className="grid gap-3 sm:grid-cols-2">
-        {fields.map((field) => (
+        {contactFields.map((field) => (
           <div
-            key={field.label}
+            key={field.key}
             className="border-outline-variant bg-surface-container flex items-start gap-3 rounded-xl border px-4 py-3"
           >
             <span className="text-on-surface-variant mt-0.5 shrink-0">
               {field.icon}
             </span>
-            <div className="min-w-0">
-              <p className="text-on-surface-variant text-xs font-medium">
+            <div className="min-w-0 flex-1">
+              <p className="text-on-surface-variant text-xs font-medium mb-1">
                 {field.label}
               </p>
-              <p className="text-on-surface truncate text-sm font-semibold">
-                {field.value}
-              </p>
+              <InlineEditField
+                value={field.value}
+                placeholder="—"
+                multiline={field.multiline}
+                onSave={(val) =>
+                  saveField(updateClientContactFieldAction, {
+                    clientId: client.id,
+                    locale,
+                    field: field.key,
+                    value: val,
+                  })
+                }
+              />
             </div>
           </div>
         ))}
       </div>
-      {client.contactNotes && (
-        <div className="border-outline-variant bg-surface-container rounded-xl border px-4 py-3">
-          <p className="text-on-surface-variant text-xs font-medium">
-            {copy.contactNotesLabel}
-          </p>
-          <p className="text-on-surface mt-1 text-sm leading-relaxed">
-            {client.contactNotes}
-          </p>
-        </div>
-      )}
     </section>
   );
 }
 
-function AssignedEmployeesList({
-  items,
-  copy,
+/* ─────────────────────────────────────────────────────────────────────────
+   AddAssignmentForm
+   ───────────────────────────────────────────────────────────────────────── */
+function AddAssignmentForm({
+  clientId,
   locale,
+  copy,
+  onClose,
 }: Readonly<{
-  items: readonly ClientAssignedEmployee[];
-  copy: ClientDetailCopy;
+  clientId: string;
   locale: Locale;
+  copy: ClientDetailCopy;
+  onClose: () => void;
 }>) {
-  if (items.length === 0) {
-    return (
-      <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
-        {copy.emptyAssignedEmployees}
-      </p>
-    );
+  const { toast } = useToast();
+  const [state, formAction, isPending] = useActionState(
+    addClientAssignmentAction,
+    null,
+  );
+
+  // Close + toast on success
+  if (state?.ok) {
+    toast(copy.savedLabel, "success");
+    onClose();
   }
 
   return (
-    <div className="grid gap-2">
+    <form
+      action={formAction}
+      className="border-outline-variant bg-surface-container-low rounded-2xl border p-4 grid gap-3"
+    >
+      <input type="hidden" name="clientId" value={clientId} />
+      <input type="hidden" name="locale" value={locale} />
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold text-on-surface">{copy.addAssignmentLabel}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="size-7 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+
+      {/* Employee select */}
+      <div className="border-outline-variant bg-surface-container-lowest rounded-xl border px-3 py-2">
+        <label className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider block mb-1">
+          {copy.employeeLabel}
+        </label>
+        <select
+          name="employeeId"
+          required
+          className="w-full bg-transparent text-sm font-semibold text-on-surface outline-none"
+        >
+          <option value="">—</option>
+          {copy.employees.map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.fullName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Start date */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="border-outline-variant bg-surface-container-lowest rounded-xl border px-3 py-2">
+          <label className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider block mb-1">
+            {copy.startDateLabel}
+          </label>
+          <input
+            type="date"
+            name="startDate"
+            required
+            defaultValue={new Date().toISOString().slice(0, 10)}
+            className="w-full bg-transparent text-sm font-semibold text-on-surface outline-none"
+          />
+        </div>
+        {/* End date (optional) */}
+        <div className="border-outline-variant bg-surface-container-lowest rounded-xl border px-3 py-2">
+          <label className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider block mb-1">
+            {copy.endDateLabel}
+          </label>
+          <input
+            type="date"
+            name="endDate"
+            className="w-full bg-transparent text-sm font-semibold text-on-surface outline-none"
+          />
+        </div>
+      </div>
+
+      {state && !state.ok && (
+        <p className="text-xs font-semibold text-error">{copy.errorLabel}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="flex items-center justify-center gap-2 rounded-xl bg-secondary py-2.5 text-sm font-bold text-on-secondary transition hover:bg-secondary/80 disabled:opacity-60"
+      >
+        {isPending ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : null}
+        {copy.saveLabel}
+      </button>
+    </form>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   AssignedEmployeesList — with end assignment action
+   ───────────────────────────────────────────────────────────────────────── */
+function AssignedEmployeesList({
+  items,
+  clientId,
+  locale,
+  copy,
+}: Readonly<{
+  items: readonly ClientAssignedEmployee[];
+  clientId: string;
+  locale: Locale;
+  copy: ClientDetailCopy;
+}>) {
+  const { toast } = useToast();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [endingId, setEndingId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const handleEnd = useCallback(
+    (assignmentId: string) => {
+      startTransition(async () => {
+        const fd = makeFormData({ assignmentId, clientId, locale });
+        const result = await endClientAssignmentAction(fd);
+        if (result.ok) {
+          toast(copy.savedLabel, "success");
+        } else {
+          toast(copy.errorLabel, "error");
+        }
+        setEndingId(null);
+      });
+    },
+    [clientId, locale, copy.savedLabel, copy.errorLabel, toast],
+  );
+
+  return (
+    <div className="grid gap-3">
+      {items.length === 0 && !showAddForm && (
+        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-6 text-sm">
+          {copy.emptyAssignedEmployees}
+        </p>
+      )}
+
       {items.map((item) => (
         <div
           key={item.id}
@@ -173,7 +405,9 @@ function AssignedEmployeesList({
             <p className="text-on-surface-variant text-xs">
               {formatDate(item.startDate, locale)}
               {" – "}
-              {item.endDate ? formatDate(item.endDate, locale) : copy.statusActive}
+              {item.endDate
+                ? formatDate(item.endDate, locale)
+                : copy.statusActive}
             </p>
           </div>
           <span
@@ -185,12 +419,59 @@ function AssignedEmployeesList({
           >
             {item.isActive ? copy.statusActive : copy.statusInactive}
           </span>
+          {item.isActive && (
+            <button
+              type="button"
+              onClick={() => setEndingId(item.id)}
+              disabled={isPending}
+              className="shrink-0 rounded-lg border border-outline-variant px-2 py-1 text-xs font-bold text-on-surface-variant transition hover:border-error hover:bg-error/10 hover:text-error disabled:opacity-50"
+            >
+              {copy.endAssignmentLabel}
+            </button>
+          )}
         </div>
       ))}
+
+      {showAddForm ? (
+        <AddAssignmentForm
+          clientId={clientId}
+          locale={locale}
+          copy={copy}
+          onClose={() => setShowAddForm(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center gap-2 rounded-xl border border-dashed border-outline-variant px-4 py-3 text-sm font-semibold text-on-surface-variant transition hover:border-secondary hover:bg-secondary/5 hover:text-secondary"
+        >
+          <Plus className="size-4" />
+          {copy.addAssignmentLabel}
+        </button>
+      )}
+
+      {/* Confirm end assignment */}
+      <ConfirmDeleteModal
+        open={endingId !== null}
+        entityName={
+          items.find((i) => i.id === endingId)?.employeeName ?? ""
+        }
+        onConfirm={async () => {
+          if (endingId) handleEnd(endingId);
+        }}
+        onCancel={() => setEndingId(null)}
+        title={copy.endAssignmentConfirmTitle}
+        body={copy.endAssignmentConfirmBody}
+        confirmLabel={copy.endAssignmentLabel}
+        cancelLabel={copy.cancelLabel}
+      />
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   RecentPlansList — read-only
+   ───────────────────────────────────────────────────────────────────────── */
 function RecentPlansList({
   items,
   copy,
@@ -250,6 +531,9 @@ function RecentPlansList({
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   SectionsTree — read-only display
+   ───────────────────────────────────────────────────────────────────────── */
 function SectionsTree({
   sections,
   copy,
@@ -265,7 +549,6 @@ function SectionsTree({
     );
   }
 
-  // Build tree
   const rootSections = sections.filter((s) => !s.parentSectionId);
   const childrenMap = new Map<string, ClientSectionSummary[]>();
   sections.forEach((s) => {
@@ -284,11 +567,8 @@ function SectionsTree({
     return (
       <div key={section.id}>
         <div
-          className={[
-            "border-outline-variant bg-surface-container-lowest flex items-center gap-3 rounded-xl border px-4 py-3",
-            depth > 0 ? "ml-6" : "",
-          ].join(" ")}
-          style={{ marginLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+          className="border-outline-variant bg-surface-container-lowest flex items-center gap-3 rounded-xl border px-4 py-3"
+          style={{ marginLeft: depth > 0 ? `${depth * 20}px` : undefined }}
         >
           <Layers className="text-on-surface-variant size-4 shrink-0" />
           <p className="text-on-surface min-w-0 flex-1 truncate text-sm font-semibold">
@@ -312,30 +592,51 @@ function SectionsTree({
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Main component
+   ───────────────────────────────────────────────────────────────────────── */
 export function ClientDetailInteractive({
   data,
   locale,
   copy,
 }: ClientDetailInteractiveProps) {
-  if (!data.client) {
-    return null;
-  }
+  const { toast } = useToast();
+  const [isActive, setIsActive] = useState(data.client?.isActive ?? true);
 
+  if (!data.client) return null;
   const { client } = data;
+
+  async function handleToggleStatus() {
+    const nextIsActive = !isActive;
+    const fd = makeFormData({
+      clientId: client.id,
+      locale,
+      nextIsActive: String(nextIsActive),
+    });
+    const result = await toggleClientStatusAction(fd);
+    if (result.ok) {
+      setIsActive(nextIsActive);
+      toast(copy.savedLabel, "success");
+    } else {
+      toast(copy.errorLabel, "error");
+    }
+  }
 
   return (
     <div className="grid gap-6">
+      {/* Back link */}
       <div>
         <Link
           className="text-on-surface-variant hover:text-secondary inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
           href={`/${locale}/admin?tab=clients`}
+          prefetch={false}
         >
           <ArrowLeft className="size-4" />
           {copy.backToClients}
         </Link>
       </div>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-4">
         <AvatarUpload
           currentAvatarPath={client.avatarPath}
@@ -351,29 +652,43 @@ export function ClientDetailInteractive({
           }}
         />
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-primary-container text-2xl font-bold">
-            {client.name}
-          </h1>
-          <p className="text-on-surface-variant text-sm">
+          {/* Editable name */}
+          <InlineEditField
+            value={client.name}
+            displayClassName="font-heading text-primary-container text-2xl font-bold"
+            onSave={async (val) => {
+              const fd = makeFormData({
+                clientId: client.id,
+                locale,
+                name: val,
+              });
+              const result = await updateClientNameAction(fd);
+              if (result.ok) {
+                toast(copy.savedLabel, "success");
+                return null;
+              }
+              toast(copy.errorLabel, "error");
+              return copy.errorLabel;
+            }}
+          />
+          <p className="text-on-surface-variant text-sm mt-0.5">
             {client.address || "—"}
           </p>
         </div>
-        <span
-          className={[
-            "ml-auto shrink-0 rounded-full px-3 py-1 text-xs font-bold",
-            client.isActive
-              ? "bg-secondary-container text-on-secondary-container"
-              : "bg-surface-container text-on-surface-variant",
-          ].join(" ")}
-        >
-          {client.isActive ? copy.statusActive : copy.statusInactive}
-        </span>
+        {/* Editable status toggle */}
+        <InlineStatusToggle
+          isActive={isActive}
+          activeLabel={copy.statusActive}
+          inactiveLabel={copy.statusInactive}
+          onToggle={handleToggleStatus}
+          className="ml-auto"
+        />
       </div>
 
-      {/* Profile */}
-      <ProfileSection client={client} copy={copy} />
+      {/* ── Profile (all fields inline-editable) ── */}
+      <ProfileSection client={client} locale={locale} copy={copy} />
 
-      {/* Sections */}
+      {/* ── Sections (read-only summary, manage in Sections tab) ── */}
       <section className="grid gap-3">
         <h2 className="font-heading text-primary-container flex items-center gap-2 text-lg font-bold">
           <Layers className="size-5" />
@@ -382,30 +697,27 @@ export function ClientDetailInteractive({
         <SectionsTree copy={copy} sections={data.sections} />
       </section>
 
-      {/* Assigned Employees */}
+      {/* ── Assigned Employees (editable) ── */}
       <section className="grid gap-3">
         <h2 className="font-heading text-primary-container flex items-center gap-2 text-lg font-bold">
           <CalendarCheck className="size-5" />
           {copy.assignedEmployeesTitle}
         </h2>
         <AssignedEmployeesList
-          copy={copy}
           items={data.assignedEmployees}
+          clientId={client.id}
           locale={locale}
+          copy={copy}
         />
       </section>
 
-      {/* Recent Plans */}
+      {/* ── Recent Plans (read-only) ── */}
       <section className="grid gap-3">
         <h2 className="font-heading text-primary-container flex items-center gap-2 text-lg font-bold">
           <ClipboardList className="size-5" />
           {copy.recentPlansTitle}
         </h2>
-        <RecentPlansList
-          copy={copy}
-          items={data.recentPlans}
-          locale={locale}
-        />
+        <RecentPlansList copy={copy} items={data.recentPlans} locale={locale} />
       </section>
     </div>
   );
