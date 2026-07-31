@@ -35,6 +35,7 @@ language sql
 stable
 security definer
 set search_path = public, auth, pg_temp
+set row_security = off
 as $$
   select public.current_user_has_aal2()
     and exists (
@@ -51,6 +52,7 @@ language sql
 stable
 security definer
 set search_path = public, auth, pg_temp
+set row_security = off
 as $$
   select public.current_user_has_aal2()
     and exists (
@@ -67,6 +69,7 @@ language sql
 stable
 security definer
 set search_path = public, auth, pg_temp
+set row_security = off
 as $$
   select public.current_user_is_employee()
     and exists (
