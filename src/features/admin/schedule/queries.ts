@@ -7,6 +7,7 @@ import { requireRole } from "@/server/auth/guards";
 export type ScheduleEmployeeOption = Readonly<{
   fullName: string;
   id: string;
+  defaultDailyHours: number | null;
 }>;
 
 export type ScheduleClientOption = Readonly<{
@@ -37,6 +38,7 @@ export type ScheduleData = Readonly<{
 const EmployeeRowSchema = z.object({
   full_name: z.string(),
   id: z.string().uuid(),
+  default_daily_hours: z.number().nullable(),
 });
 
 const ClientRowSchema = z.object({
@@ -80,7 +82,7 @@ export async function getScheduleData(
     ] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, default_daily_hours")
         .eq("role", "employee")
         .order("full_name", { ascending: true }),
       supabase
@@ -133,6 +135,7 @@ export async function getScheduleData(
         name: client.name,
       })),
       employees: employees.data.map((employee) => ({
+        defaultDailyHours: employee.default_daily_hours,
         fullName: sanitizeName(employee.full_name),
         id: employee.id,
       })),
