@@ -140,6 +140,7 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                 {/* Gradient header with initials — click opens detail page */}
                 <Link
                   href={`/${locale}/admin/clients/${client.id}`}
+                  prefetch={false}
                   className={`relative flex items-center justify-center bg-gradient-to-br ${gradient} px-4 py-8`}
                 >
                   <span className="text-white font-bold text-3xl drop-shadow-md">{initials}</span>
@@ -175,6 +176,7 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                   <div className="mt-auto pt-2 flex gap-2">
                     <Link
                       href={`/${locale}/admin/clients/${client.id}`}
+                      prefetch={false}
                       className="bg-secondary text-on-secondary flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition hover:opacity-90"
                     >
                       <ExternalLink className="size-3.5" />

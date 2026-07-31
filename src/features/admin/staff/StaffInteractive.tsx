@@ -203,6 +203,7 @@ export function StaffInteractive({
                 {/* Gradient header */}
                 <Link
                   href={`/${locale}/admin/staff/${empId}`}
+                  prefetch={false}
                   className={`flex flex-col items-center gap-3 bg-gradient-to-br ${gradient} group/header relative px-4 py-6`}
                 >
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/30 bg-white/20 text-2xl font-bold text-white backdrop-blur-sm">
@@ -222,6 +223,7 @@ export function StaffInteractive({
                 <div className="border-outline-variant bg-surface-container-low/40 grid gap-2 border-b p-3">
                   <Link
                     href={`/${locale}/admin/staff/${empId}`}
+                    prefetch={false}
                     className="bg-secondary text-on-secondary flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition hover:opacity-90"
                   >
                     <UserCircle2 className="size-4" />
