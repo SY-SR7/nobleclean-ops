@@ -98,6 +98,8 @@ export default async function AdminEmployeeDetailPage({ params }: PageProps) {
       "staff.employeeDetail.availabilityStatus.unavailable",
     ),
     weekdayLabels,
+    savedLabel: t(messages, "staff.employeeDetail.feedback.profileSaved"),
+    errorLabel: t(messages, "staff.employeeDetail.feedback.profileError"),
   };
 
   return <EmployeeDetailInteractive copy={copy} data={data} locale={locale} />;
