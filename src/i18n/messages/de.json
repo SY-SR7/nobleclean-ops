@@ -307,8 +307,14 @@
       "feedback": {
         "profileSaved": "Profil gespeichert.",
         "profileError": "Das Profil konnte nicht gespeichert werden.",
+        "defaultDailyHoursSaved": "Standardstunden gespeichert.",
+        "defaultDailyHoursError": "Die Standardstunden konnten nicht gespeichert werden.",
         "loadError": "Die Mitarbeiterdetails konnten nicht geladen werden.",
         "notFound": "Mitarbeiter nicht gefunden."
+      },
+      "defaultDailyHours": {
+        "label": "Standard-Tagesstunden",
+        "hint": "Wird beim Erstellen eines Schichteintrags als Standard für diesen Mitarbeiter vorausgefüllt."
       },
       "availabilityTitle": "Wöchentliche Verfügbarkeit",
       "availabilityHint": "Legen Sie fest, an welchen Wochentagen dieser Mitarbeiter normalerweise arbeitet.",

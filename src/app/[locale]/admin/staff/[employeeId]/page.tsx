@@ -64,6 +64,22 @@ export default async function AdminEmployeeDetailPage({ params }: PageProps) {
     ),
     profileError: t(messages, "staff.employeeDetail.feedback.profileError"),
     profileSaved: t(messages, "staff.employeeDetail.feedback.profileSaved"),
+    defaultDailyHoursLabel: t(
+      messages,
+      "staff.employeeDetail.defaultDailyHours.label",
+    ),
+    defaultDailyHoursHint: t(
+      messages,
+      "staff.employeeDetail.defaultDailyHours.hint",
+    ),
+    defaultDailyHoursSaved: t(
+      messages,
+      "staff.employeeDetail.feedback.defaultDailyHoursSaved",
+    ),
+    defaultDailyHoursError: t(
+      messages,
+      "staff.employeeDetail.feedback.defaultDailyHoursError",
+    ),
     profileTitle: t(messages, "staff.employeeDetail.profileTitle"),
     recentPlansTitle: t(messages, "staff.employeeDetail.recentPlansTitle"),
     roleAdmin: t(messages, "staff.employeeDetail.roleValues.admin"),
