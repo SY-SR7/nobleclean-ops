@@ -264,7 +264,54 @@
       "ended": "Zuweisung beendet.",
       "error": "Die Zuweisung konnte nicht gespeichert werden.",
       "loadError": "Die Zuweisungen konnten nicht geladen werden."
-    }
+    },
+    "employeeDetail": {
+      "title": "Mitarbeiterdetails",
+      "backToStaff": "Zurück zu Mitarbeitern",
+      "profileTitle": "Profil",
+      "fields": {
+        "fullName": "Vollständiger Name",
+        "role": "Rolle"
+      },
+      "roleValues": {
+        "admin": "Admin",
+        "employee": "Mitarbeiter"
+      },
+      "actions": {
+        "saveProfile": "Profil speichern"
+      },
+      "feedback": {
+        "profileSaved": "Profil gespeichert.",
+        "profileError": "Das Profil konnte nicht gespeichert werden.",
+        "loadError": "Die Mitarbeiterdetails konnten nicht geladen werden.",
+        "notFound": "Mitarbeiter nicht gefunden."
+      },
+      "availabilityTitle": "Wöchentliche Verfügbarkeit",
+      "availabilityHint": "Legen Sie fest, an welchen Wochentagen dieser Mitarbeiter normalerweise arbeitet.",
+      "weekdays": {
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "availabilityStatus": {
+        "available": "Verfügbar",
+        "unavailable": "Nicht verfügbar"
+      },
+      "assignmentHistoryTitle": "Zuweisungsverlauf",
+      "emptyAssignmentHistory": "Kein Zuweisungsverlauf vorhanden.",
+      "recentPlansTitle": "Letzte Tagespläne",
+      "emptyRecentPlans": "Keine Tagespläne vorhanden.",
+      "planStatus": {
+        "in_progress": "In Bearbeitung",
+        "submitted": "Eingereicht"
+      },
+      "planItemsCompleted": "{completed} von {total} Aufgaben erledigt"
+    },
+    "viewDetails": "Details ansehen"
   },
   "schedule": {
     "createTitle": "Planeintrag anlegen",

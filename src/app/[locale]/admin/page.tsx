@@ -354,6 +354,7 @@ async function StaffTab({ locale }: { locale: Locale }) {
     statusInactive: t(messages, "staff.status.inactive"),
     clients: t(messages, "navigation.admin.clients"),
     employees: t(messages, "staff.employees"),
+    viewDetails: t(messages, "staff.viewDetails"),
   };
   const activeCount = data.assignments.filter((a) => a.isActive).length;
 

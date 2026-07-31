@@ -264,7 +264,54 @@
       "ended": "Assignment ended.",
       "error": "The assignment could not be saved.",
       "loadError": "Assignments could not be loaded."
-    }
+    },
+    "employeeDetail": {
+      "title": "Employee details",
+      "backToStaff": "Back to staff",
+      "profileTitle": "Profile",
+      "fields": {
+        "fullName": "Full name",
+        "role": "Role"
+      },
+      "roleValues": {
+        "admin": "Admin",
+        "employee": "Employee"
+      },
+      "actions": {
+        "saveProfile": "Save profile"
+      },
+      "feedback": {
+        "profileSaved": "Profile saved.",
+        "profileError": "The profile could not be saved.",
+        "loadError": "The employee details could not be loaded.",
+        "notFound": "Employee not found."
+      },
+      "availabilityTitle": "Weekly availability",
+      "availabilityHint": "Set which weekdays this employee normally works.",
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "availabilityStatus": {
+        "available": "Available",
+        "unavailable": "Unavailable"
+      },
+      "assignmentHistoryTitle": "Assignment history",
+      "emptyAssignmentHistory": "No assignment history available.",
+      "recentPlansTitle": "Recent daily plans",
+      "emptyRecentPlans": "No daily plans available.",
+      "planStatus": {
+        "in_progress": "In progress",
+        "submitted": "Submitted"
+      },
+      "planItemsCompleted": "{completed} of {total} tasks completed"
+    },
+    "viewDetails": "View details"
   },
   "schedule": {
     "createTitle": "Create schedule entry",
