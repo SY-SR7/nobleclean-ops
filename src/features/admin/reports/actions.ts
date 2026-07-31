@@ -3,28 +3,39 @@
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireRole } from "@/server/auth/guards";
+import { hasSameOriginRequest } from "@/lib/security/request-origin";
 import type { Locale } from "@/i18n/routing";
 
 export async function updatePlanProgressAction(
   prevState: { ok: boolean; message: string },
   formData: FormData,
 ): Promise<{ ok: boolean; message: string }> {
+  if (!(await hasSameOriginRequest())) return { ok: false, message: "AUTH_FAILED" };
+
   const locale = (formData.get("locale") as Locale) || "de";
   const planId = formData.get("planId") as string;
   const status = formData.get("status") as string;
-  const completedItems = parseInt(formData.get("completedItems") as string, 10);
+
+  if (!planId || !["in_progress", "submitted"].includes(status)) {
+    return { ok: false, message: "Ungültige Eingabe" };
+  }
 
   await requireRole(locale, "admin");
 
   try {
     const supabase = await createSupabaseServerClient();
+
+    // Build update object — submitted_at is required when status=submitted
+    const updatePayload: Record<string, unknown> = { status };
+    if (status === "submitted") {
+      updatePayload.submitted_at = new Date().toISOString();
+    } else {
+      updatePayload.submitted_at = null;
+    }
+
     const { error } = await supabase
-      .from("daily_cleaning_plans")
-      .update({
-        status: status || "in_progress",
-        completed_items_count: Number.isNaN(completedItems) ? 0 : completedItems,
-        updated_at: new Date().toISOString(),
-      })
+      .from("daily_plans")
+      .update(updatePayload)
       .eq("id", planId);
 
     if (error) {
@@ -32,6 +43,7 @@ export async function updatePlanProgressAction(
     }
 
     revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/admin/reports`);
     return { ok: true, message: "Erfolgreich aktualisiert!" };
   } catch (err: unknown) {
     return { ok: false, message: err instanceof Error ? err.message : "Fehler" };
@@ -42,26 +54,40 @@ export async function markToolStepPerformedAction(
   prevState: { ok: boolean; message: string },
   formData: FormData,
 ): Promise<{ ok: boolean; message: string }> {
+  if (!(await hasSameOriginRequest())) return { ok: false, message: "AUTH_FAILED" };
+
   const locale = (formData.get("locale") as Locale) || "de";
+  const planItemId = formData.get("planItemId") as string;
   const stepId = formData.get("stepId") as string;
-  const dateStr = (formData.get("performedAt") as string) || new Date().toISOString().slice(0, 10);
+
+  if (!planItemId || !stepId) {
+    return { ok: false, message: "Ungültige Eingabe" };
+  }
 
   await requireRole(locale, "admin");
 
   try {
     const supabase = await createSupabaseServerClient();
+
+    // Mark the step as completed by upserting into daily_plan_item_steps
     const { error } = await supabase
-      .from("cleaning_tool_step_last_performed")
-      .upsert({
-        cleaning_tool_step_id: stepId,
-        last_performed_at: dateStr,
-      });
+      .from("daily_plan_item_steps")
+      .upsert(
+        {
+          daily_plan_item_id: planItemId,
+          cleaning_tool_step_id: stepId,
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+        },
+        { onConflict: "daily_plan_item_id,cleaning_tool_step_id" },
+      );
 
     if (error) {
       return { ok: false, message: error.message };
     }
 
     revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/admin/reports`);
     return { ok: true, message: "Reinigungsschritt aktualisiert!" };
   } catch (err: unknown) {
     return { ok: false, message: err instanceof Error ? err.message : "Fehler" };
