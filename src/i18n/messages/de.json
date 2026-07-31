@@ -145,6 +145,30 @@
       "statusUpdated": "Status aktualisiert.",
       "error": "Die Aenderung konnte nicht gespeichert werden.",
       "loadError": "Die Kundenliste konnte nicht geladen werden."
+    },
+    "viewDetails": "Details ansehen",
+    "clientDetail": {
+      "title": "Kundendetails",
+      "backToClients": "Zurueck zu Kunden",
+      "profileTitle": "Kundenprofil",
+      "assignedEmployeesTitle": "Zugewiesene Mitarbeiter",
+      "emptyAssignedEmployees": "Diesem Kunden sind keine Mitarbeiter zugewiesen.",
+      "recentPlansTitle": "Aktuelle Tagesplaene",
+      "emptyRecentPlans": "Noch keine Tagesplaene vorhanden.",
+      "sectionsTitle": "Bereiche",
+      "emptySections": "Fuer diesen Kunden sind keine Bereiche konfiguriert.",
+      "planStatus": {
+        "in_progress": "In Bearbeitung",
+        "submitted": "Eingereicht"
+      },
+      "planItemsCompleted": "{completed} von {total} Aufgaben erledigt",
+      "notAvailable": "Nicht angegeben",
+      "viewEmployee": "Mitarbeiter ansehen",
+      "rootSection": "Oberste Ebene",
+      "feedback": {
+        "loadError": "Die Kundendetails konnten nicht geladen werden.",
+        "notFound": "Kunde nicht gefunden."
+      }
     }
   },
   "sectionsItems": {
