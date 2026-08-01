@@ -121,15 +121,44 @@ export async function getScheduleData(
     const clientMap = new Map(
       clients.data.map((client) => [client.id, client.name]),
     );
-    const scheduleItems = schedules.data.map((schedule) => ({
-      allocatedHours: schedule.allocated_hours,
-      clientId: schedule.client_id,
-      clientName: clientMap.get(schedule.client_id) ?? "",
-      employeeId: schedule.employee_id,
-      employeeName: employeeMap.get(schedule.employee_id) ?? "",
-      id: schedule.id,
-      workDate: schedule.work_date,
-    }));
+    // Group schedules by work_date and employee_id to handle double-shift rules correctly
+    const groupedMap = new Map<string, typeof schedules.data>();
+    schedules.data.forEach((item) => {
+      const key = `${item.work_date}_${item.employee_id}`;
+      if (!groupedMap.has(key)) groupedMap.set(key, []);
+      groupedMap.get(key)!.push(item);
+    });
+
+    const scheduleItems: ScheduleListItem[] = [];
+    groupedMap.forEach((items) => {
+      const first = items[0];
+      const isDouble = items.length >= 2;
+      const isSaturday = new Date(first.work_date).getDay() === 6;
+
+      let startTime = "04:00";
+      let endTime = "07:00";
+      let hours = isDouble ? 6.0 : 3.0;
+
+      if (isSaturday) {
+        startTime = "05:30";
+        endTime = "08:30";
+      } else if (isDouble) {
+        startTime = "01:00";
+        endTime = "07:00";
+      }
+
+      scheduleItems.push({
+        allocatedHours: hours,
+        clientId: first.client_id,
+        clientName: clientMap.get(first.client_id) ?? "",
+        employeeId: first.employee_id,
+        employeeName: employeeMap.get(first.employee_id) ?? "",
+        id: first.id,
+        workDate: first.work_date,
+        startTime,
+        endTime,
+      });
+    });
 
     return {
       clients: clients.data.map((client) => ({
