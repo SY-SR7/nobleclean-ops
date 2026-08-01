@@ -12,6 +12,7 @@ import {
   Sparkles,
   ChevronRight,
   ShieldAlert,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -88,6 +89,15 @@ export function GruppenInteractive({ sections, leafItems, copy }: GruppenInterac
     });
     return map;
   }, [groups, editingGroupId]);
+
+  // Delete group
+  const handleDeleteGroup = (groupId: string, groupName: string) => {
+    if (confirm(`Möchten Sie die Gruppe "${groupName}" wirklich löschen?`)) {
+      setGroups((prev) => prev.filter((g) => g.id !== groupId));
+      toast("Gruppe erfolgreich gelöscht!", "success");
+      setIsBuilderOpen(false);
+    }
+  };
 
   // Open builder for creating a new group
   const handleOpenCreateGroup = () => {
@@ -341,6 +351,14 @@ export function GruppenInteractive({ sections, leafItems, copy }: GruppenInterac
                   className="bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-xl py-2 px-3 text-xs font-bold transition cursor-pointer"
                 >
                   Anpassen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteGroup(group.id, group.name)}
+                  title="Gruppe löschen"
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-xl p-2 text-xs font-bold transition cursor-pointer"
+                >
+                  <Trash2 className="size-4" />
                 </button>
               </div>
             </div>
