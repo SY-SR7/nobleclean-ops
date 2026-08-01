@@ -41,7 +41,7 @@ export type PdfKpiCard = Readonly<{
 }>;
 
 /**
- * Clean Centered A4 PDF Export for Reports and Lists
+ * Clean Centered A4 PDF Export for Reports and Lists matching System UI palette
  */
 export function exportToPDF(
   title: string,
@@ -54,13 +54,13 @@ export function exportToPDF(
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
-  const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #000000; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 8.5px;">${h}</th>`).join("");
+  const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #cbd5e1; background-color: #025669; color: #ffffff; font-weight: 700; text-align: left; font-size: 8.5px;">${h}</th>`).join("");
 
   const tableRows = rows
     .map(
-      (r) =>
-        `<tr>
-          ${r.map((cell) => `<td style="padding: 1.5px 5px; border: 1px solid #000000; text-align: left; color: #000000; font-size: 8px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
+      (r, idx) =>
+        `<tr style="background-color: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
+          ${r.map((cell) => `<td style="padding: 2px 6px; border: 1px solid #cbd5e1; text-align: left; color: #0f172a; font-size: 8px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
         </tr>`
     )
     .join("");
@@ -73,21 +73,21 @@ export function exportToPDF(
       <title>${title}</title>
       <style>
         @page { size: A4 portrait; margin: 8mm; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #000000; background-color: #ffffff; }
-        .table-container { width: 65%; margin: 0 auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 8px; line-height: 1.1; border: 1.5px solid #000000; }
-        th { border: 1px solid #000000; padding: 3px 5px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 8.5px; }
-        td { border: 1px solid #000000; padding: 1.5px 5px; vertical-align: top; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; color: #0f172a; background-color: #ffffff; }
+        .table-container { width: 70%; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 8px; line-height: 1.1; border: 1.5px solid #025669; }
+        th { border: 1px solid #025669; padding: 3px 5px; background-color: #025669; color: #ffffff; font-weight: 700; text-align: left; font-size: 8.5px; }
+        td { border: 1px solid #cbd5e1; padding: 2px 6px; vertical-align: top; }
       </style>
     </head>
     <body>
       <div class="table-container">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000000; padding-bottom: 3px; margin-bottom: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #025669; padding-bottom: 4px; margin-bottom: 6px;">
           <div>
-            <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.3px; color: #000000;">NOBLECLEAN</div>
-            <div style="font-size: 8px; color: #475569; font-weight: 600; margin-top: 1px;">${title}</div>
+            <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.3px; color: #025669;">NOBLECLEAN <span style="font-size: 9px; color: #c8a951; font-weight: 800; margin-left: 4px;">MANAGEMENT SYSTEM</span></div>
+            <div style="font-size: 8.5px; color: #64748b; font-weight: 600; margin-top: 1px;">${title}</div>
           </div>
-          <div style="font-size: 8px; font-weight: 700; color: #334155;">
+          <div style="font-size: 8.5px; font-weight: 700; color: #025669;">
             ${subtitle}
           </div>
         </div>
@@ -125,7 +125,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
  * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Narrow column proximity (65% width) + subtle top header with brand logo & subtitle.
+ * Takes exact schedule array rendered in system with zero modifications, matching system UI brand theme & colors.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -134,7 +134,7 @@ export function exportSchedulePDF(
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
-  // Group schedules by workDate
+  // Group schedules by workDate dynamically from input data
   const map = new Map<string, ScheduleExportItem[]>();
   schedules.forEach((item) => {
     if (!map.has(item.workDate)) map.set(item.workDate, []);
@@ -164,56 +164,26 @@ export function exportSchedulePDF(
     }
   };
 
+  const clientName = schedules[0]?.clientName || "John Reed Fitness";
+
   const rowsHtml = sortedDates
-    .map((dateStr) => {
+    .map((dateStr, idx) => {
       const rawShifts = map.get(dateStr)!;
-
-      // Count occurrences of each employee on this date
-      const counts = new Map<string, number>();
-      rawShifts.forEach((s) => {
-        counts.set(s.employeeName, (counts.get(s.employeeName) || 0) + 1);
-      });
-
-      const isSaturday = new Date(dateStr).getDay() === 6;
-
-      // Deduplicate names: list each employee ONCE per day
-      const uniqueEmployees: { name: string; start: string; end: string }[] = [];
-      const seen = new Set<string>();
-
-      rawShifts.forEach((s) => {
-        if (!seen.has(s.employeeName)) {
-          seen.add(s.employeeName);
-          const isDouble = (counts.get(s.employeeName) || 0) >= 2;
-
-          let start = "04:00";
-          let end = "07:00";
-
-          if (isSaturday) {
-            start = "05:30";
-            end = "08:30";
-          } else if (isDouble) {
-            start = "01:00";
-            end = "07:00";
-          }
-
-          uniqueEmployees.push({ name: s.employeeName, start, end });
-        }
-      });
 
       const dateFormatted = formatDateDDMMYYYY(dateStr);
       const wochentag = getGermanWochentag(dateStr);
 
-      const namesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.name}</div>`).join("");
-      const startTimesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.start}</div>`).join("");
-      const endTimesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.end}</div>`).join("");
+      const namesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.employeeName}</div>`).join("");
+      const startTimesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.startTime || "04:00"}</div>`).join("");
+      const endTimesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.endTime || "07:00"}</div>`).join("");
 
       return `
-        <tr>
-          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${dateFormatted}</td>
-          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${wochentag}</td>
-          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${namesHtml}</td>
-          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; text-align: center; line-height: 1.1;">${startTimesHtml}</td>
-          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; text-align: center; line-height: 1.1;">${endTimesHtml}</td>
+        <tr style="background-color: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
+          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #0f172a; line-height: 1.15;">${dateFormatted}</td>
+          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #0f172a; line-height: 1.15;">${wochentag}</td>
+          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 700; color: #0f172a; line-height: 1.15;">${namesHtml}</td>
+          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #025669; text-align: center; line-height: 1.15;">${startTimesHtml}</td>
+          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #025669; text-align: center; line-height: 1.15;">${endTimesHtml}</td>
         </tr>
       `;
     })
@@ -231,48 +201,50 @@ export function exportSchedulePDF(
           margin: 8mm;
         }
         body {
-          font-family: Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           margin: 0;
           padding: 0;
           background: #ffffff;
-          color: #000000;
+          color: #0f172a;
         }
         .table-container {
-          width: 65%;
+          width: 70%;
           margin: 0 auto;
         }
         table {
           width: 100%;
           border-collapse: collapse;
           font-size: 8px;
-          line-height: 1.1;
-          border: 1.5px solid #000000;
+          line-height: 1.15;
+          border: 1.5px solid #025669;
         }
         th {
-          border: 1px solid #000000;
-          padding: 3px 5px;
-          background-color: #ffffff;
-          color: #000000;
-          font-weight: 700;
+          border: 1px solid #025669;
+          padding: 4px 6px;
+          background-color: #025669;
+          color: #ffffff;
+          font-weight: 800;
           text-align: left;
           font-size: 8.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
         }
         td {
-          border: 1px solid #000000;
-          padding: 1.5px 5px;
+          border: 1px solid #cbd5e1;
+          padding: 2px 6px;
           vertical-align: top;
         }
       </style>
     </head>
     <body>
       <div class="table-container">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000000; padding-bottom: 3px; margin-bottom: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #025669; padding-bottom: 4px; margin-bottom: 6px;">
           <div>
-            <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.3px; color: #000000;">NOBLECLEAN</div>
-            <div style="font-size: 8px; color: #475569; font-weight: 600; margin-top: 1px;">Monats-Schichtplan · ${monthLabel}</div>
+            <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.3px; color: #025669;">NOBLECLEAN <span style="font-size: 9px; color: #c8a951; font-weight: 800; margin-left: 4px;">MANAGEMENT SYSTEM</span></div>
+            <div style="font-size: 8.5px; color: #64748b; font-weight: 600; margin-top: 1px;">Monats-Schichtplan · ${monthLabel}</div>
           </div>
-          <div style="font-size: 8px; font-weight: 700; color: #334155;">
-            John Reed Fitness
+          <div style="font-size: 8.5px; font-weight: 700; color: #025669;">
+            🏢 ${clientName}
           </div>
         </div>
         <table>
