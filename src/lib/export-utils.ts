@@ -54,13 +54,13 @@ export function exportToPDF(
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
-  const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #000000; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 9px;">${h}</th>`).join("");
+  const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #000000; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 8.5px;">${h}</th>`).join("");
 
   const tableRows = rows
     .map(
       (r) =>
         `<tr>
-          ${r.map((cell) => `<td style="padding: 2px 6px; border: 1px solid #000000; text-align: left; color: #000000; font-size: 8.5px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
+          ${r.map((cell) => `<td style="padding: 1.5px 5px; border: 1px solid #000000; text-align: left; color: #000000; font-size: 8px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
         </tr>`
     )
     .join("");
@@ -74,10 +74,10 @@ export function exportToPDF(
       <style>
         @page { size: A4 portrait; margin: 8mm; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #000000; background-color: #ffffff; }
-        .table-container { width: 78%; margin: 0 auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 8.5px; line-height: 1.1; border: 1.5px solid #000000; }
-        th { border: 1px solid #000000; padding: 4px 6px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 9px; }
-        td { border: 1px solid #000000; padding: 2px 6px; vertical-align: top; }
+        .table-container { width: 75%; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 8px; line-height: 1.1; border: 1.5px solid #000000; }
+        th { border: 1px solid #000000; padding: 3px 5px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 8.5px; }
+        td { border: 1px solid #000000; padding: 1.5px 5px; vertical-align: top; }
       </style>
     </head>
     <body>
@@ -116,7 +116,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
  * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Matches exact PDF layout of August 2026 schedule with 1:1 fidelity.
+ * Each employee listed ONCE per day. Double-shift employee gets 01:00 - 07:00.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -159,46 +159,52 @@ export function exportSchedulePDF(
     .map((dateStr) => {
       const rawShifts = map.get(dateStr)!;
 
-      // Count occurrences of each employee on this date to detect double-shift days
+      // Count occurrences of each employee on this date
       const counts = new Map<string, number>();
       rawShifts.forEach((s) => {
         counts.set(s.employeeName, (counts.get(s.employeeName) || 0) + 1);
       });
 
-      const hasDoubleShift = Array.from(counts.values()).some((c) => c >= 2);
       const isSaturday = new Date(dateStr).getDay() === 6;
 
-      // Employees list preserving duplicate entries for double-shift days (e.g. Eghbal, Eghbal, Shaikh)
-      const employeeNames = rawShifts.map((s) => s.employeeName);
+      // Deduplicate names: list each employee ONCE per day
+      const uniqueEmployees: { name: string; start: string; end: string }[] = [];
+      const seen = new Set<string>();
 
-      let startTimes: string[] = [];
-      let endTimes: string[] = [];
+      rawShifts.forEach((s) => {
+        if (!seen.has(s.employeeName)) {
+          seen.add(s.employeeName);
+          const isDouble = (counts.get(s.employeeName) || 0) >= 2;
 
-      if (isSaturday) {
-        startTimes = ["05:30"];
-        endTimes = ["08:30"];
-      } else if (hasDoubleShift) {
-        startTimes = ["01:00", "04:00"];
-        endTimes = ["07:00"];
-      } else {
-        startTimes = ["04:00"];
-        endTimes = ["07:00"];
-      }
+          let start = "04:00";
+          let end = "07:00";
+
+          if (isSaturday) {
+            start = "05:30";
+            end = "08:30";
+          } else if (isDouble) {
+            start = "01:00";
+            end = "07:00";
+          }
+
+          uniqueEmployees.push({ name: s.employeeName, start, end });
+        }
+      });
 
       const dateFormatted = formatDateDDMMYYYY(dateStr);
       const wochentag = getGermanWochentag(dateStr);
 
-      const namesHtml = employeeNames.map((n) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${n}</div>`).join("");
-      const startTimesHtml = startTimes.map((t) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${t}</div>`).join("");
-      const endTimesHtml = endTimes.map((t) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${t}</div>`).join("");
+      const namesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.name}</div>`).join("");
+      const startTimesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.start}</div>`).join("");
+      const endTimesHtml = uniqueEmployees.map((e) => `<div style="line-height: 1.1; margin: 0; padding: 0;">${e.end}</div>`).join("");
 
       return `
         <tr>
-          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${dateFormatted}</td>
-          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${wochentag}</td>
-          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${namesHtml}</td>
-          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.15;">${startTimesHtml}</td>
-          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.15;">${endTimesHtml}</td>
+          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${dateFormatted}</td>
+          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${wochentag}</td>
+          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; line-height: 1.1;">${namesHtml}</td>
+          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; text-align: center; line-height: 1.1;">${startTimesHtml}</td>
+          <td style="padding: 1.5px 5px; border: 1px solid #000000; font-size: 8px; font-weight: 500; text-align: center; line-height: 1.1;">${endTimesHtml}</td>
         </tr>
       `;
     })
@@ -223,28 +229,28 @@ export function exportSchedulePDF(
           color: #000000;
         }
         .table-container {
-          width: 78%;
+          width: 75%;
           margin: 0 auto;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 8.5px;
-          line-height: 1.15;
+          font-size: 8px;
+          line-height: 1.1;
           border: 1.5px solid #000000;
         }
         th {
           border: 1px solid #000000;
-          padding: 4px 6px;
+          padding: 3px 5px;
           background-color: #ffffff;
           color: #000000;
           font-weight: 700;
           text-align: left;
-          font-size: 9px;
+          font-size: 8.5px;
         }
         td {
           border: 1px solid #000000;
-          padding: 2px 6px;
+          padding: 1.5px 5px;
           vertical-align: top;
         }
       </style>
