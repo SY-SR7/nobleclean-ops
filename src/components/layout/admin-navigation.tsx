@@ -82,7 +82,7 @@ export function AdminNavigation({
               "focus-visible:ring-secondary inline-flex min-h-10 items-center gap-2.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 cursor-pointer select-none border-0 text-left w-full",
               collapsed && !isMobile ? "w-full justify-center px-0" : "px-3",
               active
-                ? "bg-secondary-container text-on-secondary-container font-semibold"
+                ? "bg-secondary text-white font-extrabold shadow-sm rounded-xl"
                 : undefined,
               !active && !isMobile
                 ? "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"

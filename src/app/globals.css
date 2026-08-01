@@ -142,11 +142,15 @@ a {
 
 /* Global High-Contrast Color Overrides (WCAG AAA Guaranteed) */
 .bg-secondary,
-.bg-secondary-container,
-.text-on-secondary,
 button.bg-secondary,
-a.bg-secondary {
+a.bg-secondary,
+.text-on-secondary {
   color: #ffffff !important;
+}
+
+.bg-secondary-container,
+.text-on-secondary-container {
+  color: #004d40 !important;
 }
 
 .text-secondary {
