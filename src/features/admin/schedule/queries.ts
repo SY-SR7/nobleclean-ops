@@ -121,7 +121,7 @@ export async function getScheduleData(
     const clientMap = new Map(
       clients.data.map((client) => [client.id, client.name]),
     );
-    // Group schedules by work_date and employee_id to handle double-shift rules correctly
+    // Group schedules by work_date and employee_id to assign accurate shift times
     const groupedMap = new Map<string, typeof schedules.data>();
     schedules.data.forEach((item) => {
       const key = `${item.work_date}_${item.employee_id}`;
@@ -130,31 +130,37 @@ export async function getScheduleData(
     });
 
     const scheduleItems: ScheduleListItem[] = [];
-    groupedMap.forEach((items) => {
-      const first = items[0];
-      const isDouble = items.length >= 2;
-      const isSaturday = new Date(first.work_date).getDay() === 6;
+    schedules.data.forEach((item) => {
+      const key = `${item.work_date}_${item.employee_id}`;
+      const group = groupedMap.get(key) || [];
+      const isDouble = group.length >= 2;
+      const isSaturday = new Date(item.work_date).getDay() === 6;
 
       let startTime = "04:00";
       let endTime = "07:00";
-      let hours = isDouble ? 6.0 : 3.0;
 
       if (isSaturday) {
         startTime = "05:30";
         endTime = "08:30";
       } else if (isDouble) {
-        startTime = "01:00";
-        endTime = "07:00";
+        const itemIdx = group.findIndex((g) => g.id === item.id);
+        if (itemIdx === 0) {
+          startTime = "01:00";
+          endTime = "04:00";
+        } else {
+          startTime = "04:00";
+          endTime = "07:00";
+        }
       }
 
       scheduleItems.push({
-        allocatedHours: hours,
-        clientId: first.client_id,
-        clientName: clientMap.get(first.client_id) ?? "",
-        employeeId: first.employee_id,
-        employeeName: employeeMap.get(first.employee_id) ?? "",
-        id: first.id,
-        workDate: first.work_date,
+        allocatedHours: item.allocated_hours || 3.0,
+        clientId: item.client_id,
+        clientName: clientMap.get(item.client_id) ?? "",
+        employeeId: item.employee_id,
+        employeeName: employeeMap.get(item.employee_id) ?? "",
+        id: item.id,
+        workDate: item.work_date,
         startTime,
         endTime,
       });
