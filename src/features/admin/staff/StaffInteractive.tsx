@@ -67,6 +67,9 @@ function formatDate(value: string | null, locale: Locale) {
   }).format(date);
 }
 
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { FileSpreadsheet, Printer } from "lucide-react";
+
 export function StaffInteractive({
   assignments,
   clients,
@@ -77,6 +80,33 @@ export function StaffInteractive({
   const { open } = useDetailDrawer();
   const { toast } = useToast();
   const [viewMode, setViewMode] = useViewMode("staff", "grid");
+
+  const handleExportStaffExcel = () => {
+    const headers = ["Mitarbeiter Name", "Objekt / Kunde", "Rolle", "Zuweisungs-Start", "Ende", "Status"];
+    const rows = assignments.map((a) => [
+      a.employeeName,
+      a.clientName,
+      a.role || "Reinigungskraft",
+      a.startDate,
+      a.endDate || "Laufend",
+      a.isActive ? "Aktiv" : "Beendet",
+    ]);
+    exportToCSV("Nobleclean_Mitarbeiter_Zuweisungen.csv", headers, rows);
+    toast("Mitarbeiter-Zuweisungen als Excel (CSV) exportiert!", "success");
+  };
+
+  const handleExportStaffPDF = () => {
+    const headers = ["Mitarbeiter Name", "Objekt / Kunde", "Rolle", "Startdatum", "Enddatum", "Status"];
+    const rows = assignments.map((a) => [
+      a.employeeName,
+      a.clientName,
+      a.role || "Reinigungskraft",
+      a.startDate,
+      a.endDate || "Laufend",
+      a.isActive ? "Aktiv" : "Beendet",
+    ]);
+    exportToPDF("Mitarbeiter- & Objektzuweisungen", "Übersicht aller aktiven Team-Zuweisungen", headers, rows, "Nobleclean_Mitarbeiter_Zuweisungen.pdf");
+  };
   const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{
     id: string;
     name: string;
@@ -209,13 +239,28 @@ export function StaffInteractive({
   return (
     <div className="grid gap-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-on-surface-variant text-sm">
-          {assignments.length} Zuweisung{assignments.length !== 1 ? "en" : ""}
-          {" · "}
-          {employeeEntries.length} Mitarbeiter
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/60 shadow-sm">
+        <p className="text-on-surface font-extrabold text-sm flex items-center gap-2">
+          <span>{assignments.length} Zuweisung{assignments.length !== 1 ? "en" : ""} · {employeeEntries.length} Mitarbeiter</span>
         </p>
-        <ViewToggle mode={viewMode} onChange={setViewMode} />
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleExportStaffExcel}
+            className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileSpreadsheet className="size-3.5 text-emerald-600" /> Excel (.csv)
+          </button>
+          <button
+            type="button"
+            onClick={handleExportStaffPDF}
+            className="px-3.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-800 border border-blue-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Printer className="size-3.5 text-blue-600" /> PDF Bericht
+          </button>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </div>
       </div>
 
       {viewMode === "grid" ? (

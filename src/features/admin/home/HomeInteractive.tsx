@@ -133,6 +133,33 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
     setClientAddress("");
   };
 
+  const handleExportHomeExcel = () => {
+    const headers = ["Metrik / Kennzahl", "Wert / Status", "Zusatzinformation"];
+    const rows = [
+      ["Aktive Kunden", data.activeClientCount, `${data.clientsList.length} Registriert`],
+      ["Aktive Zuweisungen", data.activeAssignmentCount, `${data.employeeCount} Mitarbeiter`],
+      ["Heute Geplante Stunden", `${data.todayAllocatedHours} Std.`, `${data.todayScheduleCount} Schichten`],
+      ["Fällige Aufgaben", data.dueItemCount, `${data.totalLeafItemCount} Gesamt Aufgaben`],
+      ["Hohe Priorität & Beschwerden", data.attentionItemCount, `${data.highPriorityItemCount} Hohe Prio / ${data.complaintItemCount} Beschwerden`],
+      ["Pflichtschritt-Eskalationen", data.mandatoryStepEscalationCount, "Qualitätskontrolle"],
+    ];
+    exportToCSV("Nobleclean_Executive_Overview.csv", headers, rows);
+    toast("Executive-Übersicht als Excel (CSV) exportiert!", "success");
+  };
+
+  const handleExportHomePDF = () => {
+    const headers = ["Metrik / Kennzahl", "Wert / Status", "Zusatzinformation"];
+    const rows = [
+      ["Aktive Kunden", data.activeClientCount, `${data.clientsList.length} Registriert`],
+      ["Aktive Zuweisungen", data.activeAssignmentCount, `${data.employeeCount} Mitarbeiter`],
+      ["Heute Geplante Stunden", `${data.todayAllocatedHours} Std.`, `${data.todayScheduleCount} Schichten`],
+      ["Fällige Aufgaben", data.dueItemCount, `${data.totalLeafItemCount} Gesamt Aufgaben`],
+      ["Hohe Priorität & Beschwerden", data.attentionItemCount, `${data.highPriorityItemCount} Hohe Prio / ${data.complaintItemCount} Beschwerden`],
+      ["Pflichtschritt-Eskalationen", data.mandatoryStepEscalationCount, "Qualitätskontrolle"],
+    ];
+    exportToPDF("Executive Management Dashboard Report", "System-Status & Betriebsstatistiken", headers, rows, "Nobleclean_Executive_Report.pdf");
+  };
+
   // Sub-Modal States for Nested Interactivity
   const [selectedSubClient, setSelectedSubClient] = useState<DetailClientItem | null>(null);
   const [selectedSubStaff, setSelectedSubStaff] = useState<DetailStaffItem | null>(null);
@@ -590,6 +617,24 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
               className="bg-white/15 hover:bg-white/25 text-white border border-white/30 backdrop-blur-md transition px-4 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 cursor-pointer"
             >
               <Building2 className="size-4" /> Kunde hinzufügen
+            </button>
+
+            {/* Excel & PDF Exports */}
+            <button
+              type="button"
+              onClick={handleExportHomeExcel}
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 text-white border border-emerald-400/40 backdrop-blur-md transition px-3.5 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-1.5 cursor-pointer"
+              title="Als Excel (CSV) exportieren"
+            >
+              <FileSpreadsheet className="size-4 text-emerald-300" /> Excel
+            </button>
+            <button
+              type="button"
+              onClick={handleExportHomePDF}
+              className="bg-blue-500/20 hover:bg-blue-500/30 text-white border border-blue-400/40 backdrop-blur-md transition px-3.5 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-1.5 cursor-pointer"
+              title="Als PDF drucken / speichern"
+            >
+              <Activity className="size-4 text-blue-300" /> PDF Bericht
             </button>
           </div>
         </div>

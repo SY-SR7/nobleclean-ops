@@ -56,6 +56,9 @@ function getClientGradient(name: string): string {
   return gradients[hash % gradients.length];
 }
 
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { FileSpreadsheet, Printer } from "lucide-react";
+
 export function ClientsInteractive({ clients, locale, copy }: ClientsInteractiveProps) {
   const { open, close } = useDetailDrawer();
   const { setActiveTab } = useAdminSpa();
@@ -63,6 +66,33 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
   const [viewMode, setViewMode] = useViewMode("clients", "grid");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isPendingDelete, startDeleteTransition] = useTransition();
+
+  const handleExportClientsExcel = () => {
+    const headers = ["ID", "Kunden- / Objektname", "Status", "Adresse", "Ansprechpartner", "E-Mail", "Telefon"];
+    const rows = clients.map((c) => [
+      c.id,
+      c.name,
+      c.isActive ? "Aktiv" : "Inaktiv",
+      c.address || "—",
+      c.contactInfo.contactName || "—",
+      c.contactInfo.email || "—",
+      c.contactInfo.phone || "—",
+    ]);
+    exportToCSV("Nobleclean_Kundenverzeichnis.csv", headers, rows);
+    toast("Kundenverzeichnis als Excel (CSV) exportiert!", "success");
+  };
+
+  const handleExportClientsPDF = () => {
+    const headers = ["Kundenname", "Status", "Adresse", "Ansprechpartner", "E-Mail"];
+    const rows = clients.map((c) => [
+      c.name,
+      c.isActive ? "Aktiv" : "Inaktiv",
+      c.address || "—",
+      c.contactInfo.contactName || "—",
+      c.contactInfo.email || "—",
+    ]);
+    exportToPDF("Kunden- & Objektverzeichnis", "Übersicht aller registrierten Kunden", headers, rows, "Nobleclean_Kundenliste.pdf");
+  };
 
   const deleteTargetName =
     clients.find((c) => c.id === deleteTargetId)?.name ?? "";
@@ -155,11 +185,28 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
   return (
     <div className="grid gap-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-on-surface-variant text-sm">
-          {clients.length} {clients.length === 1 ? "Kunde" : "Kunden"}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-lowest p-3.5 rounded-2xl border border-outline-variant/60 shadow-sm">
+        <p className="text-on-surface font-extrabold text-sm flex items-center gap-2">
+          <span>{clients.length} {clients.length === 1 ? "Kunde" : "Kunden"} registriert</span>
         </p>
-        <ViewToggle mode={viewMode} onChange={setViewMode} />
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleExportClientsExcel}
+            className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileSpreadsheet className="size-3.5 text-emerald-600" /> Excel (.csv)
+          </button>
+          <button
+            type="button"
+            onClick={handleExportClientsPDF}
+            className="px-3.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-800 border border-blue-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Printer className="size-3.5 text-blue-600" /> PDF Bericht
+          </button>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </div>
       </div>
 
       {viewMode === "grid" ? (
