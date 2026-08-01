@@ -133,9 +133,84 @@ export function SectionsInteractive({
           variant: item.tag === "high_priority" ? "critical" : item.tag === "complaint" ? "warning" : "success",
         },
         kpis: [
-          { label: "Dauer", value: `${item.estimatedMinutes}m`, color: "text-emerald-600" },
-          { label: "Anzahl", value: item.quantity, color: "text-blue-600" },
-          { label: "Schritte", value: item.toolSteps.length, color: "text-violet-600" },
+          {
+            label: "Dauer",
+            value: `${item.estimatedMinutes}m`,
+            color: "text-emerald-600",
+            onClick: () =>
+              open({
+                title: `${item.name} — Reinigungsdauer`,
+                subtitle: `Geschätzte Ausführungszeit: ${item.estimatedMinutes} Minuten`,
+                icon: <Clock className="size-6 text-emerald-600" />,
+                accentColor: "success",
+                sections: [
+                  {
+                    content: (
+                      <div className="p-4 bg-surface-container-low rounded-2xl space-y-3">
+                        <p className="font-bold text-sm text-on-surface">Zeitansatz & Richtwerte</p>
+                        <p className="text-xs text-on-surface-variant">
+                          Für diese Reinigungsaufgabe sind {item.estimatedMinutes} Minuten einkalkuliert.
+                        </p>
+                      </div>
+                    ),
+                  },
+                ],
+              }),
+          },
+          {
+            label: "Anzahl",
+            value: item.quantity,
+            color: "text-blue-600",
+            onClick: () =>
+              open({
+                title: `${item.name} — Objekt-Anzahl`,
+                subtitle: `Menge im Bereich: ${item.quantity} Stück`,
+                icon: <Layers className="size-6 text-blue-600" />,
+                accentColor: "secondary",
+                sections: [
+                  {
+                    content: (
+                      <div className="p-4 bg-surface-container-low rounded-2xl space-y-3">
+                        <p className="font-bold text-sm text-on-surface">Objekt-Stückzahl</p>
+                        <p className="text-xs text-on-surface-variant">
+                          Dieses Objekt ist {item.quantity}x im gewählten Bereich vorhanden.
+                        </p>
+                      </div>
+                    ),
+                  },
+                ],
+              }),
+          },
+          {
+            label: "Schritte",
+            value: item.toolSteps.length,
+            color: "text-violet-600",
+            onClick: () =>
+              open({
+                title: `${item.name} — Reinigungs-Schritte`,
+                subtitle: `${item.toolSteps.length} definierte Werkzeug-Schritte`,
+                icon: <Wrench className="size-6 text-violet-600" />,
+                accentColor: "primary",
+                sections: [
+                  {
+                    content: (
+                      <div className="p-4 bg-surface-container-low rounded-2xl space-y-3">
+                        <p className="font-bold text-sm text-on-surface">Pflicht-Reinigungsschritte</p>
+                        {item.toolSteps.length > 0 ? (
+                          item.toolSteps.map((s, i) => (
+                            <div key={s.id} className="text-xs text-on-surface-variant border-b border-outline-variant/40 pb-2">
+                              {i + 1}. {s.toolName} ({s.estimatedMinutes} Min.)
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-on-surface-variant italic">Keine separaten Werkzeug-Schritte definiert.</p>
+                        )}
+                      </div>
+                    ),
+                  },
+                ],
+              }),
+          },
         ],
         sections: [
           {
@@ -155,10 +230,66 @@ export function SectionsInteractive({
                 />
                 <InfoGrid
                   items={[
-                    { icon: <Clock className="size-4" />, label: copy.minutes, value: `${item.estimatedMinutes} min` },
-                    { icon: <Layers className="size-4" />, label: copy.quantity, value: item.quantity },
-                    ...(item.recurrenceDays ? [{ icon: <CalendarClock className="size-4" />, label: copy.recurrenceDays, value: `${item.recurrenceDays} Tage` }] : []),
-                    ...(item.hasReferenceImage ? [{ icon: <ImageIcon className="size-4" />, label: "Foto", value: copy.hasImage }] : []),
+                    {
+                      icon: <Clock className="size-4" />,
+                      label: copy.minutes,
+                      value: `${item.estimatedMinutes} min`,
+                      onClick: () =>
+                        open({
+                          title: "Dauer-Details",
+                          subtitle: `${item.estimatedMinutes} Min. geschätzte Dauer`,
+                          icon: <Clock className="size-6 text-emerald-600" />,
+                          accentColor: "success",
+                          sections: [{ content: <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Geschätzte Ausführungsdauer pro Durchgang.</p> }],
+                        }),
+                    },
+                    {
+                      icon: <Layers className="size-4" />,
+                      label: copy.quantity,
+                      value: item.quantity,
+                      onClick: () =>
+                        open({
+                          title: "Stückzahl-Details",
+                          subtitle: `${item.quantity} Einheiten vorhanden`,
+                          icon: <Layers className="size-6 text-blue-600" />,
+                          accentColor: "secondary",
+                          sections: [{ content: <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Gesamtanzahl der Einheiten in diesem Bereich.</p> }],
+                        }),
+                    },
+                    ...(item.recurrenceDays
+                      ? [
+                          {
+                            icon: <CalendarClock className="size-4" />,
+                            label: copy.recurrenceDays,
+                            value: `${item.recurrenceDays} Tage`,
+                            onClick: () =>
+                              open({
+                                title: "Reinigungs-Turnus",
+                                subtitle: `Wiederholung alle ${item.recurrenceDays} Tage`,
+                                icon: <CalendarClock className="size-6 text-amber-600" />,
+                                accentColor: "warning",
+                                sections: [{ content: <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Vorgeschriebenes Intervall für die regelmäßige Ausführung.</p> }],
+                              }),
+                          },
+                        ]
+                      : []),
+                    ...(item.hasReferenceImage
+                      ? [
+                          {
+                            icon: <ImageIcon className="size-4" />,
+                            label: "Foto",
+                            value: copy.hasImage,
+                            onClick: () =>
+                              open({
+                                title: "Referenz-Foto",
+                                subtitle: "Visueller Standard für die Reinigung",
+                                icon: <ImageIcon className="size-6 text-purple-600" />,
+                                accentColor: "primary",
+                                sections: [{ content: <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Foto-Referenz für Qualitäts-Check.</p> }],
+                              }),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </div>

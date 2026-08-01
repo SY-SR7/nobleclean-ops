@@ -64,22 +64,29 @@ export function useDetailDrawer() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Reusable Components (InfoGrid & KpiStrip)
+   Reusable Components (InfoGrid & KpiStrip) — Interactive & Clickable
    ───────────────────────────────────────────────────────────────────────── */
 export function InfoGrid({
   items,
 }: {
-  items: readonly { icon?: ReactNode; label: string; value: ReactNode }[];
+  items: readonly { icon?: ReactNode; label: string; value: ReactNode; onClick?: () => void }[];
 }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {items.map((item, i) => (
-        <div key={i} className="rounded-2xl border border-outline-variant/60 bg-surface-container-low/70 p-3.5 shadow-sm">
-          <p className="text-on-surface-variant flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-1">
+        <div
+          key={i}
+          onClick={item.onClick}
+          className={cn(
+            "rounded-2xl border border-outline-variant/60 bg-surface-container-low/70 p-3.5 shadow-sm transition-all",
+            item.onClick && "cursor-pointer hover:bg-surface-container hover:border-secondary select-none group",
+          )}
+        >
+          <p className="text-on-surface-variant flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-1 group-hover:text-secondary transition-colors">
             {item.icon && <span className="text-secondary">{item.icon}</span>}
             {item.label}
           </p>
-          <div className="text-on-surface font-semibold text-sm">
+          <div className="text-on-surface font-semibold text-sm group-hover:text-secondary transition-colors">
             {item.value || <span className="text-on-surface-variant/50">—</span>}
           </div>
         </div>
@@ -96,20 +103,20 @@ export function KpiStrip({ items }: { items: readonly KpiItem[] }) {
       style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
     >
       {items.map((item, i) => (
-        <div
+        <button
           key={i}
+          type="button"
           onClick={item.onClick}
           className={cn(
-            "px-3 py-3.5 text-center transition-all",
+            "px-3 py-3.5 text-center transition-all cursor-pointer hover:bg-surface-container/80 select-none group border-none bg-transparent w-full",
             i > 0 && "border-l border-outline-variant/60",
-            item.onClick && "cursor-pointer hover:bg-surface-container select-none",
             item.active && "bg-secondary/10 border-b-2 border-secondary",
           )}
         >
-          <p className={cn("font-heading text-xl font-extrabold", item.color ?? "text-on-surface")}>
+          <p className={cn("font-heading text-xl font-extrabold group-hover:text-secondary transition-colors", item.color ?? "text-on-surface")}>
             {item.value}
           </p>
-          <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider mt-0.5">
+          <p className="text-on-surface-variant text-[10px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-secondary transition-colors">
             {item.label}
           </p>
           {item.sub && (
@@ -117,7 +124,7 @@ export function KpiStrip({ items }: { items: readonly KpiItem[] }) {
               {item.sub}
             </p>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -188,7 +195,8 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
               "bg-black/65 backdrop-blur-md animate-in fade-in duration-200",
             )}
             onClick={(e) => {
-              if (e.target === e.currentTarget && isTop) close();
+              // Click outside/backdrop closes ALL modals directly to section page
+              if (e.target === e.currentTarget && isTop) closeAll();
             }}
           >
             {/* Modal Panel */}
@@ -206,13 +214,13 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
               <div className="border-b border-outline-variant/70 shrink-0 bg-surface-container-low/60 px-6 py-4 sm:py-5">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                    {/* Back arrow if stack level > 0 */}
+                    {/* Back arrow (←) pops 1 step back in history stack */}
                     {index > 0 && (
                       <button
                         type="button"
                         onClick={close}
                         className="text-secondary hover:bg-secondary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition border border-secondary/30 bg-surface-container-lowest shadow-sm cursor-pointer mr-1"
-                        title="Zurück"
+                        title="Zurück (Vorheriges Fenster)"
                       >
                         <ArrowLeft className="size-4" />
                       </button>
@@ -253,11 +261,13 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    {/* Close button (✕) closes ALL modals directly to main screen */}
                     <button
-                      aria-label="Schließen"
+                      aria-label="Schließen (Zurück zum Bereich)"
                       className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all border border-outline-variant/60 bg-surface-container-lowest shadow-sm cursor-pointer"
-                      onClick={close}
+                      onClick={closeAll}
                       type="button"
+                      title="Alle Naffäden schließen"
                     >
                       <X className="size-4" />
                     </button>
@@ -265,7 +275,7 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
                 </div>
               </div>
 
-              {/* KPI Strip */}
+              {/* Interactive KPI Strip */}
               {config.kpis && <KpiStrip items={config.kpis} />}
 
               {/* Scrollable Body */}
