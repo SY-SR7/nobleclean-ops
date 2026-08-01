@@ -376,7 +376,7 @@ export async function getReportsData(
       };
     }
 
-    const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+    const sanitizeName = (name: string) => name;
 
     const profiles = new Map(
       parsedProfiles.data.map((profile) => [profile.id, sanitizeName(profile.full_name)]),
