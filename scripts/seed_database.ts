@@ -36,20 +36,20 @@ const pdfAugustSchedule: [string, (string | [string, string, string])[]][] = [
   ["2026-08-11", ["Mohamad", "Eghbal", "Shaikh"]],
   ["2026-08-12", ["Eghbal", "Ammar", "Shaikh"]],
   ["2026-08-13", ["Mohamad", "Eghbal", "Shaikh"]],
-  ["2026-08-14", [["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"], ["Shaikh", "04:00", "07:00"]]],
+  ["2026-08-14", [["Eghbal", "01:00", "07:00"], ["Shaikh", "04:00", "07:00"]]],
   ["2026-08-15", ["Mohamad", "Shaikh", "Hady"]],
   ["2026-08-16", ["Ammar", "Shaikh", "Hady"]],
-  ["2026-08-17", [["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"], ["Ammar", "04:00", "07:00"]]],
+  ["2026-08-17", [["Eghbal", "01:00", "07:00"], ["Ammar", "04:00", "07:00"]]],
   ["2026-08-18", ["Mohamad", "Eghbal", "Ammar"]],
-  ["2026-08-19", [["Mohamad", "04:00", "07:00"], ["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"]]],
-  ["2026-08-20", [["Mohamad", "04:00", "07:00"], ["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"]]],
+  ["2026-08-19", [["Mohamad", "04:00", "07:00"], ["Eghbal", "01:00", "07:00"]]],
+  ["2026-08-20", [["Mohamad", "04:00", "07:00"], ["Eghbal", "01:00", "07:00"]]],
   ["2026-08-21", ["Mohamad", "Eghbal", "Ammar"]],
   ["2026-08-22", ["Mohamad", "Ammar", "Hady"]],
   ["2026-08-23", ["Mohamad", "Ammar", "Hady"]],
   ["2026-08-24", ["Mohamad", "Eghbal", "Ammar"]],
   ["2026-08-25", ["Mohamad", "Eghbal", "Ammar"]],
-  ["2026-08-26", [["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"], ["Ammar", "04:00", "07:00"]]],
-  ["2026-08-27", [["Eghbal", "01:00", "04:00"], ["Eghbal", "04:00", "07:00"], ["Shaikh", "04:00", "07:00"]]],
+  ["2026-08-26", [["Eghbal", "01:00", "07:00"], ["Ammar", "04:00", "07:00"]]],
+  ["2026-08-27", [["Eghbal", "01:00", "07:00"], ["Shaikh", "04:00", "07:00"]]],
   ["2026-08-28", ["Mohamad", "Eghbal", "Ammar"]],
   ["2026-08-29", ["Mohamad", "Shaikh", "Hady"]],
   ["2026-08-30", ["Mohamad", "Ammar", "Hady"]],
@@ -253,6 +253,15 @@ async function seed() {
       const empId = empMap[empName];
       if (!empId) continue;
 
+      let hours = 3.0;
+      if (Array.isArray(w) && w[1] && w[2]) {
+        const [sH, sM] = w[1].split(":").map(Number);
+        const [eH, eM] = w[2].split(":").map(Number);
+        let diff = (eH * 60 + (eM || 0)) - (sH * 60 + (sM || 0));
+        if (diff <= 0) diff += 24 * 60;
+        hours = Math.round((diff / 60) * 100) / 100;
+      }
+
       const uuidSchedId = toUUID(`sched-${work_date}-${empId}`);
       const uuidPlanId = toUUID(`plan-${work_date}-${empId}`);
 
@@ -261,7 +270,7 @@ async function seed() {
         employee_id: empId,
         client_id: CLIENT_ID,
         work_date,
-        allocated_hours: 3.0,
+        allocated_hours: hours,
       });
 
       const isSubmitted = work_date <= "2026-08-01";
