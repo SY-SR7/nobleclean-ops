@@ -164,7 +164,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Ultra-Compact Single-Page Monthly Schedule PDF Exporter
  * Fits an entire 31-day month schedule onto EXACTLY 1 A4 Landscape page.
- * Groups working employees inline for each day with shift times and hours.
+ * Applies the 01:00-07:00 rule for repeated employee names, and 04:00-07:00 for all regular shifts in Month 8.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -184,11 +184,11 @@ export function exportSchedulePDF(
 
   const sortedDates = Array.from(map.keys()).sort();
 
-  // Stats
-  const totalShifts = schedules.length;
-  const totalHours = schedules.reduce((sum, s) => sum + s.allocatedHours, 0);
-  const uniqueWorkers = new Set(schedules.map((s) => s.employeeName)).size;
-  const uniqueClients = new Set(schedules.map((s) => s.clientName)).size;
+  // Compute processed shifts per day based on repeat rule
+  let grandTotalShifts = 0;
+  let grandTotalHours = 0;
+  const uniqueWorkersSet = new Set<string>();
+  const uniqueClientsSet = new Set<string>();
 
   const formatShortDate = (dateStr: string) => {
     try {
@@ -213,18 +213,53 @@ export function exportSchedulePDF(
 
   const rowsHtml = sortedDates
     .map((dateStr, idx) => {
-      const dayShifts = map.get(dateStr)!;
-      const dayTotalHours = dayShifts.reduce((sum, s) => sum + s.allocatedHours, 0);
-      const weekend = isWeekend(dateStr);
-      const dateFormatted = formatShortDate(dateStr);
+      const rawShifts = map.get(dateStr)!;
 
-      const chipsHtml = dayShifts
+      // Count occurrences of each employee on this date
+      const counts = new Map<string, number>();
+      rawShifts.forEach((s) => {
+        counts.set(s.employeeName, (counts.get(s.employeeName) || 0) + 1);
+        uniqueWorkersSet.add(s.employeeName);
+        uniqueClientsSet.add(s.clientName);
+      });
+
+      // Process employees on this date (deduplicating repeated names into 01:00-07:00 shifts)
+      const processedEmployees: { employeeName: string; clientName: string; startTime: string; endTime: string; hours: number; isDouble: boolean }[] = [];
+      const seenNames = new Set<string>();
+
+      rawShifts.forEach((s) => {
+        if (!seenNames.has(s.employeeName)) {
+          seenNames.add(s.employeeName);
+          const isDouble = (counts.get(s.employeeName) || 0) >= 2;
+          const startTime = isDouble ? "01:00" : "04:00";
+          const endTime = "07:00";
+          const hours = isDouble ? 6.0 : 3.0;
+
+          processedEmployees.push({
+            employeeName: s.employeeName,
+            clientName: s.clientName,
+            startTime,
+            endTime,
+            hours,
+            isDouble,
+          });
+
+          grandTotalShifts += 1;
+          grandTotalHours += hours;
+        }
+      });
+
+      const dayTotalHours = processedEmployees.reduce((sum, e) => sum + e.hours, 0);
+      const dateFormatted = formatShortDate(dateStr);
+      const weekend = isWeekend(dateStr);
+
+      const chipsHtml = processedEmployees
         .map(
-          (s) => `
-          <span style="display: inline-flex; align-items: center; gap: 4px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 1px 6px; font-size: 8.5px; font-weight: 600; margin: 1px 2px;">
-            <strong style="color: #0f172a;">${s.employeeName}</strong>
-            <span style="color: #025669; font-weight: 700;">(${s.startTime || "04:00"}-${s.endTime || "07:00"})</span>
-            <span style="color: #047857; font-weight: 800; background-color: #d1fae5; padding: 0 4px; border-radius: 3px;">${s.allocatedHours}h</span>
+          (e) => `
+          <span style="display: inline-flex; align-items: center; gap: 4px; background-color: ${e.isDouble ? '#fef3c7' : '#f1f5f9'}; border: 1px solid ${e.isDouble ? '#fde68a' : '#cbd5e1'}; border-radius: 4px; padding: 1px 6px; font-size: 8.5px; font-weight: 600; margin: 1px 2px;">
+            <strong style="color: ${e.isDouble ? '#92400e' : '#0f172a'};">${e.employeeName}</strong>
+            <span style="color: ${e.isDouble ? '#b45309' : '#025669'}; font-weight: 800;">(${e.startTime}–${e.endTime})</span>
+            <span style="color: ${e.isDouble ? '#92400e' : '#047857'}; font-weight: 900; background-color: ${e.isDouble ? '#fef08a' : '#d1fae5'}; padding: 0 4px; border-radius: 3px;">${e.hours}h</span>
           </span>
         `
         )
@@ -241,7 +276,7 @@ export function exportSchedulePDF(
             </div>
           </td>
           <td style="padding: 3px 6px; text-align: center; font-weight: 800; color: #025669; font-size: 9px;">
-            ${dayShifts.length}
+            ${processedEmployees.length}
           </td>
           <td style="padding: 3px 6px; text-align: right; font-weight: 900; color: #047857; font-size: 9px; white-space: nowrap;">
             ${dayTotalHours} Std.
@@ -287,17 +322,17 @@ export function exportSchedulePDF(
       </div>
 
       <div class="stats-bar">
-        <div class="stat-item"><span>Gesamte Schichten:</span> <span class="stat-val">${totalShifts}</span></div>
-        <div class="stat-item"><span>Gesamtstunden:</span> <span class="stat-val" style="color: #047857;">${totalHours} Std.</span></div>
-        <div class="stat-item"><span>Eingesetzte Mitarbeiter:</span> <span class="stat-val" style="color: #4f46e5;">${uniqueWorkers}</span></div>
-        <div class="stat-item"><span>Betreute Objekte/Kunden:</span> <span class="stat-val" style="color: #d97706;">${uniqueClients}</span></div>
+        <div class="stat-item"><span>Gesamte Schichten:</span> <span class="stat-val">${grandTotalShifts}</span></div>
+        <div class="stat-item"><span>Gesamtstunden:</span> <span class="stat-val" style="color: #047857;">${grandTotalHours} Std.</span></div>
+        <div class="stat-item"><span>Eingesetzte Mitarbeiter:</span> <span class="stat-val" style="color: #4f46e5;">${uniqueWorkersSet.size}</span></div>
+        <div class="stat-item"><span>Betreute Objekte/Kunden:</span> <span class="stat-val" style="color: #d97706;">${uniqueClientsSet.size}</span></div>
       </div>
 
       <table>
         <thead>
           <tr>
             <th style="width: 85px; text-align: left;">Datum & Tag</th>
-            <th style="text-align: left;">Eingesetzte Mitarbeiter & Schichten (Zeiten & Stunden)</th>
+            <th style="text-align: left;">Eingesetzte Mitarbeiter & Schichten (Doppelbelegung 01:00-07:00 / Regular 04:00-07:00)</th>
             <th style="width: 65px; text-align: center;">Mitarbeiter</th>
             <th style="width: 75px; text-align: right;">Gesamt Std.</th>
           </tr>
