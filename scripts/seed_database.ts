@@ -11,19 +11,15 @@ function toUUID(str: string): string {
   return `${hash.slice(0,8)}-${hash.slice(8,12)}-4${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
 }
 
-// 6 Male Employees
+// Fixed UUIDs for existing 4 auth.users
 const employees = [
   { id: "e1a00000-0001-4000-8001-000000000001", name: "Mohamad", email: "mohamad@demo.nobleclean.de" },
   { id: "e2a00000-0002-4000-8002-000000000002", name: "Eghbal",  email: "eghbal@demo.nobleclean.de" },
   { id: "e3a00000-0003-4000-8003-000000000003", name: "Hady",    email: "hady@demo.nobleclean.de" },
   { id: "e4a00000-0004-4000-8004-000000000004", name: "Shaikh",  email: "shaikh@demo.nobleclean.de" },
-  { id: "e5a00000-0005-4000-8005-000000000005", name: "Ammar",   email: "ammar@demo.nobleclean.de" },
-  { id: "e6a00000-0006-4000-8006-000000000006", name: "Khalid",  email: "khalid@demo.nobleclean.de" },
+  { id: "", name: "Ammar",   email: "ammar.worker@demo.nobleclean.de" },
+  { id: "", name: "Khalid",  email: "khalid.worker@demo.nobleclean.de" },
 ];
-
-const empMap: Record<string, string> = {};
-employees.forEach(e => { empMap[e.name] = e.id; });
-empMap["Shaik"] = empMap["Shaikh"];
 
 // August 2026 Schedule from PDF
 const pdfAugustSchedule: [string, (string | [string, string, string])[]][] = [
@@ -161,35 +157,55 @@ async function seed() {
 
   console.log("Logged in successfully. Starting database update...");
 
+  // Ensure Ammar and Khalid users
+  for (const emp of employees) {
+    if (!emp.id) {
+      const signupRes = await supabase.auth.signUp({
+        email: emp.email,
+        password: "Demo@2026!",
+      });
+      if (signupRes.data.user?.id) {
+        emp.id = signupRes.data.user.id;
+      } else {
+        const signInRes = await supabase.auth.signInWithPassword({
+          email: emp.email,
+          password: "Demo@2026!",
+        });
+        if (signInRes.data.user?.id) {
+          emp.id = signInRes.data.user.id;
+        }
+      }
+    }
+  }
+
+  const empMap: Record<string, string> = {};
+  employees.forEach(e => { empMap[e.name] = e.id; });
+  empMap["Shaik"] = empMap["Shaikh"];
+
   // 1. UPDATE EMPLOYEES PROFILES
   console.log("1. Updating Employee Profiles...");
   for (const emp of employees) {
-    const { error: pErr } = await db.from("profiles").upsert({
+    if (!emp.id) continue;
+    await db.from("profiles").upsert({
       id: emp.id,
       full_name: emp.name,
       role: "employee",
       default_daily_hours: 3.0,
     });
-    if (pErr) console.warn("Profile upsert warning for", emp.name, pErr.message);
-
-    const { error: aErr } = await db.from("employee_client_assignments").upsert({
-      employee_id: emp.id,
-      client_id: CLIENT_ID,
-      start_date: "2026-07-01",
-    });
-    if (aErr) console.warn("Assignment upsert warning for", emp.name, aErr.message);
   }
 
-  // 2. RECONSTRUCT SECTIONS & LEAF ITEMS FOR JOHN REED FITNESS
-  console.log("2. Reconstructing Sections & Leaf Items...");
-  const { data: existingSecs } = await db.from("sections").select("id").eq("client_id", CLIENT_ID);
-  if (existingSecs && existingSecs.length > 0) {
-    const secIds = existingSecs.map(s => s.id);
-    await db.from("leaf_items").delete().in("section_id", secIds);
-    await db.from("sections").delete().eq("client_id", CLIENT_ID);
-  }
+  // 2. CASCADING DELETE OF OLD PLAN DATA & SECTIONS
+  console.log("2. Performing cascading delete of old sections and plans...");
+  await db.from("daily_plan_item_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("daily_plan_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("daily_plans").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("work_schedule").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("cleaning_tool_steps").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("leaf_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await db.from("sections").delete().eq("client_id", CLIENT_ID);
 
-  // Insert Main Sections first
+  // 3. RECONSTRUCT SECTIONS & LEAF ITEMS
+  console.log("3. Inserting 3-Group Sections...");
   for (const s of sectionsData.filter(s => !s.parent_id)) {
     const { error } = await db.from("sections").insert({
       id: s.id,
@@ -202,7 +218,6 @@ async function seed() {
     if (error) console.error("Error inserting main section", s.name, error.message);
   }
 
-  // Insert Sub Sections
   for (const s of sectionsData.filter(s => s.parent_id)) {
     const { error } = await db.from("sections").insert({
       id: s.id,
@@ -215,7 +230,7 @@ async function seed() {
     if (error) console.error("Error inserting sub section", s.name, error.message);
   }
 
-  // Insert Leaf Items
+  console.log("4. Inserting Leaf Items with Images...");
   for (const item of leafItemsData) {
     const { error } = await db.from("leaf_items").insert({
       id: item.id,
@@ -230,15 +245,8 @@ async function seed() {
     if (error) console.error("Error inserting leaf item", item.name, error.message);
   }
 
-  // 3. PURGE SCHEDULES & PLANS OUTSIDE MONTHS 7 & 8 2026
-  console.log("3. Cleaning up schedules outside July & August 2026...");
-  await db.from("work_schedule").delete().lt("work_date", "2026-07-01");
-  await db.from("work_schedule").delete().gt("work_date", "2026-08-31");
-  await db.from("daily_plans").delete().lt("work_date", "2026-07-01");
-  await db.from("daily_plans").delete().gt("work_date", "2026-08-31");
-
-  // 4. SEED AUGUST 2026 SCHEDULE (PDF 100%)
-  console.log("4. Seeding August 2026 Schedule (100% PDF)...");
+  // 5. SEED AUGUST 2026 SCHEDULE (PDF 100%)
+  console.log("5. Seeding August 2026 Schedule (100% PDF)...");
   for (const [work_date, workers] of pdfAugustSchedule) {
     for (const w of workers) {
       const empName = Array.isArray(w) ? w[0] : w;
@@ -248,7 +256,7 @@ async function seed() {
       const uuidSchedId = toUUID(`sched-${work_date}-${empId}`);
       const uuidPlanId = toUUID(`plan-${work_date}-${empId}`);
 
-      await db.from("work_schedule").upsert({
+      await db.from("work_schedule").insert({
         id: uuidSchedId,
         employee_id: empId,
         client_id: CLIENT_ID,
@@ -257,7 +265,7 @@ async function seed() {
       });
 
       const isSubmitted = work_date <= "2026-08-01";
-      await db.from("daily_plans").upsert({
+      await db.from("daily_plans").insert({
         id: uuidPlanId,
         employee_id: empId,
         client_id: CLIENT_ID,
@@ -268,7 +276,7 @@ async function seed() {
 
       for (const item of leafItemsData) {
         const uuidItemId = toUUID(`pi-${uuidPlanId}-${item.id}`);
-        await db.from("daily_plan_items").upsert({
+        await db.from("daily_plan_items").insert({
           id: uuidItemId,
           daily_plan_id: uuidPlanId,
           leaf_item_id: item.id,
@@ -279,8 +287,8 @@ async function seed() {
     }
   }
 
-  // 5. SEED JULY 2026 SCHEDULE (Random Realistic)
-  console.log("5. Seeding July 2026 Schedule...");
+  // 6. SEED JULY 2026 SCHEDULE (Random Realistic)
+  console.log("6. Seeding July 2026 Schedule...");
   const empNames = employees.map(e => e.name);
   for (let day = 1; day <= 31; day++) {
     const work_date = `2026-07-${String(day).padStart(2, "0")}`;
@@ -288,10 +296,11 @@ async function seed() {
 
     for (const empName of workers) {
       const empId = empMap[empName];
+      if (!empId) continue;
       const uuidSchedId = toUUID(`sched-${work_date}-${empId}`);
       const uuidPlanId = toUUID(`plan-${work_date}-${empId}`);
 
-      await db.from("work_schedule").upsert({
+      await db.from("work_schedule").insert({
         id: uuidSchedId,
         employee_id: empId,
         client_id: CLIENT_ID,
@@ -299,7 +308,7 @@ async function seed() {
         allocated_hours: 3.0,
       });
 
-      await db.from("daily_plans").upsert({
+      await db.from("daily_plans").insert({
         id: uuidPlanId,
         employee_id: empId,
         client_id: CLIENT_ID,
@@ -310,7 +319,7 @@ async function seed() {
 
       for (const item of leafItemsData) {
         const uuidItemId = toUUID(`pi-${uuidPlanId}-${item.id}`);
-        await db.from("daily_plan_items").upsert({
+        await db.from("daily_plan_items").insert({
           id: uuidItemId,
           daily_plan_id: uuidPlanId,
           leaf_item_id: item.id,
@@ -321,7 +330,7 @@ async function seed() {
     }
   }
 
-  console.log("SUCCESS! Database update completed flawlessly!");
+  console.log("🎉 SUCCESS! Database update completed flawlessly!");
 }
 
 seed().catch(err => console.error("Database update error:", err));
