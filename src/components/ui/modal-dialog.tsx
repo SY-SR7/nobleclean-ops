@@ -34,19 +34,48 @@ export function ModalDialog({
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+
+    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+    let clickedInsideParentCard = false;
+
+    modalPanels.forEach((panel) => {
+      if (e.currentTarget.contains(panel)) return;
+      const rect = panel.getBoundingClientRect();
+      if (
+        clickX >= rect.left &&
+        clickX <= rect.right &&
+        clickY >= rect.top &&
+        clickY <= rect.bottom
+      ) {
+        clickedInsideParentCard = true;
+      }
+    });
+
+    onClose();
+    if (!clickedInsideParentCard) {
+      window.dispatchEvent(new CustomEvent("nc-tab-change"));
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200 overscroll-contain"
       onWheel={(e) => e.stopPropagation()}
+      onClick={handleBackdropClick}
     >
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity pointer-events-none" />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-surface-container-lowest border border-outline-variant/60 shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200">
+      <div
+        data-modal-panel="true"
+        className="relative w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl bg-surface-container-lowest border border-outline-variant/60 shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200"
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-outline-variant/60 px-6 py-4 bg-surface-container-low/50">
           <div>

@@ -21,17 +21,47 @@ export function CleaningMediaModal({
   onClose,
   title,
   videoTitle,
-  videoSteps = [],
 }: CleaningMediaModalProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+
+    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+    let clickedInsideParentCard = false;
+
+    modalPanels.forEach((panel) => {
+      if (e.currentTarget.contains(panel)) return;
+      const rect = panel.getBoundingClientRect();
+      if (
+        clickX >= rect.left &&
+        clickX <= rect.right &&
+        clickY >= rect.top &&
+        clickY <= rect.bottom
+      ) {
+        clickedInsideParentCard = true;
+      }
+    });
+
+    onClose();
+    if (!clickedInsideParentCard) {
+      window.dispatchEvent(new CustomEvent("nc-tab-change"));
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+    >
       <div
+        data-modal-panel="true"
         className="bg-surface-container-lowest border-outline-variant relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="border-outline-variant bg-surface-container-low flex items-center justify-between border-b px-5 py-3.5">

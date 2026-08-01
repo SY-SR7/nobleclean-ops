@@ -405,10 +405,48 @@ export function EmployeeAvailabilityCalendar({
         </div>
       )}
 
+  const handleDayDetailBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+
+    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+    let clickedInsideParentCard = false;
+
+    modalPanels.forEach((panel) => {
+      if (e.currentTarget.contains(panel)) return;
+      const rect = panel.getBoundingClientRect();
+      if (
+        clickX >= rect.left &&
+        clickX <= rect.right &&
+        clickY >= rect.top &&
+        clickY <= rect.bottom
+      ) {
+        clickedInsideParentCard = true;
+      }
+    });
+
+    setSelectedDayDetail(null);
+    if (!clickedInsideParentCard) {
+      window.dispatchEvent(new CustomEvent("nc-tab-change"));
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Rest of calendar JSX */}
+
       {/* Clean Interactive Day Sheet / Popover Modal */}
       {selectedDayDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest border-outline-variant w-full max-w-md rounded-3xl border p-6 shadow-2xl space-y-5">
+        <div
+          onClick={handleDayDetailBackdropClick}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div
+            data-modal-panel="true"
+            className="bg-surface-container-lowest border-outline-variant w-full max-w-md rounded-3xl border p-6 shadow-2xl space-y-5"
+          >
             <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
               <div>
                 <p className="text-xs font-bold uppercase text-on-surface-variant">Schicht & Verfügbarkeit</p>

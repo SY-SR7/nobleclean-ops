@@ -70,21 +70,50 @@ export function ConfirmDeleteModal({
 
   const defaultBody = `„${entityName}" wird unwiderruflich gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.`;
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget || isPending) return;
+
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+
+    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+    let clickedInsideParentCard = false;
+
+    modalPanels.forEach((panel) => {
+      if (e.currentTarget.contains(panel)) return;
+      const rect = panel.getBoundingClientRect();
+      if (
+        clickX >= rect.left &&
+        clickX <= rect.right &&
+        clickY >= rect.top &&
+        clickY <= rect.bottom
+      ) {
+        clickedInsideParentCard = true;
+      }
+    });
+
+    onCancel();
+    if (!clickedInsideParentCard) {
+      window.dispatchEvent(new CustomEvent("nc-tab-change"));
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-delete-title"
+      onClick={handleBackdropClick}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={() => !isPending && onCancel()}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-outline-variant bg-surface p-6 shadow-2xl">
+      <div
+        data-modal-panel="true"
+        className="relative z-10 w-full max-w-sm rounded-3xl border border-outline-variant bg-surface p-6 shadow-2xl"
+      >
         {/* Close button */}
         <button
           type="button"
