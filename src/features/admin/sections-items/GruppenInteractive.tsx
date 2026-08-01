@@ -76,7 +76,8 @@ export function GruppenInteractive({ sections, leafItems, copy }: GruppenInterac
     const g3Items: string[] = [];
 
     leafItems.forEach((item) => {
-      const secName = (item.sectionName || "").toLowerCase();
+      const sec = sections.find((s) => s.id === item.sectionId);
+      const secName = (sec?.name || "").toLowerCase();
       const itemName = (item.name || "").toLowerCase();
       const text = `${secName} ${itemName}`;
 
