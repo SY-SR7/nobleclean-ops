@@ -123,9 +123,9 @@ export type ScheduleExportItem = Readonly<{
 }>;
 
 /**
- * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
- * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Takes exact schedule array rendered in system with zero modifications, matching system UI brand theme & colors.
+ * Graphical Weekly Card Grid PDF Exporter
+ * 100% 1-to-1 match with System Web UI Weekly Grid View
+ * Renders Week Blocks (WOCHE 1 - WOCHE 5) with 7-day card grids, avatar badges, green hour pills, and shift timings.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -143,51 +143,110 @@ export function exportSchedulePDF(
 
   const sortedDates = Array.from(map.keys()).sort();
 
-  const formatDateDDMMYYYY = (dateStr: string) => {
+  // Group sorted dates into 7-day week chunks
+  const weeks: string[][] = [];
+  for (let i = 0; i < sortedDates.length; i += 7) {
+    weeks.push(sortedDates.slice(i, i + 7));
+  }
+
+  const formatShortDate = (dateStr: string) => {
     try {
+      const d = new Date(dateStr);
+      const dayName = d.toLocaleDateString("de-DE", { weekday: "short" });
       const parts = dateStr.split("-");
-      if (parts.length === 3) {
-        return `${parts[2]}.${parts[1]}.${parts[0]}`;
-      }
-      return dateStr;
+      return `${dayName}., ${parts[2]}.${parts[1]}.`;
     } catch {
       return dateStr;
     }
   };
 
-  const getGermanWochentag = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("de-DE", { weekday: "long" });
-    } catch {
-      return "";
-    }
+  const getWeekHeaderRange = (dates: string[]) => {
+    if (dates.length === 0) return "";
+    const first = dates[0];
+    const last = dates[dates.length - 1];
+    return `${formatShortDate(first)} – ${formatShortDate(last)}`;
   };
 
-  const clientName = schedules[0]?.clientName || "John Reed Fitness";
+  const avatarColors: Record<string, string> = {
+    M: "#6366f1",
+    E: "#0284c7",
+    H: "#8b5cf6",
+    S: "#ec4899",
+    A: "#059669",
+    K: "#d97706",
+  };
 
-  const rowsHtml = sortedDates
-    .map((dateStr, idx) => {
-      const rawShifts = map.get(dateStr)!;
+  const weeksHtml = weeks
+    .map((weekDates, weekIdx) => {
+      let weekTotalHours = 0;
+      weekDates.forEach((d) => {
+        const shifts = map.get(d) || [];
+        shifts.forEach((s) => {
+          weekTotalHours += s.allocatedHours || 3;
+        });
+      });
 
-      const dateFormatted = formatDateDDMMYYYY(dateStr);
-      const wochentag = getGermanWochentag(dateStr);
+      const weekRangeStr = getWeekHeaderRange(weekDates);
 
-      const namesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.employeeName}</div>`).join("");
-      const startTimesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.startTime || "04:00"}</div>`).join("");
-      const endTimesHtml = rawShifts.map((s) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${s.endTime || "07:00"}</div>`).join("");
+      const daysCardsHtml = weekDates
+        .map((dateStr) => {
+          const rawShifts = map.get(dateStr) || [];
+          const dateShort = formatShortDate(dateStr);
+          let dayHours = 0;
+          rawShifts.forEach((s) => {
+            dayHours += s.allocatedHours || 3;
+          });
+
+          const shiftsHtml = rawShifts
+            .map((s) => {
+              const initial = (s.employeeName || "M")[0].toUpperCase();
+              const bg = avatarColors[initial] || "#4f46e5";
+              const start = s.startTime || "04:00";
+              const end = s.endTime || "07:00";
+
+              return `
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 2px 3px; margin-bottom: 2.5px;">
+                  <div style="display: flex; align-items: center; gap: 3px; font-size: 7.5px; font-weight: 700; color: #0f172a;">
+                    <span style="width: 11px; height: 11px; border-radius: 50%; background-color: ${bg}; color: #ffffff; font-size: 6.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.employeeName}</span>
+                  </div>
+                  <div style="font-size: 6.5px; color: #0284c7; font-weight: 600; margin-top: 1px; padding-left: 14px;">
+                    🕒 ${start} - ${end}
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+
+          return `
+            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px; background-color: #ffffff; display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 7.5px; font-weight: 700; color: #0f172a;">
+                <span>${dateShort}</span>
+                <span style="background-color: #dcfce7; color: #166534; font-size: 6.5px; font-weight: 800; padding: 0.5px 3px; border-radius: 3px;">${dayHours}h</span>
+              </div>
+              <div style="flex: 1;">
+                ${shiftsHtml}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
 
       return `
-        <tr style="background-color: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
-          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #0f172a; line-height: 1.15;">${dateFormatted}</td>
-          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #0f172a; line-height: 1.15;">${wochentag}</td>
-          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 700; color: #0f172a; line-height: 1.15;">${namesHtml}</td>
-          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #025669; text-align: center; line-height: 1.15;">${startTimesHtml}</td>
-          <td style="padding: 2px 6px; border: 1px solid #cbd5e1; font-size: 8px; font-weight: 600; color: #025669; text-align: center; line-height: 1.15;">${endTimesHtml}</td>
-        </tr>
+        <div style="margin-bottom: 8px; page-break-inside: avoid;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; font-weight: 800; color: #025669; margin-bottom: 3px; padding: 2px 5px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
+            <span>📅 WOCHE ${weekIdx + 1} (${weekRangeStr})</span>
+            <span style="font-weight: 800; color: #166534;">Gesamt: ${weekTotalHours} Std.</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(${weekDates.length}, 1fr); gap: 3px;">
+            ${daysCardsHtml}
+          </div>
+        </div>
       `;
     })
     .join("");
+
+  const clientName = schedules[0]?.clientName || "John Reed Fitness";
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -198,7 +257,7 @@ export function exportSchedulePDF(
       <style>
         @page {
           size: A4 portrait;
-          margin: 8mm;
+          margin: 6mm;
         }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -207,60 +266,23 @@ export function exportSchedulePDF(
           background: #ffffff;
           color: #0f172a;
         }
-        .table-container {
-          width: 70%;
-          margin: 0 auto;
-        }
-        table {
+        .page-wrapper {
           width: 100%;
-          border-collapse: collapse;
-          font-size: 8px;
-          line-height: 1.15;
-          border: 1.5px solid #025669;
-        }
-        th {
-          border: 1px solid #025669;
-          padding: 4px 6px;
-          background-color: #025669;
-          color: #ffffff;
-          font-weight: 800;
-          text-align: left;
-          font-size: 8.5px;
-          text-transform: uppercase;
-          letter-spacing: 0.3px;
-        }
-        td {
-          border: 1px solid #cbd5e1;
-          padding: 2px 6px;
-          vertical-align: top;
         }
       </style>
     </head>
     <body>
-      <div class="table-container">
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #025669; padding-bottom: 4px; margin-bottom: 6px;">
+      <div class="page-wrapper">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #025669; padding-bottom: 3px; margin-bottom: 8px;">
           <div>
-            <div style="font-size: 14px; font-weight: 900; letter-spacing: -0.3px; color: #025669;">NOBLECLEAN <span style="font-size: 9px; color: #c8a951; font-weight: 800; margin-left: 4px;">MANAGEMENT SYSTEM</span></div>
-            <div style="font-size: 8.5px; color: #64748b; font-weight: 600; margin-top: 1px;">Monats-Schichtplan · ${monthLabel}</div>
+            <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.3px; color: #025669;">NOBLECLEAN <span style="font-size: 8.5px; color: #c8a951; font-weight: 800; margin-left: 4px;">MANAGEMENT SYSTEM</span></div>
+            <div style="font-size: 8px; color: #64748b; font-weight: 600; margin-top: 1px;">Monats-Schichtplan · ${monthLabel}</div>
           </div>
-          <div style="font-size: 8.5px; font-weight: 700; color: #025669;">
+          <div style="font-size: 8px; font-weight: 700; color: #025669;">
             🏢 ${clientName}
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 20%;">Datum</th>
-              <th style="width: 20%;">Wochentag</th>
-              <th style="width: 36%;">Mitarbeiter</th>
-              <th style="width: 12%; text-align: center;">Beginn</th>
-              <th style="width: 12%; text-align: center;">Ende</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
+        ${weeksHtml}
       </div>
       <script>
         window.onload = function() {
