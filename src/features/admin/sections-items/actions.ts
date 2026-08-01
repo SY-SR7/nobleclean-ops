@@ -1070,14 +1070,37 @@ export async function quickDeleteSectionAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: leafItems } = await supabase.from("leaf_items").select("id").eq("section_id", sectionId);
+
+  // 1. Find all child sub-sections
+  const { data: subSections } = await supabase
+    .from("sections")
+    .select("id")
+    .eq("parent_section_id", sectionId);
+
+  const allSectionIds = [sectionId, ...(subSections?.map((s) => s.id) || [])];
+
+  // 2. Find all leaf items assigned to the main section OR any of its sub-sections
+  const { data: leafItems } = await supabase
+    .from("leaf_items")
+    .select("id")
+    .in("section_id", allSectionIds);
+
   if (leafItems && leafItems.length > 0) {
     const leafIds = leafItems.map((l) => l.id);
     await supabase.from("daily_plan_items").delete().in("leaf_item_id", leafIds);
     await supabase.from("cleaning_tool_steps").delete().in("leaf_item_id", leafIds);
-    await supabase.from("leaf_items").delete().eq("section_id", sectionId);
+    await supabase.from("leaf_items").delete().in("section_id", allSectionIds);
   }
-  const { error } = await supabase.from("sections").delete().eq("id", sectionId).eq("client_id", clientId);
+
+  // 3. Delete sub-sections first to avoid parent_section_id foreign key constraint
+  await supabase.from("sections").delete().eq("parent_section_id", sectionId);
+
+  // 4. Delete main section
+  const { error } = await supabase
+    .from("sections")
+    .delete()
+    .eq("id", sectionId)
+    .eq("client_id", clientId);
 
   if (error) return { ok: false, error: "SAVE_FAILED" };
 
