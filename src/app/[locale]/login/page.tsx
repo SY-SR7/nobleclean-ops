@@ -32,7 +32,6 @@ export default async function LoginPage({
   return (
     <AuthShell
       appName={t(messages, "foundation.appName")}
-      body={t(messages, "auth.login.support")}
       headingId="login-heading"
       logoAlt={t(messages, "foundation.appName")}
       title={t(messages, "auth.login.title")}
