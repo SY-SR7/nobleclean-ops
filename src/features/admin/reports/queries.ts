@@ -44,6 +44,7 @@ export type MandatoryStepEscalation = Readonly<{
 }>;
 
 export type ReportsData = Readonly<{
+  allPlans: readonly CompletionPlanSummary[];
   clients: readonly ReportsClientOption[];
   completionRate: number;
   incompletePlans: readonly CompletionPlanSummary[];
@@ -111,6 +112,7 @@ const MandatoryStepEscalationRowSchema = z.object({
 
 function initialData(): ReportsData {
   return {
+    allPlans: [],
     clients: [],
     completionRate: 0,
     incompletePlans: [],
@@ -400,6 +402,7 @@ export async function getReportsData(
     const totalIncompletePlans = totalPlans - totalCompletePlans;
 
     return {
+      allPlans: summaries,
       clients: clientOptions,
       completionRate:
         totalPlans > 0

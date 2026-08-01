@@ -634,10 +634,12 @@ async function ReportsTab({
 
   return (
     <ReportsInteractiveMain
-      plans={data.incompletePlans}
+      plans={data.allPlans}
       lastCleanedItems={data.lastCleanedItems}
       escalations={data.mandatoryStepEscalations}
       locale={locale}
+      clients={data.clients}
+      selectedClientId={data.selectedClientId}
       copy={{
         employee: copy.employee,
         workDate: copy.workDate,
