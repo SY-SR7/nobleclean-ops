@@ -152,8 +152,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Graphical Weekly Card Grid PDF Exporter
  * 100% 1-to-1 match with System Web UI Weekly Grid View
- * Renders Week Blocks (WOCHE 1 - WOCHE 5) with 7-day card grids, avatar badges, green hour pills, and shift timings.
- * Directly triggers device print dialog without tab redirection.
+ * Compact Day Cards with increased 5px spacing between cards.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -230,12 +229,12 @@ export function exportSchedulePDF(
               const end = s.endTime || "07:00";
 
               return `
-                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 2px 3px; margin-bottom: 2.5px;">
-                  <div style="display: flex; align-items: center; gap: 3px; font-size: 7.5px; font-weight: 700; color: #0f172a;">
-                    <span style="width: 11px; height: 11px; border-radius: 50%; background-color: ${bg}; color: #ffffff; font-size: 6.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</span>
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 1.5px 2.5px; margin-bottom: 2px;">
+                  <div style="display: flex; align-items: center; gap: 2.5px; font-size: 7px; font-weight: 700; color: #0f172a;">
+                    <span style="width: 10px; height: 10px; border-radius: 50%; background-color: ${bg}; color: #ffffff; font-size: 6px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</span>
                     <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.employeeName}</span>
                   </div>
-                  <div style="font-size: 6.5px; color: #0284c7; font-weight: 600; margin-top: 1px; padding-left: 14px;">
+                  <div style="font-size: 6px; color: #0284c7; font-weight: 600; margin-top: 0.5px; padding-left: 12.5px;">
                     🕒 ${start} - ${end}
                   </div>
                 </div>
@@ -244,10 +243,10 @@ export function exportSchedulePDF(
             .join("");
 
           return `
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px; background-color: #ffffff; display: flex; flex-direction: column;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; font-size: 7.5px; font-weight: 700; color: #0f172a;">
+            <div style="border: 1px solid #cbd5e1; border-radius: 5px; padding: 2.5px 3px; background-color: #ffffff; display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5px; font-size: 7px; font-weight: 700; color: #0f172a;">
                 <span>${dateShort}</span>
-                <span style="background-color: #dcfce7; color: #166534; font-size: 6.5px; font-weight: 800; padding: 0.5px 3px; border-radius: 3px;">${dayHours}h</span>
+                <span style="background-color: #dcfce7; color: #166534; font-size: 6px; font-weight: 800; padding: 0.5px 2.5px; border-radius: 3px;">${dayHours}h</span>
               </div>
               <div style="flex: 1;">
                 ${shiftsHtml}
@@ -258,12 +257,12 @@ export function exportSchedulePDF(
         .join("");
 
       return `
-        <div style="margin-bottom: 8px; page-break-inside: avoid;">
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; font-weight: 800; color: #025669; margin-bottom: 3px; padding: 2px 5px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
+        <div style="margin-bottom: 10px; page-break-inside: avoid;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 7.5px; font-weight: 800; color: #025669; margin-bottom: 4px; padding: 2px 5px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 4px;">
             <span>📅 WOCHE ${weekIdx + 1} (${weekRangeStr})</span>
             <span style="font-weight: 800; color: #166534;">Gesamt: ${weekTotalHours} Std.</span>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;">
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
             ${daysCardsHtml}
           </div>
         </div>
