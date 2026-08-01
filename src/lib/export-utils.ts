@@ -74,7 +74,7 @@ export function exportToPDF(
       <style>
         @page { size: A4 portrait; margin: 8mm; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #000000; background-color: #ffffff; }
-        .table-container { width: 75%; margin: 0 auto; }
+        .table-container { width: 65%; margin: 0 auto; }
         table { width: 100%; border-collapse: collapse; font-size: 8px; line-height: 1.1; border: 1.5px solid #000000; }
         th { border: 1px solid #000000; padding: 3px 5px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 8.5px; }
         td { border: 1px solid #000000; padding: 1.5px 5px; vertical-align: top; }
@@ -82,6 +82,15 @@ export function exportToPDF(
     </head>
     <body>
       <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000000; padding-bottom: 3px; margin-bottom: 6px;">
+          <div>
+            <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.3px; color: #000000;">NOBLECLEAN</div>
+            <div style="font-size: 8px; color: #475569; font-weight: 600; margin-top: 1px;">${title}</div>
+          </div>
+          <div style="font-size: 8px; font-weight: 700; color: #334155;">
+            ${subtitle}
+          </div>
+        </div>
         <table>
           <thead>
             <tr>${tableHeaders}</tr>
@@ -116,7 +125,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
  * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Each employee listed ONCE per day. Double-shift employee gets 01:00 - 07:00.
+ * Narrow column proximity (65% width) + subtle top header with brand logo & subtitle.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -229,7 +238,7 @@ export function exportSchedulePDF(
           color: #000000;
         }
         .table-container {
-          width: 75%;
+          width: 65%;
           margin: 0 auto;
         }
         table {
@@ -257,12 +266,21 @@ export function exportSchedulePDF(
     </head>
     <body>
       <div class="table-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #000000; padding-bottom: 3px; margin-bottom: 6px;">
+          <div>
+            <div style="font-size: 13px; font-weight: 900; letter-spacing: -0.3px; color: #000000;">NOBLECLEAN</div>
+            <div style="font-size: 8px; color: #475569; font-weight: 600; margin-top: 1px;">Monats-Schichtplan · ${monthLabel}</div>
+          </div>
+          <div style="font-size: 8px; font-weight: 700; color: #334155;">
+            John Reed Fitness
+          </div>
+        </div>
         <table>
           <thead>
             <tr>
-              <th style="width: 18%;">Datum</th>
-              <th style="width: 18%;">Wochentag</th>
-              <th style="width: 40%;">Mitarbeiter</th>
+              <th style="width: 20%;">Datum</th>
+              <th style="width: 20%;">Wochentag</th>
+              <th style="width: 36%;">Mitarbeiter</th>
               <th style="width: 12%; text-align: center;">Beginn</th>
               <th style="width: 12%; text-align: center;">Ende</th>
             </tr>
