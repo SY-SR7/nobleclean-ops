@@ -4,12 +4,12 @@ import { cn } from "@/lib/cn";
 
 const buttonVariants = {
   danger:
-    "bg-error text-on-error hover:bg-error-container hover:text-on-error-container",
-  ghost: "bg-transparent text-primary-container hover:bg-surface-container-low",
+    "bg-error text-white hover:bg-red-700 shadow-sm",
+  ghost: "bg-transparent text-on-surface hover:bg-surface-container-low",
   primary:
-    "bg-secondary text-on-secondary hover:bg-secondary-container hover:text-on-secondary-container",
+    "bg-secondary text-white hover:opacity-90 shadow-sm",
   secondary:
-    "border border-primary-container bg-transparent text-primary-container hover:bg-surface-accent",
+    "border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container hover:border-secondary shadow-sm",
 } as const;
 
 const buttonSizes = {

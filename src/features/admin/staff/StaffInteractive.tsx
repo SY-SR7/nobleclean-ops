@@ -261,17 +261,34 @@ export function StaffInteractive({
                   <Link
                     href={`/${locale}/admin/staff/${empId}`}
                     prefetch={false}
-                    className="bg-secondary text-on-secondary flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition hover:opacity-90"
+                    className="bg-secondary text-white font-extrabold flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs transition hover:opacity-90 shadow-sm"
                   >
-                    <UserCircle2 className="size-4" />
+                    <UserCircle2 className="size-4 text-white" />
                     {copy.viewDetails}
                   </Link>
                   <button
                     type="button"
                     onClick={() =>
-                      setSelectedCalendarEmployee({ id: empId, name })
+                      open({
+                        title: name,
+                        subtitle: "Mitarbeiter Verfügbarkeit & Schichten",
+                        icon: <CalendarDays className="size-6 text-secondary" />,
+                        accentColor: "secondary",
+                        sections: [
+                          {
+                            content: (
+                              <EmployeeAvailabilityCalendar
+                                employeeId={empId}
+                                employeeName={name}
+                                clients={clients}
+                                locale={locale}
+                              />
+                            ),
+                          },
+                        ],
+                      })
                     }
-                    className="bg-secondary/10 hover:bg-secondary/20 text-secondary flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition"
+                    className="bg-secondary/10 hover:bg-secondary/20 text-secondary border border-secondary/30 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition"
                   >
                     <CalendarDays className="size-4" />
                     Verfügbarkeit & Schichten (Nächster Monat)
