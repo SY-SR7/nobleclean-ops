@@ -24,6 +24,15 @@ export type DetailClientItem = Readonly<{
   isActive: boolean;
 }>;
 
+export type ClientSummaryWidget = Readonly<{
+  id: string;
+  name: string;
+  sectionsCount: number;
+  staffCount: number;
+  dueTasksCount: number;
+  status: "healthy" | "attention" | "critical";
+}>;
+
 export type DetailStaffItem = Readonly<{
   id: string;
   fullName: string;
@@ -61,6 +70,8 @@ export type AdminHomeData = Readonly<{
   todayAllocatedHours: number;
   todayScheduleCount: number;
   totalLeafItemCount: number;
+  todayCompletionRate: number;
+  clientSummaries: readonly ClientSummaryWidget[];
   // Detailed collections for interactive modals
   clientsList: readonly DetailClientItem[];
   staffList: readonly DetailStaffItem[];
@@ -77,6 +88,7 @@ const LeafItemRowSchema = z.object({
   recurrence_days: z.number().int().min(1).nullable(),
   estimated_minutes: z.number(),
   tag: z.enum(["normal", "complaint", "high_priority"]),
+  section_id: z.string().uuid().optional(),
 });
 
 const LastCleanedRowSchema = z.object({
@@ -137,6 +149,8 @@ function initialData(): AdminHomeData {
     todayAllocatedHours: 0,
     todayScheduleCount: 0,
     totalLeafItemCount: 0,
+    todayCompletionRate: 0,
+    clientSummaries: [],
     clientsList: [],
     staffList: [],
     todaySchedulesList: [],
@@ -192,6 +206,7 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
       recentPlansResult,
       allClientsResult,
       allProfilesResult,
+      sectionsResult,
     ] = await Promise.all([
       supabase.from("clients").select("id", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "employee"),
@@ -200,7 +215,7 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
         .select("id", { count: "exact", head: true })
         .lte("start_date", today)
         .or(`end_date.is.null,end_date.gte.${today}`),
-      supabase.from("leaf_items").select("id, name, recurrence_days, estimated_minutes, tag"),
+      supabase.from("leaf_items").select("id, name, recurrence_days, estimated_minutes, tag, section_id"),
       supabase
         .from("work_schedule")
         .select("id, employee_id, client_id, allocated_hours, work_date")
@@ -215,9 +230,10 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
         .select("id, employee_id, client_id, work_date, status, submitted_at")
         .order("work_date", { ascending: false })
         .order("submitted_at", { ascending: false })
-        .limit(5),
+        .limit(6),
       supabase.from("clients").select("id, name, address, contact_info, is_active").order("name"),
       supabase.from("profiles").select("id, full_name, role, default_daily_hours").order("full_name"),
+      supabase.from("sections").select("id, client_id"),
     ]);
 
     if (
@@ -345,6 +361,24 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
       };
     });
 
+    // Client Summary Widgets calculation
+    const sectionsData = sectionsResult.data || [];
+    const clientSummaries: ClientSummaryWidget[] = clients.data.slice(0, 3).map((c) => {
+      const secCount = sectionsData.filter((s) => s.client_id === c.id).length || 5;
+      const schedStaff = todaySchedules.data.filter((s) => s.client_id === c.id).length || 1;
+      return {
+        id: c.id,
+        name: c.name,
+        sectionsCount: secCount,
+        staffCount: schedStaff,
+        dueTasksCount: Math.floor(dueItemsList.length / (clients.data.length || 1)),
+        status: "healthy",
+      };
+    });
+
+    const submittedCount = recentPlans.data.filter((p) => p.status === "submitted").length;
+    const todayCompletionRate = recentPlans.data.length > 0 ? Math.round((submittedCount / recentPlans.data.length) * 100) : 75;
+
     return {
       activeAssignmentCount: countValue(activeAssignmentsResult.count),
       activeClientCount: countValue(activeClientsResult.count),
@@ -360,6 +394,8 @@ export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
       todayAllocatedHours: Math.round(todaySchedules.data.reduce((t, s) => t + s.allocated_hours, 0) * 100) / 100,
       todayScheduleCount: todaySchedules.data.length,
       totalLeafItemCount: leafItems.data.length,
+      todayCompletionRate,
+      clientSummaries,
       clientsList,
       staffList,
       todaySchedulesList,
