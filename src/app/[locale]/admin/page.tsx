@@ -25,12 +25,9 @@ import {
 import {
   EscalationInteractiveCard,
   LastCleanedInteractiveCard,
-  PlanInteractiveCard,
-  PlansGridContainer,
-  LastCleanedGridContainer,
-  EscalationsGridContainer,
   ReportsInteractiveMain,
 } from "@/features/admin/reports/ReportsInteractive";
+
 import { getReportsData } from "@/features/admin/reports/queries";
 import { ScheduleInteractive } from "@/features/admin/schedule/ScheduleInteractive";
 import {
