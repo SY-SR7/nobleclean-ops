@@ -1,7 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { X } from "lucide-react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { X, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -22,6 +30,7 @@ export type DrawerSection = Readonly<{
 }>;
 
 export type DrawerConfig = Readonly<{
+  id?: string;
   title: string;
   subtitle?: string;
   icon?: ReactNode;
@@ -38,7 +47,9 @@ export type DrawerConfig = Readonly<{
 type DrawerContextValue = Readonly<{
   open: (config: DrawerConfig) => void;
   close: () => void;
+  closeAll: () => void;
   isOpen: boolean;
+  stackLength: number;
 }>;
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -53,7 +64,7 @@ export function useDetailDrawer() {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Reusable Khabiaa-Style Components (InfoGrid & KpiStrip)
+   Reusable Components (InfoGrid & KpiStrip)
    ───────────────────────────────────────────────────────────────────────── */
 export function InfoGrid({
   items,
@@ -113,157 +124,174 @@ export function KpiStrip({ items }: { items: readonly KpiItem[] }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Provider + Centered Modal UI (Exact Khabiaa Pattern)
+   Provider + Multi-level Stacked Centered Modal UI
    ───────────────────────────────────────────────────────────────────────── */
 export function DetailDrawerProvider({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<DrawerConfig | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [stack, setStack] = useState<DrawerConfig[]>([]);
 
   const open = useCallback((cfg: DrawerConfig) => {
-    setConfig(cfg);
-    setIsOpen(true);
+    setStack((prev) => [...prev, cfg]);
   }, []);
 
   const close = useCallback(() => {
-    setIsOpen(false);
-    setTimeout(() => setConfig(null), 250);
+    setStack((prev) => (prev.length > 0 ? prev.slice(0, prev.length - 1) : []));
   }, []);
 
-  const closeRef = useRef<() => void>(() => {
-    setIsOpen(false);
-    setConfig(null);
-  });
+  const closeAll = useCallback(() => {
+    setStack([]);
+  }, []);
+
+  const closeAllRef = useRef(closeAll);
   useEffect(() => {
-    closeRef.current = () => {
-      setIsOpen(false);
-      setConfig(null);
-    };
+    closeAllRef.current = closeAll;
   });
+
   useEffect(() => {
-    const handleTabChange = () => closeRef.current();
+    const handleTabChange = () => closeAllRef.current();
     window.addEventListener("nc-tab-change", handleTabChange);
     return () => window.removeEventListener("nc-tab-change", handleTabChange);
   }, []);
 
-  const accentClass = {
-    primary: "border-primary text-primary bg-primary/10",
-    secondary: "border-secondary text-secondary bg-secondary/10",
-    success: "border-status-success text-status-success bg-status-success/10",
-    warning: "border-status-warning text-status-warning bg-status-warning/10",
-    critical: "border-status-critical text-status-critical bg-status-critical/10",
-  }[config?.accentColor ?? "secondary"];
-
-  const badgeStyles = {
-    success: "bg-secondary-container text-on-secondary-container border-secondary/20",
-    warning: "bg-warning-container text-on-warning-container border-warning/20",
-    critical: "bg-error-container text-on-error-container border-error/20",
-    neutral: "bg-surface-container text-on-surface-variant border-outline-variant",
-  }[config?.badge?.variant ?? "success"];
+  const isOpen = stack.length > 0;
 
   return (
-    <DrawerContext.Provider value={{ open, close, isOpen }}>
+    <DrawerContext.Provider value={{ open, close, closeAll, isOpen, stackLength: stack.length }}>
       {children}
 
-      {/* Centered Modal Backdrop (Khabiaa pattern) */}
-      {config && (
-        <div
-          aria-hidden="true"
-          className={cn(
-            "fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 transition-all duration-200",
-            "bg-black/65 backdrop-blur-md",
-            isOpen ? "opacity-100" : "pointer-events-none opacity-0",
-          )}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
-        >
-          {/* Centered Modal Panel (Khabiaa exact dimensions & animations) */}
+      {/* Render each modal in the stack with incremental Z-Index */}
+      {stack.map((config, index) => {
+        const isTop = index === stack.length - 1;
+        const zIndex = 60 + index * 10; // First modal z-60, second modal z-70, third z-80
+
+        const accentClass = {
+          primary: "border-primary text-primary bg-primary/10",
+          secondary: "border-secondary text-secondary bg-secondary/10",
+          success: "border-status-success text-status-success bg-status-success/10",
+          warning: "border-status-warning text-status-warning bg-status-warning/10",
+          critical: "border-status-critical text-status-critical bg-status-critical/10",
+        }[config.accentColor ?? "secondary"];
+
+        const badgeStyles = {
+          success: "bg-secondary-container text-on-secondary-container border-secondary/20",
+          warning: "bg-warning-container text-on-warning-container border-warning/20",
+          critical: "bg-error-container text-on-error-container border-error/20",
+          neutral: "bg-surface-container text-on-surface-variant border-outline-variant",
+        }[config.badge?.variant ?? "success"];
+
+        return (
           <div
-            aria-label={config.title}
-            aria-modal="true"
-            role="dialog"
+            key={config.id || `drawer-level-${index}`}
+            aria-hidden="true"
+            style={{ zIndex }}
             className={cn(
-              "relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl",
-              "bg-surface-container-lowest border border-outline-variant shadow-2xl transition-all duration-250",
-              isOpen
-                ? "scale-100 opacity-100 translate-y-0"
-                : "scale-95 opacity-0 translate-y-4",
+              "fixed inset-0 flex items-center justify-center p-3 sm:p-6 transition-all duration-200",
+              "bg-black/65 backdrop-blur-md animate-in fade-in duration-200",
             )}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && isTop) close();
+            }}
           >
-            {/* Khabiaa Header */}
-            <div className="border-b border-outline-variant/70 shrink-0 bg-surface-container-low/60 px-6 py-5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  {config.icon && (
-                    <div
-                      className={cn(
-                        "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border shadow-sm text-xl",
-                        accentClass,
-                      )}
-                    >
-                      {config.icon}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h2 className="font-heading text-on-surface text-lg sm:text-xl font-extrabold truncate">
-                        {config.title}
-                      </h2>
-                      {config.badge && (
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide shrink-0",
-                            badgeStyles,
-                          )}
-                        >
-                          {config.badge.label}
-                        </span>
-                      )}
-                    </div>
-                    {config.subtitle && (
-                      <p className="text-on-surface-variant mt-0.5 text-xs font-medium truncate">
-                        {config.subtitle}
-                      </p>
+            {/* Modal Panel */}
+            <div
+              aria-label={config.title}
+              aria-modal="true"
+              role="dialog"
+              className={cn(
+                "relative flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-3xl",
+                "bg-surface-container-lowest border border-outline-variant shadow-2xl transition-all duration-250",
+                "scale-100 opacity-100 translate-y-0 animate-in zoom-in-95 duration-200",
+              )}
+            >
+              {/* Header */}
+              <div className="border-b border-outline-variant/70 shrink-0 bg-surface-container-low/60 px-6 py-4 sm:py-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    {/* Back arrow if stack level > 0 */}
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={close}
+                        className="text-secondary hover:bg-secondary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition border border-secondary/30 bg-surface-container-lowest shadow-sm cursor-pointer mr-1"
+                        title="Zurück"
+                      >
+                        <ArrowLeft className="size-4" />
+                      </button>
                     )}
+
+                    {config.icon && (
+                      <div
+                        className={cn(
+                          "flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl border shadow-sm text-xl",
+                          accentClass,
+                        )}
+                      >
+                        {config.icon}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h2 className="font-heading text-on-surface text-lg sm:text-xl font-extrabold truncate">
+                          {config.title}
+                        </h2>
+                        {config.badge && (
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide shrink-0",
+                              badgeStyles,
+                            )}
+                          >
+                            {config.badge.label}
+                          </span>
+                        )}
+                      </div>
+                      {config.subtitle && (
+                        <p className="text-on-surface-variant mt-0.5 text-xs font-medium truncate">
+                          {config.subtitle}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      aria-label="Schließen"
+                      className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all border border-outline-variant/60 bg-surface-container-lowest shadow-sm cursor-pointer"
+                      onClick={close}
+                      type="button"
+                    >
+                      <X className="size-4" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  aria-label="Schließen"
-                  className="text-on-surface-variant hover:bg-surface-container hover:text-on-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all border border-outline-variant/60 bg-surface-container-lowest shadow-sm cursor-pointer"
-                  onClick={close}
-                  type="button"
-                >
-                  <X className="size-4" />
-                </button>
               </div>
-            </div>
 
-            {/* Khabiaa KPI Strip */}
-            {config.kpis && <KpiStrip items={config.kpis} />}
+              {/* KPI Strip */}
+              {config.kpis && <KpiStrip items={config.kpis} />}
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {config.sections.map((section, idx) => (
-                <div key={idx} className="grid gap-3">
-                  {section.label && (
-                    <h3 className="text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase">
-                      {section.label}
-                    </h3>
-                  )}
-                  <div>{section.content}</div>
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {config.sections.map((section, idx) => (
+                  <div key={idx} className="grid gap-3">
+                    {section.label && (
+                      <h3 className="text-on-surface-variant text-[10px] font-extrabold tracking-widest uppercase">
+                        {section.label}
+                      </h3>
+                    )}
+                    <div>{section.content}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              {config.footer && (
+                <div className="shrink-0 border-t border-outline-variant/70 bg-surface-container-low/50 px-6 py-4">
+                  {config.footer}
                 </div>
-              ))}
+              )}
             </div>
-
-            {/* Khabiaa Footer */}
-            {config.footer && (
-              <div className="shrink-0 border-t border-outline-variant/70 bg-surface-container-low/50 px-6 py-4">
-                {config.footer}
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        );
+      })}
     </DrawerContext.Provider>
   );
 }
