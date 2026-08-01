@@ -865,7 +865,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
       {selectedSubClient && (
         <div
           onClick={(e) => handleSubModalBackdropClick(e, () => setSelectedSubClient(null))}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
         >
           <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[85vh] w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-6">
             <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
@@ -932,7 +932,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
       {selectedSubStaff && (
         <div
           onClick={(e) => handleSubModalBackdropClick(e, () => setSelectedSubStaff(null))}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
         >
           <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[85vh] w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-6">
             <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
@@ -986,7 +986,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
       {selectedSubSchedule && (
         <div
           onClick={(e) => handleSubModalBackdropClick(e, () => setSelectedSubSchedule(null))}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
         >
           <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[85vh] w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-6">
             <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
@@ -1042,7 +1042,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
       {selectedSubTask && (
         <div
           onClick={(e) => handleSubModalBackdropClick(e, () => setSelectedSubTask(null))}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
         >
           <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[85vh] w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden space-y-4 p-6">
             <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">

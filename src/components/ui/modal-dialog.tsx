@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
+import { cn } from "@/lib/cn";
 
 export type ModalDialogProps = Readonly<{
   isOpen: boolean;
@@ -9,6 +10,7 @@ export type ModalDialogProps = Readonly<{
   title: string;
   subtitle?: string;
   children: ReactNode;
+  zIndexClass?: string;
 }>;
 
 export function ModalDialog({
@@ -17,6 +19,7 @@ export function ModalDialog({
   title,
   subtitle,
   children,
+  zIndexClass = "z-[150]",
 }: ModalDialogProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -64,7 +67,10 @@ export function ModalDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200 overscroll-contain"
+      className={cn(
+        "fixed inset-0 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200 overscroll-contain",
+        zIndexClass,
+      )}
       onWheel={(e) => e.stopPropagation()}
       onClick={handleBackdropClick}
     >

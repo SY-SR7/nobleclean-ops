@@ -180,7 +180,7 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
       {/* Render each modal in the stack with incremental Z-Index */}
       {stack.map((config, index) => {
         const isTop = index === stack.length - 1;
-        const zIndex = 60 + index * 10; // First modal z-60, second modal z-70, third z-80
+        const zIndex = 100 + index * 20; // First modal z-100, second modal z-120, third z-140
 
         const accentClass = {
           primary: "border-primary text-primary bg-primary/10",
