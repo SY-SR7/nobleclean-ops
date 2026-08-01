@@ -203,8 +203,8 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
             aria-hidden="true"
             style={{ zIndex }}
             className={cn(
-              "fixed inset-0 flex items-center justify-center p-3 sm:p-6 transition-all duration-200",
-              "bg-black/65 backdrop-blur-md animate-in fade-in duration-200 overscroll-contain",
+              "fixed inset-0 flex items-center justify-center p-3 sm:p-6 transition-all duration-200 overscroll-contain",
+              index === 0 ? "bg-black/60 backdrop-blur-md animate-in fade-in duration-200" : "bg-black/10 backdrop-blur-none",
             )}
             onWheel={(e) => e.stopPropagation()}
             onClick={(e) => {
