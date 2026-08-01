@@ -49,6 +49,9 @@ function pruneExpiredRecords(store: Map<string, RateLimitRecord>, now: number) {
 export async function checkRequestRateLimit(
   options: RateLimitOptions,
 ): Promise<boolean> {
+  if (process.env.NODE_ENV === "development") {
+    return true;
+  }
   const headerStore = await headers();
   const forwardedFor = firstHeaderValue(headerStore.get("x-forwarded-for"));
   const realIp = firstHeaderValue(headerStore.get("x-real-ip"));
