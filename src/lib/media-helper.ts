@@ -13,52 +13,51 @@ export type ToolMedia = {
 
 export function getSectionMedia(sectionName: string): SectionMedia {
   const name = sectionName.toLowerCase();
-  const v = "?v=20260801";
 
   if (name.includes("eingang") || name.includes("empfang") || name.includes("lounge")) {
     return {
-      imageUrl: `/images/sections/entrance.jpg${v}`,
+      imageUrl: "/images/sections/entrance_v2.jpg",
       videoTitle: "Demonstration: Eingangsbereich & Empfangstheke Pflege",
-      videoPoster: `/images/sections/entrance.jpg${v}`,
+      videoPoster: "/images/sections/entrance_v2.jpg",
     };
   }
 
   if (name.includes("cardio") || name.includes("laufband") || name.includes("bike")) {
     return {
-      imageUrl: `/images/sections/cardio.jpg${v}`,
+      imageUrl: "/images/sections/cardio_v2.jpg",
       videoTitle: "Demonstration: Desinfektion von Cardio-Geräten & Laufbändern",
-      videoPoster: `/images/sections/cardio.jpg${v}`,
+      videoPoster: "/images/sections/cardio_v2.jpg",
     };
   }
 
   if (name.includes("kraft") || name.includes("hantel") || name.includes("maschine")) {
     return {
-      imageUrl: `/images/sections/strength.jpg${v}`,
+      imageUrl: "/images/sections/strength_v2.jpg",
       videoTitle: "Demonstration: Hygiene & Reinigung im Freihantel- & Kraftbereich",
-      videoPoster: `/images/sections/strength.jpg${v}`,
+      videoPoster: "/images/sections/strength_v2.jpg",
     };
   }
 
   if (name.includes("sanitär") || name.includes("dusche") || name.includes("wc") || name.includes("umkleide")) {
     return {
-      imageUrl: `/images/sections/sanitary.jpg${v}`,
+      imageUrl: "/images/sections/sanitary_v2.jpg",
       videoTitle: "Demonstration: Tiefenreinigung & Sanitär-Hygiene",
-      videoPoster: `/images/sections/sanitary.jpg${v}`,
+      videoPoster: "/images/sections/sanitary_v2.jpg",
     };
   }
 
   if (name.includes("sauna") || name.includes("dampfbad")) {
     return {
-      imageUrl: `/images/sections/sauna.jpg${v}`,
+      imageUrl: "/images/sections/sauna_v2.jpg",
       videoTitle: "Demonstration: Pflege & Desinfektion der Saunabänke",
-      videoPoster: `/images/sections/sauna.jpg${v}`,
+      videoPoster: "/images/sections/sauna_v2.jpg",
     };
   }
 
   return {
-    imageUrl: `/images/sections/entrance.jpg${v}`,
+    imageUrl: "/images/sections/entrance_v2.jpg",
     videoTitle: "Demonstration: Allgemeine Bereichsreinigung",
-    videoPoster: `/images/sections/entrance.jpg${v}`,
+    videoPoster: "/images/sections/entrance_v2.jpg",
   };
 }
 
