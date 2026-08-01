@@ -55,8 +55,8 @@ export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
         </button>
 
         {/* Current Month Active Badge */}
-        <div className="px-5 py-2 rounded-xl bg-secondary text-on-secondary font-extrabold text-sm shadow-sm flex items-center gap-2 min-w-44 justify-center">
-          <CalendarDays className="size-4" />
+        <div className="px-5 py-2 rounded-2xl bg-surface-container-lowest border border-outline-variant/80 text-on-surface font-extrabold text-sm shadow-sm flex items-center gap-2 min-w-44 justify-center">
+          <CalendarDays className="size-4 text-secondary" />
           <span>{formatMonthLabel(currentMonth, locale)}</span>
         </div>
 
