@@ -208,12 +208,42 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
             )}
             onWheel={(e) => e.stopPropagation()}
             onClick={(e) => {
-              // Click outside/backdrop closes ALL modals directly to section page
-              if (e.target === e.currentTarget && isTop) closeAll();
+              if (e.target !== e.currentTarget || !isTop) return;
+
+              if (stack.length <= 1) {
+                closeAll();
+                return;
+              }
+
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+              let clickedInsideParentCard = false;
+
+              modalPanels.forEach((panel) => {
+                if (e.currentTarget.contains(panel)) return;
+                const rect = panel.getBoundingClientRect();
+                if (
+                  clickX >= rect.left &&
+                  clickX <= rect.right &&
+                  clickY >= rect.top &&
+                  clickY <= rect.bottom
+                ) {
+                  clickedInsideParentCard = true;
+                }
+              });
+
+              if (clickedInsideParentCard) {
+                close();
+              } else {
+                closeAll();
+              }
             }}
           >
             {/* Modal Panel */}
             <div
+              data-modal-panel="true"
               aria-label={config.title}
               aria-modal="true"
               role="dialog"
