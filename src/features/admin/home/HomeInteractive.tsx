@@ -7,16 +7,19 @@ import {
   Layers,
   CalendarDays,
   BarChart3,
-  CheckCircle2,
   Clock,
   AlertTriangle,
   Sparkles,
   Phone,
   Mail,
   MapPin,
-  ExternalLink,
   ChevronRight,
-  ShieldAlert,
+  TrendingUp,
+  Activity,
+  CheckCircle,
+  Plus,
+  Radio,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 
@@ -150,7 +153,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
             close();
             setActiveTab("clients");
           }}
-          className="w-full bg-secondary text-on-secondary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
+          className="w-full bg-secondary text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
         >
           <span>Zur Kundenverwaltung wechseln</span>
           <ArrowRight className="size-4" />
@@ -219,7 +222,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
             close();
             setActiveTab("staff");
           }}
-          className="w-full bg-secondary text-on-secondary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
+          className="w-full bg-secondary text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
         >
           <span>Zur Teamverwaltung wechseln</span>
           <ArrowRight className="size-4" />
@@ -294,7 +297,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
             close();
             setActiveTab("schedule");
           }}
-          className="w-full bg-secondary text-on-secondary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
+          className="w-full bg-secondary text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
         >
           <span>Zum Schichtplan wechseln</span>
           <ArrowRight className="size-4" />
@@ -363,7 +366,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
             close();
             setActiveTab("sections");
           }}
-          className="w-full bg-secondary text-on-secondary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
+          className="w-full bg-secondary text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
         >
           <span>Zu Bereichen & Objekten wechseln</span>
           <ArrowRight className="size-4" />
@@ -427,7 +430,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
             close();
             setActiveTab("reports");
           }}
-          className="w-full bg-rose-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-rose-700 transition cursor-pointer"
+          className="w-full bg-rose-600 text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:bg-rose-700 transition cursor-pointer"
         >
           <span>Zu den Berichten & Analysen</span>
           <ArrowRight className="size-4" />
@@ -488,7 +491,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
               close();
               setActiveTab("reports");
             }}
-            className="w-full bg-secondary text-on-secondary py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
+            className="w-full bg-secondary text-white py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 text-sm shadow-sm hover:opacity-90 transition cursor-pointer"
           >
             <span>Berichte anzeigen</span>
             <ArrowRight className="size-4" />
@@ -510,13 +513,44 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
 
   return (
     <div className="grid gap-6">
-      {/* Title Header */}
-      <div className="grid gap-1">
-        <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
-        <p className="text-on-surface-variant max-w-3xl text-sm">{copy.subtitle}</p>
+      {/* ── Executive Hero Command Banner ── */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-secondary via-secondary/90 to-primary-container p-6 sm:p-8 text-white shadow-xl">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-bold tracking-wide border border-white/20">
+              <Radio className="size-3.5 text-emerald-400 animate-pulse" />
+              <span>System Status: 100% Operational · Live Sync</span>
+            </div>
+            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Willkommen zurück, Administrator!
+            </h1>
+            <p className="text-white/80 text-sm font-medium">
+              Echtzeit-Zentrale für Gebäude-Reinigung, Schichtpläne und Qualitätskontrolle.
+            </p>
+          </div>
+
+          {/* Quick Action Shortcuts Bar */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab("schedule")}
+              className="bg-white text-secondary hover:bg-white/90 transition px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="size-4" /> Schicht anlegen
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("clients")}
+              className="bg-white/15 hover:bg-white/25 text-white border border-white/30 backdrop-blur-md transition px-4 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 cursor-pointer"
+            >
+              <Building2 className="size-4" /> Kunde hinzufügen
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Interactive Metric Cards — Every single card opens a rich interactive details modal */}
+      {/* ── Luxury Metric Cards Grid ── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {/* Card 1: Active Clients */}
         <button type="button" onClick={openClientsModal} className="block group text-left cursor-pointer">
@@ -549,7 +583,55 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
         </button>
       </div>
 
-      {/* Main Grid Sections */}
+      {/* ── Client Operational Health Overview ── */}
+      <section className="grid gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-heading text-primary-container text-xl font-bold flex items-center gap-2">
+            <Building2 className="size-5 text-secondary" /> Kunden-Status & Abdeckung
+          </h2>
+          <button
+            type="button"
+            onClick={openClientsModal}
+            className="text-xs font-bold text-secondary hover:underline cursor-pointer flex items-center gap-1"
+          >
+            Alle Kunden anzeigen <ArrowRight className="size-3.5" />
+          </button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {data.clientSummaries.map((client) => (
+            <button
+              key={client.id}
+              type="button"
+              onClick={openClientsModal}
+              className="p-5 rounded-3xl border border-outline-variant/60 bg-surface-container-lowest hover:border-secondary hover:shadow-lg transition-all text-left cursor-pointer group space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="h-10 w-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-bold">
+                  <Building2 className="size-5" />
+                </div>
+                <span className="text-[10px] font-extrabold uppercase bg-emerald-500/10 text-emerald-800 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                  Optimal
+                </span>
+              </div>
+              <div>
+                <p className="font-bold text-base text-on-surface group-hover:text-secondary transition-colors">
+                  {client.name}
+                </p>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  {client.sectionsCount} Bereiche · {client.staffCount} Mitarbeiter eingeplant
+                </p>
+              </div>
+              <div className="pt-2 border-t border-outline-variant/60 flex items-center justify-between text-xs font-semibold text-on-surface-variant">
+                <span>Fällige Aufgaben</span>
+                <span className="font-bold text-secondary">{client.dueTasksCount} Objekte</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Main Activity Grid ── */}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
         {/* Recent Activity */}
         <section className="grid h-fit gap-3">
@@ -566,9 +648,14 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
                     className="border-outline-variant bg-surface-container-lowest group block w-full text-left rounded-2xl border p-4 transition-all hover:border-secondary hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-on-surface group-hover:text-secondary text-sm font-extrabold transition-colors">{plan.employeeName}</p>
-                        <p className="text-on-surface-variant text-xs mt-0.5">{plan.clientName} · {formatDate(plan.workDate, locale)}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                          {plan.employeeName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-on-surface group-hover:text-secondary text-sm font-extrabold transition-colors truncate">{plan.employeeName}</p>
+                          <p className="text-on-surface-variant text-xs mt-0.5 truncate">{plan.clientName} · {formatDate(plan.workDate, locale)}</p>
+                        </div>
                       </div>
                       <div className="shrink-0 text-right">
                         <p className="font-heading text-secondary text-lg font-bold">{pct}%</p>
@@ -584,27 +671,45 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
           )}
         </section>
 
-        {/* Attention Items Summary */}
-        <section className="grid h-fit gap-3">
-          <h2 className="font-heading text-primary-container text-xl font-bold">{copy.sectionAttention}</h2>
-          {[
-            { label: copy.mandatoryEscalations, value: data.mandatoryStepEscalationCount, action: openAttentionModal },
-            { label: copy.openPlans, value: data.openPlanCount, action: openScheduleModal },
-            { label: copy.dueItems, value: data.dueItemCount, action: openDueItemsModal },
-          ].map((row) => (
-            <button
-              key={row.label}
-              type="button"
-              onClick={row.action}
-              className="border-outline-variant bg-surface-container-lowest group flex w-full items-center justify-between rounded-2xl border p-4 transition-all hover:border-secondary hover:shadow-sm text-left cursor-pointer"
-            >
-              <span className="text-on-surface group-hover:text-secondary text-sm font-bold transition-colors">{row.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-on-surface text-lg font-extrabold">{row.value}</span>
-                <ArrowRight className="text-on-surface-variant size-4 group-hover:text-secondary transition-colors" />
-              </div>
-            </button>
-          ))}
+        {/* Attention Items Summary & Quick Performance Status */}
+        <section className="grid h-fit gap-4">
+          <div className="grid gap-3">
+            <h2 className="font-heading text-primary-container text-xl font-bold">{copy.sectionAttention}</h2>
+            {[
+              { label: copy.mandatoryEscalations, value: data.mandatoryStepEscalationCount, action: openAttentionModal },
+              { label: copy.openPlans, value: data.openPlanCount, action: openScheduleModal },
+              { label: copy.dueItems, value: data.dueItemCount, action: openDueItemsModal },
+            ].map((row) => (
+              <button
+                key={row.label}
+                type="button"
+                onClick={row.action}
+                className="border-outline-variant bg-surface-container-lowest group flex w-full items-center justify-between rounded-2xl border p-4 transition-all hover:border-secondary hover:shadow-sm text-left cursor-pointer"
+              >
+                <span className="text-on-surface group-hover:text-secondary text-sm font-bold transition-colors">{row.label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-heading text-on-surface text-lg font-extrabold">{row.value}</span>
+                  <ArrowRight className="text-on-surface-variant size-4 group-hover:text-secondary transition-colors" />
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Operational Progress Card */}
+          <div className="p-5 rounded-3xl bg-surface-container-lowest border border-outline-variant/60 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase text-on-surface-variant tracking-wider flex items-center gap-1.5">
+                <Activity className="size-4 text-emerald-600" /> Tages-Fortschritt
+              </span>
+              <span className="text-sm font-extrabold text-emerald-700">{data.todayCompletionRate}%</span>
+            </div>
+            <div className="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-600 h-full rounded-full transition-all duration-500" style={{ width: `${data.todayCompletionRate}%` }} />
+            </div>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              {data.todayScheduleCount} Schichten heute aktiv · {data.todayAllocatedHours} Std. geplante Arbeitszeit.
+            </p>
+          </div>
         </section>
       </div>
 
@@ -685,7 +790,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
                   close();
                   setActiveTab("sections");
                 }}
-                className="flex-1 bg-secondary text-on-secondary py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
+                className="flex-1 bg-secondary text-white py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
               >
                 <Layers className="size-4" /> Bereiche anzeigen
               </button>
@@ -736,7 +841,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
                   close();
                   setActiveTab("staff");
                 }}
-                className="flex-1 bg-secondary text-on-secondary py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
+                className="flex-1 bg-secondary text-white py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
               >
                 <Users className="size-4" /> Personal-Details öffnen
               </button>
@@ -789,7 +894,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
                   close();
                   setActiveTab("schedule");
                 }}
-                className="flex-1 bg-secondary text-on-secondary py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
+                className="flex-1 bg-secondary text-white py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
               >
                 <CalendarDays className="size-4" /> Schichtplan öffnen
               </button>
@@ -844,7 +949,7 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
                   close();
                   setActiveTab("sections");
                 }}
-                className="flex-1 bg-secondary text-on-secondary py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
+                className="flex-1 bg-secondary text-white py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-90 transition cursor-pointer"
               >
                 <Layers className="size-4" /> Zu den Bereichen wechseln
               </button>
