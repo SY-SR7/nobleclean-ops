@@ -135,32 +135,13 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
 
       {selectedClientId ? (
         <div className="grid gap-6">
-          {/* Client Selector Bar */}
-          <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => e.preventDefault()}>
-            <input type="hidden" name="tab" value="sections" />
-            <div className="grid gap-2 sm:min-w-80">
-              <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="sections-client">
-                {copy.clientLabel}
-              </label>
-              <select
-                className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded-xl border px-3.5 text-sm outline-none transition"
-                value={selectedClientId}
-                onChange={(e) => {
-                  const newId = e.target.value;
-                  setActiveTab("sections", newId, "");
-                }}
-                id="sections-client"
-                name="clientId"
-              >
-                {data.clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.isActive ? client.name : `${client.name} (${copy.inactive})`}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Button type="button" onClick={() => setActiveTab("sections", selectedClientId)}>{copy.selectClient}</Button>
-          </form>
+          {/* Smart Instant Client Selector */}
+          <SmartClientSelector
+            clients={data.clients}
+            selectedClientId={selectedClientId}
+            clientLabel={copy.clientLabel}
+            inactiveLabel={copy.inactive}
+          />
 
           {/* Sub-Tab Portals Bar */}
           <SectionPortalTabs
