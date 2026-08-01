@@ -6,6 +6,11 @@ const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 
 const CLIENT_ID = "c1a00000-0001-4000-8001-000000000001";
 
+function toUUID(str: string): string {
+  const hash = crypto.createHash("md5").update(str).digest("hex");
+  return `${hash.slice(0,8)}-${hash.slice(8,12)}-4${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
+}
+
 // 6 Male Employees
 const employees = [
   { id: "e1a00000-0001-4000-8001-000000000001", name: "Mohamad", email: "mohamad@demo.nobleclean.de" },
@@ -71,54 +76,71 @@ const IMAGES = {
 };
 
 // 3 Groups Sections
-const sectionsData = [
+const rawSections = [
   // MAIN SECTIONS
-  { id: "sec-g1-main", parent_id: null, name: "Gruppe 1 — Vorne, KidsClub, Herren Dusche, Mitte", image: IMAGES.reception, order: 1 },
-  { id: "sec-g2-main", parent_id: null, name: "Gruppe 2 — Hinten, Herren WC, Herren Umkleide, Wege", image: IMAGES.strength, order: 2 },
-  { id: "sec-g3-main", parent_id: null, name: "Gruppe 3 — Frauen komplett, Wellness, Cycling, Kursraum", image: IMAGES.sauna, order: 3 },
+  { key: "sec-g1-main", parent_key: null, name: "Gruppe 1 — Vorne, KidsClub, Herren Dusche, Mitte", image: IMAGES.reception, order: 1 },
+  { key: "sec-g2-main", parent_key: null, name: "Gruppe 2 — Hinten, Herren WC, Herren Umkleide, Wege", image: IMAGES.strength, order: 2 },
+  { key: "sec-g3-main", parent_key: null, name: "Gruppe 3 — Frauen komplett, Wellness, Cycling, Kursraum", image: IMAGES.sauna, order: 3 },
 
   // SUB SECTIONS G1
-  { id: "sec-g1-vorne", parent_id: "sec-g1-main", name: "Vorne (Empfang & Rezeption)", image: IMAGES.reception, order: 1 },
-  { id: "sec-g1-kids", parent_id: "sec-g1-main", name: "KidsClub (Kinderbereich)", image: IMAGES.entrance, order: 2 },
-  { id: "sec-g1-hdusche", parent_id: "sec-g1-main", name: "Herren Dusche (Sanitär & Duschen)", image: IMAGES.sanitary, order: 3 },
-  { id: "sec-g1-mitte", parent_id: "sec-g1-main", name: "Mitte (Cardio & Lounge)", image: IMAGES.cardio, order: 4 },
+  { key: "sec-g1-vorne", parent_key: "sec-g1-main", name: "Vorne (Empfang & Rezeption)", image: IMAGES.reception, order: 1 },
+  { key: "sec-g1-kids", parent_key: "sec-g1-main", name: "KidsClub (Kinderbereich)", image: IMAGES.entrance, order: 2 },
+  { key: "sec-g1-hdusche", parent_key: "sec-g1-main", name: "Herren Dusche (Sanitär & Duschen)", image: IMAGES.sanitary, order: 3 },
+  { key: "sec-g1-mitte", parent_key: "sec-g1-main", name: "Mitte (Cardio & Lounge)", image: IMAGES.cardio, order: 4 },
 
   // SUB SECTIONS G2
-  { id: "sec-g2-hinten", parent_id: "sec-g2-main", name: "Hinten (Kraftbereich & Freie Gewichte)", image: IMAGES.freeweights, order: 1 },
-  { id: "sec-g2-hwc", parent_id: "sec-g2-main", name: "Herren WC (Toiletten & Waschtische)", image: IMAGES.sanitary, order: 2 },
-  { id: "sec-g2-humkleide", parent_id: "sec-g2-main", name: "Herren Umkleide (Locker Room)", image: IMAGES.lockers, order: 3 },
-  { id: "sec-g2-wege", parent_id: "sec-g2-main", name: "alle Wege mit Maschine (Hauptkorridore)", image: IMAGES.scrubber, order: 4 },
+  { key: "sec-g2-hinten", parent_key: "sec-g2-main", name: "Hinten (Kraftbereich & Freie Gewichte)", image: IMAGES.freeweights, order: 1 },
+  { key: "sec-g2-hwc", parent_key: "sec-g2-main", name: "Herren WC (Toiletten & Waschtische)", image: IMAGES.sanitary, order: 2 },
+  { key: "sec-g2-humkleide", parent_key: "sec-g2-main", name: "Herren Umkleide (Locker Room)", image: IMAGES.lockers, order: 3 },
+  { key: "sec-g2-wege", parent_key: "sec-g2-main", name: "alle Wege mit Maschine (Hauptkorridore)", image: IMAGES.scrubber, order: 4 },
 
   // SUB SECTIONS G3
-  { id: "sec-g3-frauen", parent_id: "sec-g3-main", name: "Frauen komplett (Umkleide & WC Damen)", image: IMAGES.lockers, order: 1 },
-  { id: "sec-g3-wellness", parent_id: "sec-g3-main", name: "Wellness & Sauna (Ruhebereich)", image: IMAGES.sauna, order: 2 },
-  { id: "sec-g3-cycling", parent_id: "sec-g3-main", name: "Cyclingraum (Studio B)", image: IMAGES.cardio, order: 3 },
-  { id: "sec-g3-kursraum", parent_id: "sec-g3-main", name: "Kursraum (Studio A & C)", image: IMAGES.strength, order: 4 },
+  { key: "sec-g3-frauen", parent_key: "sec-g3-main", name: "Frauen komplett (Umkleide & WC Damen)", image: IMAGES.lockers, order: 1 },
+  { key: "sec-g3-wellness", parent_key: "sec-g3-main", name: "Wellness & Sauna (Ruhebereich)", image: IMAGES.sauna, order: 2 },
+  { key: "sec-g3-cycling", parent_key: "sec-g3-main", name: "Cyclingraum (Studio B)", image: IMAGES.cardio, order: 3 },
+  { key: "sec-g3-kursraum", parent_key: "sec-g3-main", name: "Kursraum (Studio A & C)", image: IMAGES.strength, order: 4 },
 ];
+
+const sectionsData = rawSections.map(s => ({
+  id: toUUID(s.key),
+  parent_id: s.parent_key ? toUUID(s.parent_key) : null,
+  name: s.name,
+  image: s.image,
+  order: s.order
+}));
 
 // LEAF ITEMS
-const leafItemsData = [
+const rawLeafItems = [
   // G1 Items (Total = 195 min)
-  { id: "item-g1-01", section_id: "sec-g1-vorne", name: "Empfangstheke & Glastüren desinfizieren", mins: 25, image: IMAGES.disinfectant, tag: "high_priority" },
-  { id: "item-g1-02", section_id: "sec-g1-vorne", name: "Drehkreuze & Zugangssysteme feucht wischen", mins: 20, image: IMAGES.entrance, tag: "normal" },
-  { id: "item-g1-03", section_id: "sec-g1-kids", name: "KidsClub Spiel- & Liegeflächen desinfizieren", mins: 35, image: IMAGES.entrance, tag: "high_priority" },
-  { id: "item-g1-04", section_id: "sec-g1-kids", name: "KidsClub Spielzeug & Schränke abwischen", mins: 25, image: IMAGES.disinfectant, tag: "normal" },
-  { id: "item-g1-05", section_id: "sec-g1-hdusche", name: "Herren Dusche Kacheln & Abflüsse entkalken", mins: 45, image: IMAGES.sanitary, tag: "high_priority" },
-  { id: "item-g1-06", section_id: "sec-g1-mitte", name: "Cardio-Geräte Konsolen & Griffe reinigen", mins: 45, image: IMAGES.cardio, tag: "normal" },
+  { key: "item-g1-01", sec_key: "sec-g1-vorne", name: "Empfangstheke & Glastüren desinfizieren", mins: 25, image: IMAGES.disinfectant, tag: "high_priority" },
+  { key: "item-g1-02", sec_key: "sec-g1-vorne", name: "Drehkreuze & Zugangssysteme feucht wischen", mins: 20, image: IMAGES.entrance, tag: "normal" },
+  { key: "item-g1-03", sec_key: "sec-g1-kids", name: "KidsClub Spiel- & Liegeflächen desinfizieren", mins: 35, image: IMAGES.entrance, tag: "high_priority" },
+  { key: "item-g1-04", sec_key: "sec-g1-kids", name: "KidsClub Spielzeug & Schränke abwischen", mins: 25, image: IMAGES.disinfectant, tag: "normal" },
+  { key: "item-g1-05", sec_key: "sec-g1-hdusche", name: "Herren Dusche Kacheln & Abflüsse entkalken", mins: 45, image: IMAGES.sanitary, tag: "high_priority" },
+  { key: "item-g1-06", sec_key: "sec-g1-mitte", name: "Cardio-Geräte Konsolen & Griffe reinigen", mins: 45, image: IMAGES.cardio, tag: "normal" },
 
   // G2 Items (Total = 190 min)
-  { id: "item-g2-01", section_id: "sec-g2-hinten", name: "Freie Gewichte & Hantelbänke desinfizieren", mins: 40, image: IMAGES.freeweights, tag: "high_priority" },
-  { id: "item-g2-02", section_id: "sec-g2-hinten", name: "Kraftmaschinen Kabelzüge & Polster abwischen", mins: 35, image: IMAGES.strength, tag: "normal" },
-  { id: "item-g2-03", section_id: "sec-g2-hwc", name: "Herren WC المرايا والمغاسل والأسطح desinfizieren", mins: 40, image: IMAGES.sanitary, tag: "high_priority" },
-  { id: "item-g2-04", section_id: "sec-g2-humkleide", name: "Herren Umkleide الخزانات والمقاعد feucht wischen", mins: 35, image: IMAGES.lockers, tag: "normal" },
-  { id: "item-g2-05", section_id: "sec-g2-wege", name: "alle Wege mit Scheuersaugmaschine nassreinigen", mins: 40, image: IMAGES.scrubber, tag: "high_priority" },
+  { key: "item-g2-01", sec_key: "sec-g2-hinten", name: "Freie Gewichte & Hantelbänke desinfizieren", mins: 40, image: IMAGES.freeweights, tag: "high_priority" },
+  { key: "item-g2-02", sec_key: "sec-g2-hinten", name: "Kraftmaschinen Kabelzüge & Polster abwischen", mins: 35, image: IMAGES.strength, tag: "normal" },
+  { key: "item-g2-03", sec_key: "sec-g2-hwc", name: "Herren WC Mirrors, Waschtische & Surfaces", mins: 40, image: IMAGES.sanitary, tag: "high_priority" },
+  { key: "item-g2-04", sec_key: "sec-g2-humkleide", name: "Herren Umkleide Lockers & Benches wischen", mins: 35, image: IMAGES.lockers, tag: "normal" },
+  { key: "item-g2-05", sec_key: "sec-g2-wege", name: "alle Wege mit Scheuersaugmaschine nassreinigen", mins: 40, image: IMAGES.scrubber, tag: "high_priority" },
 
   // G3 Items (Total = 185 min)
-  { id: "item-g3-01", section_id: "sec-g3-frauen", name: "Frauen Umkleide & WC komplett desinfizieren", mins: 55, image: IMAGES.lockers, tag: "high_priority" },
-  { id: "item-g3-02", section_id: "sec-g3-wellness", name: "Wellness & Sauna Liegebänke & Aufguss reinigen", mins: 45, image: IMAGES.sauna, tag: "high_priority" },
-  { id: "item-g3-03", section_id: "sec-g3-cycling", name: "Indoor-Cycling Bikes & Pedale desinfizieren", mins: 45, image: IMAGES.cardio, tag: "normal" },
-  { id: "item-g3-04", section_id: "sec-g3-kursraum", name: "Kursraum Matten, Spiegel & Schwingboden wischen", mins: 40, image: IMAGES.strength, tag: "normal" },
+  { key: "item-g3-01", sec_key: "sec-g3-frauen", name: "Frauen Umkleide & WC komplett desinfizieren", mins: 55, image: IMAGES.lockers, tag: "high_priority" },
+  { key: "item-g3-02", sec_key: "sec-g3-wellness", name: "Wellness & Sauna Liegebänke & Aufguss reinigen", mins: 45, image: IMAGES.sauna, tag: "high_priority" },
+  { key: "item-g3-03", sec_key: "sec-g3-cycling", name: "Indoor-Cycling Bikes & Pedale desinfizieren", mins: 45, image: IMAGES.cardio, tag: "normal" },
+  { key: "item-g3-04", sec_key: "sec-g3-kursraum", name: "Kursraum Matten, Spiegel & Schwingboden wischen", mins: 40, image: IMAGES.strength, tag: "normal" },
 ];
+
+const leafItemsData = rawLeafItems.map(i => ({
+  id: toUUID(i.key),
+  section_id: toUUID(i.sec_key),
+  name: i.name,
+  mins: i.mins,
+  image: i.image,
+  tag: i.tag
+}));
 
 async function seed() {
   const supabase = createClient(url, key);
@@ -160,7 +182,6 @@ async function seed() {
 
   // 2. RECONSTRUCT SECTIONS & LEAF ITEMS FOR JOHN REED FITNESS
   console.log("2. Reconstructing Sections & Leaf Items...");
-  // Clear old leaf items and sections
   const { data: existingSecs } = await db.from("sections").select("id").eq("client_id", CLIENT_ID);
   if (existingSecs && existingSecs.length > 0) {
     const secIds = existingSecs.map(s => s.id);
@@ -224,11 +245,8 @@ async function seed() {
       const empId = empMap[empName];
       if (!empId) continue;
 
-      const schedId = crypto.createHash("md5").update(`sched-${work_date}-${empId}`).digest("hex");
-      const planId = crypto.createHash("md5").update(`plan-${work_date}-${empId}`).digest("hex");
-
-      const uuidSchedId = `${schedId.slice(0,8)}-${schedId.slice(8,12)}-4${schedId.slice(13,16)}-a${schedId.slice(17,20)}-${schedId.slice(20,32)}`;
-      const uuidPlanId = `${planId.slice(0,8)}-${planId.slice(8,12)}-4${planId.slice(13,16)}-a${planId.slice(17,20)}-${planId.slice(20,32)}`;
+      const uuidSchedId = toUUID(`sched-${work_date}-${empId}`);
+      const uuidPlanId = toUUID(`plan-${work_date}-${empId}`);
 
       await db.from("work_schedule").upsert({
         id: uuidSchedId,
@@ -249,8 +267,7 @@ async function seed() {
       });
 
       for (const item of leafItemsData) {
-        const itemId = crypto.createHash("md5").update(`pi-${uuidPlanId}-${item.id}`).digest("hex");
-        const uuidItemId = `${itemId.slice(0,8)}-${itemId.slice(8,12)}-4${itemId.slice(13,16)}-a${itemId.slice(17,20)}-${itemId.slice(20,32)}`;
+        const uuidItemId = toUUID(`pi-${uuidPlanId}-${item.id}`);
         await db.from("daily_plan_items").upsert({
           id: uuidItemId,
           daily_plan_id: uuidPlanId,
@@ -267,16 +284,12 @@ async function seed() {
   const empNames = employees.map(e => e.name);
   for (let day = 1; day <= 31; day++) {
     const work_date = `2026-07-${String(day).padStart(2, "0")}`;
-    // Select 3 distinct workers per day
     const workers = [empNames[(day - 1) % 6], empNames[day % 6], empNames[(day + 1) % 6]];
 
     for (const empName of workers) {
       const empId = empMap[empName];
-      const schedId = crypto.createHash("md5").update(`sched-${work_date}-${empId}`).digest("hex");
-      const planId = crypto.createHash("md5").update(`plan-${work_date}-${empId}`).digest("hex");
-
-      const uuidSchedId = `${schedId.slice(0,8)}-${schedId.slice(8,12)}-4${schedId.slice(13,16)}-a${schedId.slice(17,20)}-${schedId.slice(20,32)}`;
-      const uuidPlanId = `${planId.slice(0,8)}-${planId.slice(8,12)}-4${planId.slice(13,16)}-a${planId.slice(17,20)}-${planId.slice(20,32)}`;
+      const uuidSchedId = toUUID(`sched-${work_date}-${empId}`);
+      const uuidPlanId = toUUID(`plan-${work_date}-${empId}`);
 
       await db.from("work_schedule").upsert({
         id: uuidSchedId,
@@ -296,8 +309,7 @@ async function seed() {
       });
 
       for (const item of leafItemsData) {
-        const itemId = crypto.createHash("md5").update(`pi-${uuidPlanId}-${item.id}`).digest("hex");
-        const uuidItemId = `${itemId.slice(0,8)}-${itemId.slice(8,12)}-4${itemId.slice(13,16)}-a${itemId.slice(17,20)}-${itemId.slice(20,32)}`;
+        const uuidItemId = toUUID(`pi-${uuidPlanId}-${item.id}`);
         await db.from("daily_plan_items").upsert({
           id: uuidItemId,
           daily_plan_id: uuidPlanId,
@@ -309,7 +321,7 @@ async function seed() {
     }
   }
 
-  console.log("Database update completed successfully!");
+  console.log("SUCCESS! Database update completed flawlessly!");
 }
 
 seed().catch(err => console.error("Database update error:", err));
