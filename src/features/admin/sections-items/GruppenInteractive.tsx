@@ -69,7 +69,90 @@ const INITIAL_GROUPS: WorkGroup[] = [
 ];
 
 export function GruppenInteractive({ sections, leafItems, copy }: GruppenInteractiveProps) {
-  const [groups, setGroups] = useState<WorkGroup[]>(INITIAL_GROUPS);
+  // Dynamically map 100% of leaf items from DB to the 3 default groups requested by user
+  const defaultGroups = useMemo(() => {
+    const g1Items: string[] = [];
+    const g2Items: string[] = [];
+    const g3Items: string[] = [];
+
+    leafItems.forEach((item) => {
+      const secName = (item.sectionName || "").toLowerCase();
+      const itemName = (item.name || "").toLowerCase();
+      const text = `${secName} ${itemName}`;
+
+      if (
+        text.includes("vorne") ||
+        text.includes("kids") ||
+        text.includes("dusche") ||
+        text.includes("mitte") ||
+        text.includes("empfang") ||
+        text.includes("rezeption")
+      ) {
+        g1Items.push(item.id);
+      } else if (
+        text.includes("hinten") ||
+        text.includes("wc") ||
+        text.includes("umkleide") ||
+        text.includes("wege") ||
+        text.includes("korridor") ||
+        text.includes("kraft")
+      ) {
+        g2Items.push(item.id);
+      } else if (
+        text.includes("frauen") ||
+        text.includes("damen") ||
+        text.includes("wellness") ||
+        text.includes("sauna") ||
+        text.includes("cycling") ||
+        text.includes("kursraum") ||
+        text.includes("studio")
+      ) {
+        g3Items.push(item.id);
+      } else {
+        // Fallback for any extra/unassigned items: distribute to G1
+        g1Items.push(item.id);
+      }
+    });
+
+    const calcMins = (itemIds: string[]) =>
+      itemIds.reduce((sum, id) => {
+        const found = leafItems.find((l) => l.id === id);
+        return sum + (found?.estimatedMinutes || 0);
+      }, 0);
+
+    return [
+      {
+        id: "group-1",
+        name: "Gruppe 1 — Vorne, KidsClub, Herren Dusche, Mitte",
+        description: "Vorne (Empfang), KidsClub, Herren Dusche & Cardio Mitte Bereich",
+        targetMins: calcMins(g1Items) || 195,
+        assignedItemIds: g1Items,
+      },
+      {
+        id: "group-2",
+        name: "Gruppe 2 — Hinten, Herren WC, Herren Umkleide, alle Wege mit Maschine",
+        description: "Kraftbereich (Hinten), Herren WC, Herren Umkleide & Korridore mit Maschine",
+        targetMins: calcMins(g2Items) || 190,
+        assignedItemIds: g2Items,
+      },
+      {
+        id: "group-3",
+        name: "Gruppe 3 — Frauen komplett, Wellness, Cyclingraum, Kursraum",
+        description: "Frauenbereich komplett, Wellness & Sauna, Cyclingraum & Kursräume",
+        targetMins: calcMins(g3Items) || 185,
+        assignedItemIds: g3Items,
+      },
+    ];
+  }, [leafItems]);
+
+  const [groups, setGroups] = useState<WorkGroup[]>(defaultGroups);
+
+  // Sync groups state if defaultGroups items update
+  useMemo(() => {
+    if (groups.length === 0 || (groups.length === 3 && groups[0]?.assignedItemIds.length === 0)) {
+      setGroups(defaultGroups);
+    }
+  }, [defaultGroups]);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
