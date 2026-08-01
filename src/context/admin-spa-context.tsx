@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 export type AdminTab = "home" | "clients" | "staff" | "sections" | "schedule" | "reports";
 
@@ -42,6 +42,7 @@ export function useAdminSpa() {
 
 export function AdminSpaProvider({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Read initial tab from URL query params ?tab=...
   const tabFromUrl = searchParams ? searchParams.get("tab") : null;
@@ -55,7 +56,7 @@ export function AdminSpaProvider({ children }: { children: ReactNode }) {
     searchParams ? searchParams.get("sectionId") : null
   );
 
-  // Sync state automatically if searchParams in URL change (e.g. browser back/forward or external link)
+  // Sync state automatically if searchParams in URL change
   useEffect(() => {
     if (!searchParams) return;
     const currentTabParam = searchParams.get("tab");
@@ -86,22 +87,31 @@ export function AdminSpaProvider({ children }: { children: ReactNode }) {
       }
 
       if (typeof window !== "undefined") {
-        // Synchronize browser address bar URL so router.refresh() or back button keeps exact state
-        const url = new URL(window.location.href);
-        url.searchParams.set("tab", tab);
-        if (clientId) {
-          url.searchParams.set("clientId", clientId);
-        }
-        if (sectionId) {
-          url.searchParams.set("sectionId", sectionId);
-        }
-        window.history.pushState(null, "", url.toString());
+        const currentPath = window.location.pathname;
+        const parts = currentPath.split("/").filter(Boolean);
+        // parts[0] is locale (e.g. 'de' or 'en'), parts[1] is 'admin'
+        const localeStr = parts[0] || "de";
+        const isSubPage = parts.length > 2; // e.g. /de/admin/staff/123 or /de/admin/clients/456
 
-        window.dispatchEvent(new CustomEvent("nc-tab-change", { detail: { tab } }));
+        const search = new URLSearchParams();
+        search.set("tab", tab);
+        if (clientId) search.set("clientId", clientId);
+        if (sectionId) search.set("sectionId", sectionId);
+
+        const targetHref = `/${localeStr}/admin?${search.toString()}`;
+
+        if (isSubPage) {
+          // If we are currently inside a detail sub-page, navigate back to main SPA admin route!
+          router.push(targetHref);
+        } else {
+          // Soft URL sync on main admin SPA page
+          window.history.pushState(null, "", targetHref);
+          window.dispatchEvent(new CustomEvent("nc-tab-change", { detail: { tab } }));
+        }
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [],
+    [router],
   );
 
   return (
