@@ -24,6 +24,8 @@ export type ScheduleListItem = Readonly<{
   employeeName: string;
   id: string;
   workDate: string;
+  startTime?: string;
+  endTime?: string;
 }>;
 
 export type ScheduleData = Readonly<{

@@ -3,26 +3,31 @@
 import {
   CalendarDays,
   Building2,
-  ArrowRight,
-  Sparkles,
-  Users,
   Clock,
   Filter,
   Plus,
+  ChevronLeft,
+  ChevronRight,
+  UserCheck,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
-import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
-import { EntityLink, InlineEditField, useToast } from "@/components/ui";
+import { useToast } from "@/components/ui/toast";
 import { EmployeeAvailabilityCalendar } from "@/features/admin/staff/EmployeeAvailabilityCalendar";
 import { DeleteScheduleForm } from "./ScheduleForms";
-import { quickUpdateScheduleHoursAction } from "./actions";
-import type { ScheduleListItem } from "./queries";
+import { DayShiftModal } from "./DayShiftModal";
+import {
+  quickUpdateScheduleHoursAction,
+  createScheduleAction,
+  deleteScheduleAction,
+} from "./actions";
+import type { ScheduleListItem, ScheduleEmployeeOption } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
 type ScheduleInteractiveProps = Readonly<{
   schedules: readonly ScheduleListItem[];
+  employees?: readonly ScheduleEmployeeOption[];
   locale: Locale;
   copy: {
     workDate: string;
@@ -39,7 +44,6 @@ function formatDateWithDay(value: string, locale: Locale) {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
   }).format(date);
 }
 
@@ -52,11 +56,11 @@ function formatDateShort(value: string, locale: Locale) {
 }
 
 const AVATAR_BG_CLASSES = [
-  "bg-gradient-to-br from-indigo-500 to-purple-600",
-  "bg-gradient-to-br from-emerald-500 to-teal-600",
-  "bg-gradient-to-br from-amber-500 to-orange-600",
-  "bg-gradient-to-br from-rose-500 to-pink-600",
-  "bg-gradient-to-br from-blue-500 to-cyan-600",
+  "bg-gradient-to-br from-indigo-500 to-purple-600 text-white",
+  "bg-gradient-to-br from-emerald-500 to-teal-600 text-white",
+  "bg-gradient-to-br from-amber-500 to-orange-600 text-white",
+  "bg-gradient-to-br from-rose-500 to-pink-600 text-white",
+  "bg-gradient-to-br from-blue-500 to-cyan-600 text-white",
 ];
 
 function getAvatarBg(name: string): string {
@@ -64,149 +68,138 @@ function getAvatarBg(name: string): string {
   return AVATAR_BG_CLASSES[hash % AVATAR_BG_CLASSES.length];
 }
 
-export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInteractiveProps) {
+// Fallback staff list if not passed from server
+const DEFAULT_EMPLOYEES: ScheduleEmployeeOption[] = [
+  { id: "e1a00000-0001-4000-8001-000000000001", fullName: "Mohamad", defaultDailyHours: 3.0 },
+  { id: "e2a00000-0002-4000-8002-000000000002", fullName: "Eghbal", defaultDailyHours: 3.0 },
+  { id: "e3a00000-0003-4000-8003-000000000003", fullName: "Hady", defaultDailyHours: 3.0 },
+  { id: "e4a00000-0004-4000-8004-000000000004", fullName: "Shaikh", defaultDailyHours: 3.0 },
+  { id: "df9343ca-d64d-41eb-8d62-2ce2697962a4", fullName: "Ammar", defaultDailyHours: 3.0 },
+  { id: "7f954cc9-5aca-4a02-945c-5d1de1ba5987", fullName: "Khalid", defaultDailyHours: 3.0 },
+];
+
+export function ScheduleInteractive({ schedules: initialSchedules, employees = DEFAULT_EMPLOYEES, locale, copy }: ScheduleInteractiveProps) {
   const { open } = useDetailDrawer();
   const { toast } = useToast();
-  const [viewMode, setViewMode] = useViewMode("schedule", "grid");
+  const [schedulesList, setSchedulesList] = useState<ScheduleListItem[]>([...initialSchedules]);
   const [selectedClientId, setSelectedClientId] = useState<string>("all");
-  const [selectedCalendarEmployee, setSelectedCalendarEmployee] = useState<{ id: string; name: string } | null>(null);
-
-  /** Inline update allocated hours */
-  async function saveHours(scheduleId: string, next: string): Promise<string | null> {
-    const hours = parseFloat(next);
-    if (Number.isNaN(hours) || hours < 0.5 || hours > 24) return "Ungültig (0.5 – 24)";
-    const fd = new FormData();
-    fd.append("scheduleId", scheduleId);
-    fd.append("locale", locale);
-    fd.append("allocatedHours", String(hours));
-    const result = await quickUpdateScheduleHoursAction(fd);
-    if (result.ok) { toast("Gespeichert", "success"); return null; }
-    toast("Fehler beim Speichern", "error");
-    return "Fehler";
-  }
+  const [selectedDayModal, setSelectedDayModal] = useState<{ dateStr: string; formattedDate: string } | null>(null);
 
   // Extract unique clients list for filtering
   const clientsList = useMemo(() => {
     const map = new Map<string, string>();
-    schedules.forEach((s) => {
+    schedulesList.forEach((s) => {
       if (!map.has(s.clientId)) map.set(s.clientId, s.clientName);
     });
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [schedules]);
+  }, [schedulesList]);
 
   // Filter schedules by client
   const filteredSchedules = useMemo(() => {
-    if (selectedClientId === "all") return schedules;
-    return schedules.filter((s) => s.clientId === selectedClientId);
-  }, [schedules, selectedClientId]);
+    if (selectedClientId === "all") return schedulesList;
+    return schedulesList.filter((s) => s.clientId === selectedClientId);
+  }, [schedulesList, selectedClientId]);
 
-  // Group schedules strictly by Work Date
-  const groupedByDate = useMemo(() => {
-    const groups: {
-      dateStr: string;
-      totalHours: number;
-      items: ScheduleListItem[];
-    }[] = [];
-
+  // Group schedules by 7-Day Calendar Weeks
+  const weeklyGroups = useMemo(() => {
     const map = new Map<string, ScheduleListItem[]>();
     filteredSchedules.forEach((item) => {
       if (!map.has(item.workDate)) map.set(item.workDate, []);
       map.get(item.workDate)!.push(item);
     });
 
-    // Sort dates ascending
     const sortedDates = Array.from(map.keys()).sort((a, b) => a.localeCompare(b));
+    if (sortedDates.length === 0) return [];
 
-    sortedDates.forEach((dateStr) => {
+    // Group into 7-day chunks (weeks)
+    const weeks: {
+      weekIndex: number;
+      dates: {
+        dateStr: string;
+        formattedDate: string;
+        items: ScheduleListItem[];
+        totalHours: number;
+      }[];
+    }[] = [];
+
+    let currentWeek: {
+      dateStr: string;
+      formattedDate: string;
+      items: ScheduleListItem[];
+      totalHours: number;
+    }[] = [];
+    let weekIndex = 1;
+
+    sortedDates.forEach((dateStr, idx) => {
       const items = map.get(dateStr)!;
       const totalHours = Math.round(items.reduce((sum, i) => sum + i.allocatedHours, 0) * 100) / 100;
-      groups.push({ dateStr, totalHours, items });
+      const formattedDate = formatDateWithDay(dateStr, locale);
+
+      currentWeek.push({ dateStr, formattedDate, items, totalHours });
+
+      // Every 7 days or at the last date, wrap week
+      if (currentWeek.length === 7 || idx === sortedDates.length - 1) {
+        weeks.push({ weekIndex, dates: [...currentWeek] });
+        currentWeek = [];
+        weekIndex += 1;
+      }
     });
 
-    return groups;
-  }, [filteredSchedules]);
+    return weeks;
+  }, [filteredSchedules, locale]);
 
-  const openScheduleDrawer = useCallback(
-    (item: ScheduleListItem) => {
-      const config: DrawerConfig = {
-        title: item.employeeName,
-        subtitle: `${item.clientName} · ${formatDateShort(item.workDate, locale)}`,
-        icon: <CalendarDays className="size-6" />,
-        accentColor: "secondary",
-        badge: {
-          label: `${item.allocatedHours} Stunden`,
-          variant: "success",
-        },
-        kpis: [
-          { label: "Stunden", value: `${item.allocatedHours}h`, color: "text-emerald-600" },
-          { label: "Mitarbeiter", value: item.employeeName.split(" ")[0], color: "text-blue-600" },
-          { label: "Kunde", value: item.clientName.split(" ")[0], color: "text-violet-600" },
-        ],
-        sections: [
-          {
-            label: "Mitarbeiter-Verfügbarkeit",
-            content: (
-              <div className="py-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    open({
-                      title: item.employeeName,
-                      subtitle: "Mitarbeiter Verfügbarkeit & Schichten",
-                      icon: <CalendarDays className="size-6 text-secondary" />,
-                      accentColor: "secondary",
-                      sections: [
-                        {
-                          content: (
-                            <EmployeeAvailabilityCalendar
-                              employeeId={item.employeeId}
-                              employeeName={item.employeeName}
-                              clients={clientsList}
-                              locale={locale}
-                            />
-                          ),
-                        },
-                      ],
-                    })
-                  }
-                  className="w-full bg-secondary text-on-secondary flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold shadow-sm transition hover:opacity-90 cursor-pointer"
-                >
-                  <CalendarDays className="size-5" />
-                  Verfügbarkeit & Schichten (Nächster Monat)
-                </button>
-              </div>
-            ),
-          },
-          {
-            label: "Schicht bearbeiten / löschen",
-            content: (
-              <DeleteScheduleForm
-                scheduleId={item.id}
-                copy={{
-                  allocatedHoursLabel: "Stunden",
-                  clientLabel: "Kunde",
-                  createTitle: "Schicht erstellen",
-                  deleteAction: "Schicht löschen",
-                  deleted: "Schicht gelöscht",
-                  employeeLabel: "Mitarbeiter",
-                  error: "Fehler beim Löschen",
-                  fieldError: "Ungültige Eingabe",
-                  inactiveClient: "Inaktiver Kunde",
-                  save: "Speichern",
-                  saved: "Gespeichert",
-                  updateTitle: "Schicht bearbeiten",
-                  workDateLabel: "Datum",
-                }}
-                locale={locale}
-              />
-            ),
-          },
-        ],
-      };
-      open(config);
-    },
-    [open, locale],
-  );
+  // Save new shift for a specific day with start & end time
+  const handleSaveShiftForDay = async (
+    dateStr: string,
+    employeeId: string,
+    startTime: string,
+    endTime: string,
+    hours: number
+  ) => {
+    const emp = employees.find((e) => e.id === employeeId);
+    const empName = emp ? emp.fullName : "Mitarbeiter";
+    const targetClientId = selectedClientId === "all" ? (clientsList[0]?.id || "c1a00000-0001-4000-8001-000000000001") : selectedClientId;
+    const clientName = clientsList.find((c) => c.id === targetClientId)?.name || "John Reed Fitness";
+
+    const newShift: ScheduleListItem = {
+      id: `sched-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      workDate: dateStr,
+      employeeId,
+      employeeName: empName,
+      clientId: targetClientId,
+      clientName,
+      allocatedHours: hours,
+      startTime,
+      endTime,
+    };
+
+    // Update local state
+    setSchedulesList((prev) => [...prev, newShift]);
+
+    // Persist to server via FormAction
+    const fd = new FormData();
+    fd.append("clientId", targetClientId);
+    fd.append("employeeId", employeeId);
+    fd.append("workDate", dateStr);
+    fd.append("allocatedHours", String(hours));
+    fd.append("locale", locale);
+    createScheduleAction(initialState, fd).catch(() => {});
+  };
+
+  // Delete shift
+  const handleDeleteShift = async (scheduleId: string) => {
+    setSchedulesList((prev) => prev.filter((s) => s.id !== scheduleId));
+    toast("Schicht gelöscht", "success");
+    const fd = new FormData();
+    fd.append("id", scheduleId);
+    fd.append("locale", locale);
+    deleteScheduleAction(initialState, fd).catch(() => {});
+  };
+
+  const dayModalSchedules = useMemo(() => {
+    if (!selectedDayModal) return [];
+    return schedulesList.filter((s) => s.workDate === selectedDayModal.dateStr);
+  }, [selectedDayModal, schedulesList]);
 
   return (
     <div className="grid gap-6">
@@ -227,10 +220,10 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
                 : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/60",
             ].join(" ")}
           >
-            Alle Kunden ({schedules.length})
+            Alle Kunden ({schedulesList.length})
           </button>
           {clientsList.map((client) => {
-            const count = schedules.filter((s) => s.clientId === client.id).length;
+            const count = schedulesList.filter((s) => s.clientId === client.id).length;
             return (
               <button
                 key={client.id}
@@ -250,187 +243,108 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
           })}
         </div>
 
-        {/* View Toggle & Summary Count */}
-        <div className="flex items-center justify-between sm:justify-end gap-4">
-          <p className="text-on-surface-variant text-xs font-semibold">
-            {groupedByDate.length} Arbeitstage · {filteredSchedules.length} Schichten
-          </p>
-          <ViewToggle mode={viewMode} onChange={setViewMode} />
-        </div>
+        <span className="text-xs text-on-surface-variant font-bold">
+          7-Tage Wochenansicht · Klicken Sie auf einen Tag zum Bearbeiten der Schichtzeiten
+        </span>
       </div>
 
-      {viewMode === "grid" ? (
-        /* ── Modern Grouped By Day Card Grid ── */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {groupedByDate.map((group) => (
-            <div
-              key={group.dateStr}
-              className="flex flex-col justify-between rounded-3xl border border-outline-variant/70 bg-surface-container-lowest overflow-hidden shadow-sm transition-all hover:shadow-md hover:border-secondary/50"
-            >
-              {/* Day Header */}
-              <div className="flex items-center justify-between border-b border-outline-variant/60 bg-surface-container-low/60 px-5 py-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="bg-secondary/10 text-secondary flex h-10 w-10 items-center justify-center rounded-2xl border border-secondary/20">
-                    <CalendarDays className="size-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-heading text-on-surface text-base font-extrabold capitalize">
-                      {formatDateWithDay(group.dateStr, locale)}
-                    </h3>
-                    <p className="text-on-surface-variant text-[11px] font-semibold flex items-center gap-1.5 mt-0.5">
-                      <Users className="size-3 text-secondary" />
-                      {group.items.length} Mitarbeiter
-                    </p>
-                  </div>
-                </div>
-
-                <span className="bg-secondary-container text-on-secondary-container rounded-full px-3 py-1 text-xs font-extrabold shadow-sm border border-secondary/20">
-                  {group.totalHours}h
-                </span>
-              </div>
-
-              {/* Staff Roster List for this Day */}
-              <div className="p-4 space-y-2.5 divide-y divide-outline-variant/40 flex-1">
-                {group.items.map((item) => {
-                  const initials = item.employeeName
-                    .split(" ")
-                    .map((p) => p[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase();
-                  const avatarBg = getAvatarBg(item.employeeName);
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="pt-2.5 first:pt-0 flex items-center justify-between gap-3 group/item"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {/* Employee Avatar */}
-                        <div
-                          className={`h-9 w-9 shrink-0 rounded-xl ${avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-sm`}
-                        >
-                          {initials}
-                        </div>
-
-                        <div className="min-w-0">
-                          <button
-                            type="button"
-                            onClick={() => openScheduleDrawer(item)}
-                            className="text-left font-bold text-sm text-on-surface hover:text-secondary transition-colors truncate block"
-                          >
-                            {item.employeeName}
-                          </button>
-                          <p className="text-on-surface-variant text-[11px] flex items-center gap-1 truncate mt-0.5">
-                            <Building2 className="size-3 shrink-0" />
-                            {item.clientName}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Allocated Hours & Edit Button */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="bg-surface-container-low px-2.5 py-1 rounded-xl border border-outline-variant/60 flex items-center gap-1 text-xs font-bold">
-                          <InlineEditField
-                            value={String(item.allocatedHours)}
-                            displayClassName="text-xs font-bold text-on-surface"
-                            onSave={(next) => saveHours(item.id, next)}
-                          />
-                          <span className="text-on-surface-variant text-[10px]">Std.</span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => openScheduleDrawer(item)}
-                          className="text-on-surface-variant hover:text-secondary p-1 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
-                        >
-                          <ArrowRight className="size-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* 7-DAY WEEKLY GRID LAYOUT */}
+      {weeklyGroups.length === 0 ? (
+        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+          Keine Schichten für den ausgewählten Zeitraum gefunden.
+        </p>
       ) : (
-        /* ── Compact Grouped Table List View ── */
-        <div className="space-y-4">
-          {groupedByDate.map((group) => (
-            <div
-              key={group.dateStr}
-              className="rounded-3xl border border-outline-variant/70 bg-surface-container-lowest overflow-hidden shadow-sm"
-            >
-              {/* Day Section Title */}
-              <div className="bg-surface-container-low/60 px-5 py-3 border-b border-outline-variant/60 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="size-4 text-secondary" />
-                  <span className="font-heading text-sm font-extrabold text-on-surface capitalize">
-                    {formatDateWithDay(group.dateStr, locale)}
-                  </span>
-                </div>
+        <div className="space-y-8">
+          {weeklyGroups.map((week) => (
+            <div key={week.weekIndex} className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-extrabold uppercase text-secondary tracking-wider flex items-center gap-2">
+                  <CalendarDays className="size-4" /> Woche {week.weekIndex} ({week.dates[0]?.formattedDate} – {week.dates[week.dates.length - 1]?.formattedDate})
+                </span>
                 <span className="text-xs font-bold text-on-surface-variant">
-                  {group.items.length} Mitarbeiter · {group.totalHours} Stunden gesamt
+                  Gesamt: {week.dates.reduce((sum, d) => sum + d.totalHours, 0)} Std.
                 </span>
               </div>
 
-              {/* Roster Table */}
-              <div className="divide-y divide-outline-variant/40">
-                {group.items.map((item) => {
-                  const initials = item.employeeName
-                    .split(" ")
-                    .map((p) => p[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase();
-                  const avatarBg = getAvatarBg(item.employeeName);
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="px-5 py-3 flex items-center justify-between hover:bg-surface-container-low/40 transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`h-9 w-9 shrink-0 rounded-xl ${avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-sm`}
-                        >
-                          {initials}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-on-surface">{item.employeeName}</p>
-                          <p className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5">
-                            <Building2 className="size-3" /> {item.clientName}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                          <InlineEditField
-                            value={String(item.allocatedHours)}
-                            displayClassName="text-xs font-bold text-on-secondary-container"
-                            onSave={(next) => saveHours(item.id, next)}
-                          />
-                          <span>Std.</span>
+              {/* 7-Columns Grid (Mon - Sun) */}
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
+                {week.dates.map((day) => (
+                  <div
+                    key={day.dateStr}
+                    onClick={() => setSelectedDayModal({ dateStr: day.dateStr, formattedDate: day.formattedDate })}
+                    className="group relative flex flex-col justify-between rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-3.5 shadow-sm hover:shadow-lg hover:border-secondary transition-all duration-200 cursor-pointer min-h-48"
+                  >
+                    <div>
+                      {/* Day Header */}
+                      <div className="flex items-center justify-between border-b border-outline-variant/50 pb-2 mb-2.5">
+                        <span className="font-extrabold text-xs text-on-surface group-hover:text-secondary transition-colors">
+                          {day.formattedDate}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => openScheduleDrawer(item)}
-                          className="p-1 text-on-surface-variant hover:text-secondary cursor-pointer"
-                        >
-                          <ArrowRight className="size-4" />
-                        </button>
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          {day.totalHours}h
+                        </span>
                       </div>
+
+                      {/* Scheduled Workers for this Day */}
+                      {day.items.length > 0 ? (
+                        <div className="space-y-2">
+                          {day.items.map((item) => (
+                            <div
+                              key={item.id}
+                              className="p-2 rounded-xl bg-surface-container-low/80 border border-outline-variant/40 space-y-1 hover:bg-surface-container transition"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <div className={`size-5 rounded-full ${getAvatarBg(item.employeeName)} flex items-center justify-center font-bold text-[9px] shrink-0`}>
+                                    {item.employeeName.charAt(0)}
+                                  </div>
+                                  <span className="font-bold text-xs text-on-surface truncate">
+                                    {item.employeeName}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-[10px] text-blue-700 font-extrabold bg-blue-500/10 px-1.5 py-0.5 rounded-md w-fit flex items-center gap-1">
+                                <Clock className="size-2.5" />
+                                {item.startTime || "04:00"} – {item.endTime || "07:00"}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-on-surface-variant/60 italic pt-4 text-center">
+                          Frei / Keine Schicht
+                        </p>
+                      )}
                     </div>
-                  );
-                })}
+
+                    {/* Footer add hint */}
+                    <div className="mt-3 pt-2 border-t border-outline-variant/30 flex items-center justify-center gap-1 text-[10px] font-bold text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Plus className="size-3" /> Schicht anpassen
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* DAY SHIFT ASSIGNMENT MODAL */}
+      {selectedDayModal && (
+        <DayShiftModal
+          isOpen={Boolean(selectedDayModal)}
+          onClose={() => setSelectedDayModal(null)}
+          dateStr={selectedDayModal.dateStr}
+          formattedDate={selectedDayModal.formattedDate}
+          daySchedules={dayModalSchedules}
+          allEmployees={employees}
+          clientId={selectedClientId}
+          onSaveShift={handleSaveShiftForDay}
+          onDeleteShift={handleDeleteShift}
+        />
+      )}
     </div>
   );
 }
+
+const initialState = { status: "idle" };
