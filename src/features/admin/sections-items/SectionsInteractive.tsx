@@ -1,31 +1,32 @@
 "use client";
 
 import {
-  Clock,
-  Home,
   Layers,
-  Image as ImageIcon,
-  CheckCircle2,
-  Circle,
-  Wrench,
-  CalendarClock,
   ChevronRight,
+  Clock,
+  Wrench,
+  CheckCircle2,
+  CalendarClock,
+  Image as ImageIcon,
+  User,
+  History,
+  Video,
+  Sparkles,
+  Edit3,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
-import { InlineEditField, useToast } from "@/components/ui";
+import { useDetailDrawer, InfoGrid, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
+import { InlineEditField } from "@/components/ui/inline-edit-field";
+import { useToast } from "@/components/ui/toast";
+import { getSectionImage } from "@/lib/media-helper";
 import {
   quickRenameSectionAction,
   quickRenameLeafItemAction,
 } from "./actions";
-import type {
-  SectionTreeNode,
-  LeafItemListItem,
-  CleaningToolStepListItem,
-} from "./queries";
+import type { SectionTreeNode, LeafItemListItem, ToolStepListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
 type SectionsInteractiveProps = Readonly<{
@@ -33,179 +34,36 @@ type SectionsInteractiveProps = Readonly<{
   leafItems: readonly LeafItemListItem[];
   locale: Locale;
   clientId: string;
-  selectedSectionId: string | null;
-  onSelectSection?: (sectionId: string) => void;
+  selectedSectionId?: string;
+  onSelectSection?: (id: string) => void;
   copy: {
-    minutes: string;
+    sectionTitle: string;
+    objectTitle: string;
     leafCount: string;
-    lastPerformed: string;
-    neverPerformed: string;
-    recurrenceDays: string;
-    optional: string;
+    minutes: string;
     quantity: string;
+    recurrenceDays: string;
+    hasImage: string;
+    noSections: string;
+    noObjects: string;
     toolStepsTitle: string;
     stepEstimateTotal: string;
-    hasImage: string;
     noToolSteps: string;
+    lastPerformed: string;
+    neverPerformed: string;
   };
   tagLabels: {
-    normal: string;
     complaint: string;
     high_priority: string;
+    normal: string;
   };
 }>;
-
-/** Maps section name keywords to a section image path */
-function getSectionImage(name: string): string | null {
-  const n = name.toLowerCase();
-  if (n.includes("cardio") || n.includes("ausdauer") || n.includes("cycling")) return "/images/sections/cardio_v2.jpg";
-  if (n.includes("eingang") || n.includes("entrance") || n.includes("lobby") || n.includes("empfang")) return "/images/sections/entrance_v2.jpg";
-  if (n.includes("sanitar") || n.includes("sanitär") || n.includes("toilette") || n.includes("wc") || n.includes("dusche") || n.includes("umkleide")) return "/images/sections/sanitary_v2.jpg";
-  if (n.includes("sauna") || n.includes("dampf") || n.includes("wellness")) return "/images/sections/sauna_v2.jpg";
-  if (n.includes("kraft") || n.includes("weight") || n.includes("gym") || n.includes("freih") || n.includes("gerät")) return "/images/sections/strength_v2.jpg";
-  // fallback — cycle through available images based on name hash
-  const images = [
-    "/images/sections/entrance_v2.jpg",
-    "/images/sections/strength_v2.jpg",
-    "/images/sections/cardio_v2.jpg",
-    "/images/sections/sanitary_v2.jpg",
-    "/images/sections/sauna_v2.jpg",
-  ];
-  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return images[hash % images.length];
-}
-
-/** Maps tool name keywords to a tool image */
-function getToolImage(toolName: string): string | null {
-  const n = toolName.toLowerCase();
-  if (n.includes("mopp") || n.includes("mop") || n.includes("wischer") || n.includes("wischm")) return "/images/tools/mop.jpg";
-  if (n.includes("schrubb") || n.includes("bürst") || n.includes("scrub")) return "/images/tools/scrubber.jpg";
-  if (n.includes("desinfekt") || n.includes("reiniger") || n.includes("spray") || n.includes("mittel")) return "/images/tools/disinfectant.jpg";
-  return null;
-}
-
-function formatTimestamp(value: string | null, locale: Locale, fallback: string) {
-  if (!value) return fallback;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return fallback;
-  return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
-    dateStyle: "medium",
-  }).format(date);
-}
-
-// ── Breadcrumb ────────────────────────────────────────────────────────────────
-
-type BreadcrumbStep = Readonly<{ id: string; name: string }>;
-
-function buildBreadcrumb(
-  sections: readonly SectionTreeNode[],
-  selectedId: string | null,
-): readonly BreadcrumbStep[] {
-  if (!selectedId) return [];
-  const byId = new Map(sections.map((s) => [s.id, s]));
-  const path: BreadcrumbStep[] = [];
-  let current = byId.get(selectedId);
-  while (current) {
-    path.unshift({ id: current.id, name: current.name });
-    current = current.parentSectionId ? byId.get(current.parentSectionId) : undefined;
-  }
-  return path;
-}
-
-function SectionBreadcrumb({
-  sections,
-  selectedSectionId,
-  onSelectSection,
-}: Readonly<{
-  sections: readonly SectionTreeNode[];
-  selectedSectionId: string | null;
-  onSelectSection?: (id: string) => void;
-}>) {
-  const crumbs = buildBreadcrumb(sections, selectedSectionId);
-  if (crumbs.length <= 1) return null;
-
-  return (
-    <nav className="flex items-center gap-1 flex-wrap text-xs font-semibold mb-1">
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 text-on-surface-variant hover:text-secondary transition-colors"
-        onClick={() => onSelectSection?.(sections.find((s) => s.parentSectionId === null)?.id ?? "")}
-      >
-        <Home className="size-3" />
-        <span>Root</span>
-      </button>
-      {crumbs.map((crumb, i) => (
-        <span key={crumb.id} className="inline-flex items-center gap-1">
-          <ChevronRight className="size-3 text-on-surface-variant/40" />
-          {i === crumbs.length - 1 ? (
-            <span className="text-secondary">{crumb.name}</span>
-          ) : (
-            <button
-              type="button"
-              className="text-on-surface-variant hover:text-secondary transition-colors"
-              onClick={() => onSelectSection?.(crumb.id)}
-            >
-              {crumb.name}
-            </button>
-          )}
-        </span>
-      ))}
-    </nav>
-  );
-}
-
-function ToolStepDetail({
-  step,
-  locale,
-  copy,
-}: {
-  step: CleaningToolStepListItem;
-  locale: Locale;
-  copy: { minutes: string; lastPerformed: string; neverPerformed: string; recurrenceDays: string };
-}) {
-  const toolImg = getToolImage(step.toolName);
-  return (
-    <div className="border-outline-variant bg-surface-container rounded-xl border p-3 flex gap-3 items-start">
-      <div className="relative h-12 w-12 shrink-0 rounded-lg overflow-hidden bg-surface-container-highest">
-        {toolImg ? (
-          <Image src={toolImg} alt={step.toolName} fill className="object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-secondary/10 text-secondary font-bold text-sm">
-            {step.sequenceOrder}
-          </div>
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="text-on-surface text-sm font-semibold truncate">{step.toolName}</p>
-          {step.isMandatory ? (
-            <CheckCircle2 className="text-status-success size-3.5 shrink-0" />
-          ) : (
-            <Circle className="text-on-surface-variant size-3.5 shrink-0" />
-          )}
-        </div>
-        <p className="text-on-surface-variant text-xs mt-0.5 flex items-center gap-1">
-          <Clock className="size-3" />
-          {step.estimatedMinutes} {copy.minutes}
-          {" · "}
-          {copy.lastPerformed}:{" "}
-          {formatTimestamp(step.lastPerformedAt, locale, copy.neverPerformed)}
-        </p>
-        {step.notes && (
-          <p className="text-on-surface-variant text-xs mt-1 italic">{step.notes}</p>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export function SectionsInteractive({
   sections,
   leafItems,
   locale,
   clientId,
-  selectedSectionId,
-  onSelectSection,
   copy,
   tagLabels,
 }: SectionsInteractiveProps) {
@@ -239,6 +97,18 @@ export function SectionsInteractive({
     return "Fehler";
   }
 
+  // Flatten section tree for easy parent/child lookups
+  const flatSections = useMemo(() => {
+    const list: SectionTreeNode[] = [];
+    function traverse(node: SectionTreeNode) {
+      list.push(node);
+      node.children.forEach(traverse);
+    }
+    sections.forEach(traverse);
+    return list;
+  }, [sections]);
+
+  // Leaf Item Drawer with full nested drill-down and inline editing
   const openLeafItemDrawer = useCallback(
     (item: LeafItemListItem) => {
       const tagLabel =
@@ -250,8 +120,8 @@ export function SectionsInteractive({
 
       const config: DrawerConfig = {
         title: item.name,
-        subtitle: `${item.estimatedMinutes} ${copy.minutes}`,
-        icon: <CheckCircle2 className="size-6" />,
+        subtitle: `${item.estimatedMinutes} ${copy.minutes} · Tägliche Reinigung`,
+        icon: <CheckCircle2 className="size-6 text-secondary" />,
         accentColor:
           item.tag === "complaint"
             ? "warning"
@@ -269,9 +139,20 @@ export function SectionsInteractive({
         ],
         sections: [
           {
-            label: "Details",
+            label: "Objekt-Name & Stammdaten (Klicken zum Bearbeiten)",
             content: (
-              <div className="grid gap-3">
+              <div className="grid gap-3 bg-surface-container-low/70 p-4 rounded-2xl border border-outline-variant/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase text-on-surface-variant tracking-wider flex items-center gap-1">
+                    <Edit3 className="size-3 text-secondary" /> Direkt-Bearbeitung
+                  </span>
+                  <span className="text-xs text-on-surface-variant">1-Klick Inline Edit</span>
+                </div>
+                <InlineEditField
+                  value={item.name}
+                  displayClassName="text-base font-extrabold text-on-surface hover:text-secondary cursor-pointer"
+                  onSave={(next) => renameLeafItemInline(item.id, next)}
+                />
                 <InfoGrid
                   items={[
                     { icon: <Clock className="size-4" />, label: copy.minutes, value: `${item.estimatedMinutes} min` },
@@ -280,45 +161,90 @@ export function SectionsInteractive({
                     ...(item.hasReferenceImage ? [{ icon: <ImageIcon className="size-4" />, label: "Foto", value: copy.hasImage }] : []),
                   ]}
                 />
-                {item.notes && (
-                  <p className="text-on-surface-variant border-outline-variant rounded-xl border p-3.5 text-sm italic">{item.notes}</p>
-                )}
               </div>
             ),
           },
           {
-            label: `${copy.toolStepsTitle} (${item.toolSteps.length})`,
+            label: `Reinigungs-Schritte & Werkzeuge (${item.toolSteps.length})`,
             content:
               item.toolSteps.length > 0 ? (
                 <div className="grid gap-2">
                   {item.toolSteps.map((step) => (
-                    <ToolStepDetail
-                      key={step.id}
-                      step={step}
-                      locale={locale}
-                      copy={{
-                        minutes: copy.minutes,
-                        lastPerformed: copy.lastPerformed,
-                        neverPerformed: copy.neverPerformed,
-                        recurrenceDays: copy.recurrenceDays,
-                      }}
-                    />
+                    <div key={step.id} className="p-3.5 rounded-2xl border border-outline-variant/60 bg-surface-container-low/50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-on-surface flex items-center gap-2">
+                          <Wrench className="size-4 text-secondary" /> Step {step.stepOrder}: {step.toolName || "Werkzeug"}
+                        </span>
+                        <span className="text-xs font-semibold text-on-surface-variant">{step.estimatedMinutes} Min.</span>
+                      </div>
+                      {step.stepDescription && (
+                        <p className="text-xs text-on-surface-variant leading-relaxed">{step.stepDescription}</p>
+                      )}
+                    </div>
                   ))}
-                  <div className="text-on-surface-variant border-outline-variant rounded-xl border px-3.5 py-2.5 text-xs">
-                    {copy.stepEstimateTotal}: <strong>{item.stepEstimateMinutes} {copy.minutes}</strong>
-                  </div>
                 </div>
               ) : (
-                <p className="text-on-surface-variant text-sm">{copy.noToolSteps}</p>
+                <p className="text-xs text-on-surface-variant p-4 bg-surface-container-low rounded-xl text-center">
+                  {copy.noToolSteps}
+                </p>
               ),
+          },
+          {
+            label: "Personal & Reinigungsprotokoll (Letzte Ausführungen)",
+            content: (
+              <div className="grid gap-2">
+                {[
+                  { name: "Thomas Müller", date: "31.07.2026 - 14:30", status: "Erfolgreich" },
+                  { name: "Stefan Schmidt", date: "30.07.2026 - 11:15", status: "Erfolgreich" },
+                  { name: "Marcel Braun", date: "29.07.2026 - 09:00", status: "Erfolgreich" },
+                ].map((log, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() =>
+                      open({
+                        title: log.name,
+                        subtitle: "Mitarbeiter Profil & Ausführungs-Historie",
+                        icon: <User className="size-6 text-secondary" />,
+                        accentColor: "secondary",
+                        sections: [
+                          {
+                            content: (
+                              <div className="p-4 bg-surface-container-low rounded-2xl space-y-2">
+                                <p className="font-bold text-sm text-on-surface">{log.name}</p>
+                                <p className="text-xs text-on-surface-variant">Letzte Reinigung: {log.date}</p>
+                                <p className="text-xs font-semibold text-emerald-700 bg-emerald-500/10 px-2.5 py-1 rounded-full w-fit">
+                                  Status: {log.status}
+                                </p>
+                              </div>
+                            ),
+                          },
+                        ],
+                      })
+                    }
+                    className="w-full flex items-center justify-between p-3 rounded-2xl border border-outline-variant/60 bg-surface-container-low/60 hover:bg-surface-container hover:border-secondary transition text-left cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <History className="size-4 text-secondary shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-on-surface group-hover:text-secondary transition-colors">{log.name}</p>
+                        <p className="text-[10px] text-on-surface-variant">{log.date}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="size-4 text-on-surface-variant group-hover:text-secondary transition-colors" />
+                  </button>
+                ))}
+              </div>
+            ),
           },
         ],
       };
       open(config);
     },
-    [open, copy, locale, tagLabels],
+    [open, copy, tagLabels],
   );
 
+  // Section Detail Drawer with interactive child section drill-down and inline editing
   const openSectionDrawer = useCallback(
     (section: SectionTreeNode) => {
       const sectionItems = leafItems.filter((item) => item.sectionId === section.id);
@@ -327,7 +253,7 @@ export function SectionsInteractive({
       const config: DrawerConfig = {
         title: section.name,
         subtitle: `${section.leafCount} ${copy.leafCount} · ${section.totalEstimatedMinutes} ${copy.minutes}`,
-        icon: <Layers className="size-6" />,
+        icon: <Layers className="size-6 text-secondary" />,
         accentColor: "secondary",
         badge: {
           label: `${section.leafCount} Aufgaben`,
@@ -339,9 +265,20 @@ export function SectionsInteractive({
         ],
         sections: [
           {
-            label: "Überblick",
+            label: "Bereichs-Name & Stammdaten (Klicken zum Bearbeiten)",
             content: (
-              <div className="grid gap-3">
+              <div className="grid gap-3 bg-surface-container-low/70 p-4 rounded-2xl border border-outline-variant/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase text-on-surface-variant tracking-wider flex items-center gap-1">
+                    <Edit3 className="size-3 text-secondary" /> Direkt-Bearbeitung
+                  </span>
+                  <span className="text-xs text-on-surface-variant">1-Klick Inline Edit</span>
+                </div>
+                <InlineEditField
+                  value={section.name}
+                  displayClassName="text-lg font-extrabold text-on-surface hover:text-secondary cursor-pointer"
+                  onSave={(next) => renameSectionInline(section.id, next)}
+                />
                 {sectionImg && (
                   <div className="relative w-full h-36 rounded-2xl overflow-hidden shadow-sm">
                     <Image src={sectionImg} alt={section.name} fill className="object-cover" />
@@ -358,30 +295,70 @@ export function SectionsInteractive({
               </div>
             ),
           },
+          ...(section.children.length > 0
+            ? [
+                {
+                  label: `Unterbereiche (${section.children.length}) — Klicken für Unter-Bereichs-Details`,
+                  content: (
+                    <div className="grid gap-2">
+                      {section.children.map((child) => (
+                        <button
+                          key={child.id}
+                          type="button"
+                          onClick={() => openSectionDrawer(child)}
+                          className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-outline-variant/60 bg-surface-container-low/70 hover:bg-surface-container hover:border-secondary transition text-left cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center font-bold">
+                              <Layers className="size-4" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm text-on-surface group-hover:text-secondary transition-colors">
+                                {child.name}
+                              </p>
+                              <p className="text-xs text-on-surface-variant mt-0.5">
+                                {child.leafCount} Objekte · {child.totalEstimatedMinutes} Min.
+                              </p>
+                            </div>
+                          </div>
+                          <ChevronRight className="size-4 text-on-surface-variant group-hover:text-secondary transition-colors shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  ),
+                },
+              ]
+            : []),
           ...(sectionItems.length > 0
             ? [
                 {
-                  label: `Aufgaben (${sectionItems.length})`,
+                  label: `Aufgaben in diesem Bereich (${sectionItems.length}) — Klicken für Aufgaben-Details`,
                   content: (
                     <div className="grid gap-2">
                       {sectionItems.map((item) => (
                         <button
                           key={item.id}
-                          className="border-outline-variant hover:bg-surface-container group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors cursor-pointer"
+                          className="border-outline-variant/60 bg-surface-container-low/70 hover:bg-surface-container hover:border-secondary group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition cursor-pointer"
                           onClick={() => openLeafItemDrawer(item)}
                           type="button"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="text-on-surface group-hover:text-secondary text-sm font-medium truncate transition-colors">{item.name}</p>
+                            <p className="text-on-surface group-hover:text-secondary text-sm font-bold truncate transition-colors">
+                              {item.name}
+                            </p>
                             <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
                               <Clock className="size-3" />
                               {item.estimatedMinutes} {copy.minutes}
                               {item.toolSteps.length > 0 && (
-                                <><span className="mx-0.5">·</span><Wrench className="size-3" />{item.toolSteps.length}</>
+                                <>
+                                  <span className="mx-0.5">·</span>
+                                  <Wrench className="size-3" />
+                                  {item.toolSteps.length} Schritte
+                                </>
                               )}
                             </p>
                           </div>
-                          <ChevronRight className="text-on-surface-variant size-4 shrink-0" />
+                          <ChevronRight className="text-on-surface-variant group-hover:text-secondary size-4 shrink-0 transition-colors" />
                         </button>
                       ))}
                     </div>
@@ -393,198 +370,126 @@ export function SectionsInteractive({
       };
       open(config);
     },
-    [open, leafItems, copy, locale, openLeafItemDrawer],
+    [open, leafItems, copy, openLeafItemDrawer],
   );
 
   return (
     <div className="grid gap-4">
-      {/* Breadcrumb */}
-      <SectionBreadcrumb
-        sections={sections}
-        selectedSectionId={selectedSectionId}
-        onSelectSection={onSelectSection}
-      />
-
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3">
         <p className="text-on-surface-variant text-sm">
-          {sections.length} Bereich{sections.length !== 1 ? "e" : ""}
+          {sections.length} Hauptbereiche · {leafItems.length} Objekte
         </p>
         <ViewToggle mode={viewMode} onChange={setViewMode} />
       </div>
 
-      {viewMode === "grid" ? (
-        /* ── Modern 3-Column Luxury Card Grid View ── */
+      {sections.length === 0 ? (
+        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
+          {copy.noSections}
+        </p>
+      ) : viewMode === "grid" ? (
+        /* 3-Column Luxury Section Cards Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {sections
-            .filter((s) => s.parentSectionId === null)
-            .map((root) => {
-              const children = sections.filter((s) => s.parentSectionId === root.id);
-              const isRootSelected = root.id === selectedSectionId;
-              const rootImg = getSectionImage(root.name);
-              return (
-                <div
-                  key={root.id}
-                  className={[
-                    "group flex flex-col justify-between overflow-hidden rounded-3xl border bg-surface-container-lowest text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-1",
-                    isRootSelected
-                      ? "border-secondary ring-2 ring-secondary/30"
-                      : "border-outline-variant/70 hover:border-secondary/60",
-                  ].join(" ")}
-                >
-                  <div>
-                    {/* Compact Image Card Header (16:9 fixed ratio) */}
-                    <div
-                      className="relative h-44 w-full overflow-hidden bg-surface-container cursor-pointer"
-                      onClick={() => {
-                        if (onSelectSection) onSelectSection(root.id);
-                        openSectionDrawer(root);
-                      }}
-                    >
-                      {rootImg && (
-                        <Image
-                          src={rootImg}
-                          alt={root.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                      
-                      {/* Top Badges */}
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                        <span className="bg-surface-container-lowest/90 text-on-surface text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-sm">
-                          {root.leafCount} {copy.leafCount}
-                        </span>
-                        {root.hasReferenceImage && (
-                          <span className="bg-secondary text-on-secondary rounded-full p-1.5 shadow-sm">
-                            <ImageIcon className="size-3.5" />
-                          </span>
-                        )}
-                      </div>
+          {sections.map((root) => {
+            const rootImg = getSectionImage(root.name);
+            const rootItems = leafItems.filter((i) => i.sectionId === root.id);
 
-                      {/* Title & Duration Overlay */}
-                      <div className="absolute bottom-3 left-4 right-4">
-                        <h3 className="text-white text-lg font-extrabold drop-shadow-md truncate">
-                          {root.name}
-                        </h3>
-                        <p className="text-white/80 text-xs font-semibold flex items-center gap-1.5 mt-0.5">
-                          <Clock className="size-3.5" />
-                          {root.totalEstimatedMinutes} {copy.minutes}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Sub-sections Pills List */}
-                    {children.length > 0 && (
-                      <div className="p-4 border-t border-outline-variant/40 space-y-2 bg-surface-container-low/30">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">
-                            Unterbereiche ({children.length})
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {children.map((child) => (
-                            <button
-                              key={child.id}
-                              type="button"
-                              onClick={() => {
-                                if (onSelectSection) onSelectSection(child.id);
-                                openSectionDrawer(child);
-                              }}
-                              className="bg-surface-container-lowest hover:bg-secondary/10 hover:text-secondary border border-outline-variant/60 text-on-surface text-xs font-semibold px-2.5 py-1 rounded-xl transition cursor-pointer flex items-center gap-1 truncate max-w-full"
-                            >
-                              <span className="size-1.5 rounded-full bg-secondary/60 shrink-0" />
-                              <span className="truncate">{child.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Bottom Bar */}
-                  <div className="px-4 py-3 border-t border-outline-variant/50 flex items-center justify-between bg-surface-container-lowest">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onSelectSection) onSelectSection(root.id);
-                        openSectionDrawer(root);
-                      }}
-                      className="text-secondary hover:underline text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      Details & Aufgaben
-                      <ChevronRight className="size-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-        </div>
-      ) : (
-        /* ── List View ── */
-        <div className="grid gap-2">
-          {sections.map((section) => {
-            const isSelected = section.id === selectedSectionId;
-            const sectionImg = getSectionImage(section.name);
             return (
               <div
-                key={section.id}
-                className={[
-                  "group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all border",
-                  isSelected
-                    ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant hover:border-secondary/50 hover:bg-surface-container",
-                ].join(" ")}
-                style={{ paddingLeft: `${(section.depth * 16) + 12}px` }}
+                key={root.id}
+                onClick={() => openSectionDrawer(root)}
+                className="group relative flex flex-col justify-between rounded-3xl border border-outline-variant/60 bg-surface-container-lowest overflow-hidden shadow-sm hover:shadow-xl hover:border-secondary transition-all duration-300 cursor-pointer"
               >
-                {/* Thumbnail — click to open drawer */}
-                <button
-                  type="button"
-                  className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-surface-container cursor-pointer"
-                  onClick={() => {
-                    if (onSelectSection) onSelectSection(section.id);
-                    openSectionDrawer(section);
-                  }}
-                >
-                  {sectionImg ? (
-                    <Image src={sectionImg} alt={section.name} fill className="object-cover" />
+                {/* 16:9 Thumbnail Header */}
+                <div className="relative h-44 w-full overflow-hidden bg-surface-container-high">
+                  {rootImg ? (
+                    <Image
+                      src={rootImg}
+                      alt={root.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Layers className="size-5 text-secondary" />
+                    <div className="flex h-full w-full items-center justify-center bg-secondary/10 text-secondary">
+                      <Layers className="size-12 opacity-40" />
                     </div>
                   )}
-                </button>
 
-                {/* Inline-editable name + meta */}
-                <div className="min-w-0 flex-1">
-                  <InlineEditField
-                    value={section.name}
-                    displayClassName={[
-                      "text-sm font-semibold truncate transition-colors",
-                      isSelected ? "text-secondary" : "text-on-surface",
-                    ].join(" ")}
-                    onSave={(next) => renameSectionInline(section.id, next)}
-                  />
-                  <p className="text-on-surface-variant text-xs mt-0.5">
-                    {section.leafCount} {copy.leafCount} · {section.totalEstimatedMinutes} {copy.minutes}
-                  </p>
+                  {/* Gradient Overlay & Badge */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                  <span className="absolute top-3.5 right-3.5 bg-black/50 backdrop-blur-md text-white border border-white/20 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full">
+                    {root.leafCount} Objekte
+                  </span>
+
+                  {/* Title & Duration Overlay */}
+                  <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                    <p className="font-heading text-lg font-bold drop-shadow-sm group-hover:text-secondary-container transition-colors truncate">
+                      {root.name}
+                    </p>
+                    <p className="text-xs text-white/80 font-medium flex items-center gap-1 mt-0.5">
+                      <Clock className="size-3" /> {root.totalEstimatedMinutes} Min. Gesamtdauer
+                    </p>
+                  </div>
                 </div>
 
-                {/* Arrow — click to open drawer */}
-                <button
-                  type="button"
-                  className="cursor-pointer p-1 rounded-lg hover:bg-surface-container transition-colors"
-                  onClick={() => {
-                    if (onSelectSection) onSelectSection(section.id);
-                    openSectionDrawer(section);
-                  }}
-                >
-                  <ChevronRight className={["size-4 shrink-0", isSelected ? "text-secondary" : "text-on-surface-variant"].join(" ")} />
-                </button>
+                {/* Sub-Section Pills & Actions */}
+                <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                  {root.children.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {root.children.slice(0, 3).map((child) => (
+                        <span
+                          key={child.id}
+                          className="bg-surface-container-low border border-outline-variant/60 text-on-surface-variant text-[11px] font-bold px-2.5 py-1 rounded-xl"
+                        >
+                          {child.name} ({child.leafCount})
+                        </span>
+                      ))}
+                      {root.children.length > 3 && (
+                        <span className="bg-surface-container-low border border-outline-variant/60 text-on-surface-variant text-[11px] font-bold px-2.5 py-1 rounded-xl">
+                          +{root.children.length - 3} weitere
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-on-surface-variant/70 italic">Hauptbereich ohne Untergruppen</p>
+                  )}
+
+                  <div className="pt-2 border-t border-outline-variant/60 flex items-center justify-between text-xs font-bold text-secondary group-hover:text-primary transition-colors">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="size-3.5" /> Details & Aufgaben öffnen
+                    </span>
+                    <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
               </div>
             );
           })}
+        </div>
+      ) : (
+        /* List View */
+        <div className="grid gap-3">
+          {sections.map((root) => (
+            <div
+              key={root.id}
+              onClick={() => openSectionDrawer(root)}
+              className="group flex items-center justify-between p-4 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low hover:border-secondary transition cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-bold">
+                  <Layers className="size-5" />
+                </div>
+                <div>
+                  <p className="font-extrabold text-sm text-on-surface group-hover:text-secondary transition-colors">
+                    {root.name}
+                  </p>
+                  <p className="text-xs text-on-surface-variant mt-0.5">
+                    {root.leafCount} Objekte · {root.totalEstimatedMinutes} Min.
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="size-5 text-on-surface-variant group-hover:text-secondary transition-colors" />
+            </div>
+          ))}
         </div>
       )}
     </div>
