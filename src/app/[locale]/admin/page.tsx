@@ -33,6 +33,7 @@ import {
   DeleteScheduleForm,
   ScheduleForm,
 } from "@/features/admin/schedule/ScheduleForms";
+import { MonthSelector } from "@/features/admin/schedule/MonthSelector";
 import { getScheduleData } from "@/features/admin/schedule/queries";
 import {
   DeleteToolStepForm,
@@ -548,15 +549,8 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
         </div>
       </div>
 
-      {/* Month selector */}
-      <form className="flex items-end gap-3" action={`/${locale}/admin`}>
-        <input type="hidden" name="tab" value="schedule" />
-        <div className="grid gap-2">
-          <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="schedule-month">{t(messages, "schedule.month")}</label>
-          <input className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition" defaultValue={safeM} id="schedule-month" name="month" type="month" />
-        </div>
-        <Button type="submit">{t(messages, "schedule.actions.selectMonth")}</Button>
-      </form>
+      {/* Smart Instant Month Selector */}
+      <MonthSelector currentMonth={safeM} locale={locale} />
 
       {!data.ok && (
         <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">{t(messages, "schedule.feedback.loadError")}</p>
