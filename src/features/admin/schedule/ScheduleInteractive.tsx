@@ -149,7 +149,26 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
               <div className="py-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedCalendarEmployee({ id: item.employeeId, name: item.employeeName })}
+                  onClick={() =>
+                    open({
+                      title: item.employeeName,
+                      subtitle: "Mitarbeiter Verfügbarkeit & Schichten",
+                      icon: <CalendarDays className="size-6 text-secondary" />,
+                      accentColor: "secondary",
+                      sections: [
+                        {
+                          content: (
+                            <EmployeeAvailabilityCalendar
+                              employeeId={item.employeeId}
+                              employeeName={item.employeeName}
+                              clients={clientsList}
+                              locale={locale}
+                            />
+                          ),
+                        },
+                      ],
+                    })
+                  }
                   className="w-full bg-secondary text-on-secondary flex items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold shadow-sm transition hover:opacity-90 cursor-pointer"
                 >
                   <CalendarDays className="size-5" />
