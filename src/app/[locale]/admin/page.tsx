@@ -34,6 +34,8 @@ import {
   ScheduleForm,
 } from "@/features/admin/schedule/ScheduleForms";
 import { MonthSelector } from "@/features/admin/schedule/MonthSelector";
+import { ActivityLogInteractive } from "@/features/admin/audit/ActivityLogInteractive";
+import { getAuditLogsData } from "@/features/admin/audit/queries";
 import { getScheduleData } from "@/features/admin/schedule/queries";
 import {
   DeleteToolStepForm,
@@ -705,6 +707,14 @@ async function ReportsTab({
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   AUDIT LOG TAB
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function AuditTab({ locale }: { locale: Locale }) {
+  const data = await getAuditLogsData(locale);
+  return <ActivityLogInteractive logs={data.logs} locale={locale} />;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    PAGE ENTRY
    ═══════════════════════════════════════════════════════════════════════════ */
 export default async function AdminPage({ params, searchParams }: AdminPageProps) {
@@ -725,6 +735,7 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
     sections: t(messages, "navigation.admin.sectionsItems"),
     schedule: t(messages, "navigation.admin.schedule"),
     reports: "التقارير والإحصائيات",
+    audit: "سجل النشاط (Audit)",
   };
 
   return (
@@ -750,6 +761,7 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
             to={firstValue(sp.to)}
           />
         }
+        auditTab={<AuditTab locale={locale} />}
       />
     </Suspense>
   );

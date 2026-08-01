@@ -1,4 +1,4 @@
-import { createClient } from "@/server/db/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Locale } from "@/i18n/routing";
 
 export type AuditLogItem = Readonly<{
@@ -141,7 +141,7 @@ const MOCK_AUDIT_LOGS: AuditLogItem[] = [
 
 export async function getAuditLogsData(locale: Locale): Promise<AuditLogsData> {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServerClient();
     const { data: dbLogs, error } = await supabase
       .from("audit_logs")
       .select("*")

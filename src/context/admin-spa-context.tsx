@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
-export type AdminTab = "home" | "clients" | "staff" | "sections" | "schedule" | "reports";
+export type AdminTab = "home" | "clients" | "staff" | "sections" | "schedule" | "reports" | "audit";
 
 const TAB_MAP: Record<string, AdminTab> = {
   home: "home",
@@ -12,6 +12,7 @@ const TAB_MAP: Record<string, AdminTab> = {
   sections: "sections",
   schedule: "schedule",
   reports: "reports",
+  audit: "audit",
 };
 
 type AdminSpaContextValue = Readonly<{

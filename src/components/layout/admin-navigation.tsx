@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   BarChart3,
   Building2,
   CalendarDays,
@@ -14,6 +15,7 @@ import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 import { cn } from "@/lib/cn";
 
 const adminNavigationIcons = {
+  audit: Activity,
   clients: Building2,
   home: Home,
   reports: BarChart3,
@@ -43,6 +45,7 @@ const tabParamMap: Record<string, AdminTab> = {
   sectionsItems: "sections",
   schedule: "schedule",
   reports: "reports",
+  audit: "audit",
 };
 
 export function AdminNavigation({
