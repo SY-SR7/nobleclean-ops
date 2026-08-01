@@ -29,6 +29,7 @@ import {
   PlansGridContainer,
   LastCleanedGridContainer,
   EscalationsGridContainer,
+  ReportsInteractiveMain,
 } from "@/features/admin/reports/ReportsInteractive";
 import { getReportsData } from "@/features/admin/reports/queries";
 import { ScheduleInteractive } from "@/features/admin/schedule/ScheduleInteractive";
@@ -632,91 +633,24 @@ async function ReportsTab({
   };
 
   return (
-    <div className="grid gap-6">
-      <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
-      {!data.ok && (
-        <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">{copy.loadError}</p>
-      )}
-      {data.clients.length === 0 && (
-        <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyClients}</p>
-      )}
-      {data.selectedClientId ? (
-        <>
-          {/* Filters */}
-          <form className="grid gap-3 rounded sm:grid-cols-[minmax(14rem,20rem)_repeat(2,12rem)_auto] sm:items-end" action={`/${locale}/admin`}>
-            <input type="hidden" name="tab" value="reports" />
-            <div className="grid gap-2">
-              <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="reports-client">{copy.clientLabel}</label>
-              <select className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition" defaultValue={data.selectedClientId} id="reports-client" name="clientId">
-                {data.clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.isActive ? c.name : `${c.name} (${copy.inactive})`}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid gap-2">
-              <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="reports-from">{copy.dateFrom}</label>
-              <input className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition" defaultValue={from} id="reports-from" name="from" type="date" />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-on-surface-variant text-xs font-bold uppercase tracking-wide" htmlFor="reports-to">{copy.dateTo}</label>
-              <input className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 rounded border px-3 text-sm outline-none transition" defaultValue={to} id="reports-to" name="to" type="date" />
-            </div>
-            <Button type="submit">{copy.filter}</Button>
-          </form>
-
-          {/* Metrics */}
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <MetricCard label={copy.totalPlans} value={data.totalPlans} />
-            <MetricCard label={copy.completePlans} statusTone="success" value={data.totalCompletePlans} />
-            <MetricCard label={copy.incompletePlans} statusTone={data.totalIncompletePlans > 0 ? "warning" : "recent"} value={data.totalIncompletePlans} />
-            <MetricCard label={copy.mandatoryStepEscalations} statusTone={data.mandatoryStepEscalations.length > 0 ? "critical" : "recent"} value={data.mandatoryStepEscalations.length} />
-            <MetricCard label={copy.completionRate} metadata="%" statusTone={data.completionRate === 100 ? "success" : "warning"} value={data.completionRate} />
-          </div>
-
-          {/* Three sections — each with its own Grid/List toggle */}
-          <div className="grid gap-8">
-            <section className="grid gap-3">
-              <h2 className="font-heading text-primary-container text-xl font-bold">{copy.mandatoryStepEscalations}</h2>
-              {data.mandatoryStepEscalations.length > 0 ? (
-                <EscalationsGridContainer
-                  items={data.mandatoryStepEscalations}
-                  locale={locale}
-                  copy={{ lastPerformed: copy.lastPerformed, neverPerformed: copy.neverPerformed, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, mandatory: copy.mandatory }}
-                />
-              ) : (
-                <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyMandatoryStepEscalations}</p>
-              )}
-            </section>
-
-            <section className="grid gap-3">
-              <h2 className="font-heading text-primary-container text-xl font-bold">{copy.incompletePlans}</h2>
-              {data.incompletePlans.length > 0 ? (
-                <PlansGridContainer
-                  plans={data.incompletePlans}
-                  locale={locale}
-                  copy={{ employee: copy.employee, workDate: copy.workDate, statusInProgress: copy.statusInProgress, statusSubmitted: copy.statusSubmitted, items: copy.items }}
-                />
-              ) : (
-                <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyIncomplete}</p>
-              )}
-            </section>
-
-            <section className="grid gap-3">
-              <h2 className="font-heading text-primary-container text-xl font-bold">{copy.lastCleaned}</h2>
-              {data.lastCleanedItems.length > 0 ? (
-                <LastCleanedGridContainer
-                  items={data.lastCleanedItems}
-                  locale={locale}
-                  copy={{ lastCleaned: copy.lastCleaned, neverCleaned: copy.neverCleaned, minutes: copy.minutes, recurrenceDays: copy.recurrenceDays, section: copy.section }}
-                />
-              ) : (
-                <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded border px-4 py-6 text-sm">{copy.emptyLastCleaned}</p>
-              )}
-            </section>
-          </div>
-        </>
-      ) : null}
-    </div>
+    <ReportsInteractiveMain
+      plans={[...data.completePlans, ...data.incompletePlans]}
+      lastCleanedItems={data.lastCleanedItems}
+      escalations={data.mandatoryStepEscalations}
+      locale={locale}
+      copy={{
+        employee: copy.employee,
+        workDate: copy.workDate,
+        statusInProgress: copy.statusInProgress,
+        statusSubmitted: copy.statusSubmitted,
+        items: copy.items,
+        lastCleaned: copy.lastCleaned,
+        neverCleaned: copy.neverCleaned,
+        minutes: copy.minutes,
+        recurrenceDays: copy.recurrenceDays,
+        section: copy.section,
+      }}
+    />
   );
 }
 
@@ -740,7 +674,7 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
     staff: t(messages, "navigation.admin.staff"),
     sections: t(messages, "navigation.admin.sectionsItems"),
     schedule: t(messages, "navigation.admin.schedule"),
-    reports: t(messages, "navigation.admin.reports"),
+    reports: "التقارير والإحصائيات",
   };
 
   return (
