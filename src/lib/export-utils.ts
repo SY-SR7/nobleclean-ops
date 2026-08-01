@@ -238,7 +238,7 @@ export function exportSchedulePDF(
             <span>📅 WOCHE ${weekIdx + 1} (${weekRangeStr})</span>
             <span style="font-weight: 800; color: #166534;">Gesamt: ${weekTotalHours} Std.</span>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(${weekDates.length}, 1fr); gap: 3px;">
+          <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;">
             ${daysCardsHtml}
           </div>
         </div>
