@@ -42,20 +42,20 @@ export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
   const nextMonth = getAdjacentMonth(currentMonth, 1);
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-3xl bg-surface-container-low/60 border border-outline-variant/60">
+    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low/60 border border-outline-variant/60">
       {/* Month Navigator Control */}
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => handleSelectMonth(prevMonth)}
-          className="size-10 rounded-2xl bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-secondary hover:text-white transition flex items-center justify-center cursor-pointer shadow-sm"
+          className="size-10 rounded-xl bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-secondary hover:text-white transition flex items-center justify-center cursor-pointer shadow-sm"
           title={`Vorheriger Monat (${formatMonthLabel(prevMonth, locale)})`}
         >
           <ChevronLeft className="size-5" />
         </button>
 
         {/* Current Month Active Badge */}
-        <div className="px-5 py-2 rounded-2xl bg-secondary text-on-secondary font-extrabold text-sm shadow-md flex items-center gap-2 min-w-44 justify-center">
+        <div className="px-5 py-2 rounded-xl bg-secondary text-on-secondary font-extrabold text-sm shadow-sm flex items-center gap-2 min-w-44 justify-center">
           <CalendarDays className="size-4" />
           <span>{formatMonthLabel(currentMonth, locale)}</span>
         </div>
@@ -63,55 +63,30 @@ export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
         <button
           type="button"
           onClick={() => handleSelectMonth(nextMonth)}
-          className="size-10 rounded-2xl bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-secondary hover:text-white transition flex items-center justify-center cursor-pointer shadow-sm"
+          className="size-10 rounded-xl bg-surface-container-lowest border border-outline-variant/60 text-on-surface hover:bg-secondary hover:text-white transition flex items-center justify-center cursor-pointer shadow-sm"
           title={`Nächster Monat (${formatMonthLabel(nextMonth, locale)})`}
         >
           <ChevronRight className="size-5" />
         </button>
 
         {/* Hidden DatePicker with Auto-Submit on Change */}
-        <div className="relative ml-2">
+        <div className="relative ml-1">
           <input
             type="month"
             value={currentMonth}
             onChange={(e) => {
               if (e.target.value) handleSelectMonth(e.target.value);
             }}
-            className="w-10 h-10 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest text-transparent cursor-pointer focus:outline-none text-xs"
+            className="w-10 h-10 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-transparent cursor-pointer focus:outline-none text-xs"
             title="Datum-Auswahl öffnen"
           />
           <CalendarDays className="size-4 text-on-surface-variant absolute top-3 left-3 pointer-events-none" />
         </div>
       </div>
 
-      {/* Quick Month Preset Chips */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider mr-1">
-          Schnellauswahl:
-        </span>
-        <button
-          type="button"
-          onClick={() => handleSelectMonth("2026-07")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer border ${
-            currentMonth === "2026-07"
-              ? "bg-secondary text-on-secondary border-secondary shadow-sm"
-              : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/60 hover:border-secondary"
-          }`}
-        >
-          Juli 2026
-        </button>
-        <button
-          type="button"
-          onClick={() => handleSelectMonth("2026-08")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer border ${
-            currentMonth === "2026-08"
-              ? "bg-secondary text-on-secondary border-secondary shadow-sm"
-              : "bg-surface-container-lowest text-on-surface-variant border-outline-variant/60 hover:border-secondary"
-          }`}
-        >
-          August 2026
-        </button>
-      </div>
+      <span className="text-xs font-bold text-on-surface-variant hidden sm:inline-block">
+        Automatische Monats-Aktualisierung
+      </span>
     </div>
   );
 }
