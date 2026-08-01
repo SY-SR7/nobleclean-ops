@@ -161,6 +161,18 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
 
   const isOpen = stack.length > 0;
 
+  // Prevent background page scroll when any modal is open
+  useEffect(() => {
+    if (stack.length > 0) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [stack.length]);
+
   return (
     <DrawerContext.Provider value={{ open, close, closeAll, isOpen, stackLength: stack.length }}>
       {children}
@@ -192,8 +204,9 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
             style={{ zIndex }}
             className={cn(
               "fixed inset-0 flex items-center justify-center p-3 sm:p-6 transition-all duration-200",
-              "bg-black/65 backdrop-blur-md animate-in fade-in duration-200",
+              "bg-black/65 backdrop-blur-md animate-in fade-in duration-200 overscroll-contain",
             )}
+            onWheel={(e) => e.stopPropagation()}
             onClick={(e) => {
               // Click outside/backdrop closes ALL modals directly to section page
               if (e.target === e.currentTarget && isTop) closeAll();
@@ -278,8 +291,8 @@ export function DetailDrawerProvider({ children }: { children: ReactNode }) {
               {/* Interactive KPI Strip */}
               {config.kpis && <KpiStrip items={config.kpis} />}
 
-              {/* Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Scrollable Body with overscroll containment */}
+              <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-6">
                 {config.sections.map((section, idx) => (
                   <div key={idx} className="grid gap-3">
                     {section.label && (
