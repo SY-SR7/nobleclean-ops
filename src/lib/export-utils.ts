@@ -116,7 +116,7 @@ export type ScheduleExportItem = Readonly<{
 /**
  * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
  * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Ultra-tight vertical height and narrower column width.
+ * Matches exact PDF layout of August 2026 schedule with 1:1 fidelity.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -159,43 +159,38 @@ export function exportSchedulePDF(
     .map((dateStr) => {
       const rawShifts = map.get(dateStr)!;
 
-      // Count occurrences of each employee on this date
+      // Count occurrences of each employee on this date to detect double-shift days
       const counts = new Map<string, number>();
       rawShifts.forEach((s) => {
         counts.set(s.employeeName, (counts.get(s.employeeName) || 0) + 1);
       });
 
-      // Process unique employees on this date with their shift times
-      const employees: { name: string; start: string; end: string }[] = [];
-      const seenNames = new Set<string>();
+      const hasDoubleShift = Array.from(counts.values()).some((c) => c >= 2);
+      const isSaturday = new Date(dateStr).getDay() === 6;
 
-      rawShifts.forEach((s) => {
-        if (!seenNames.has(s.employeeName)) {
-          seenNames.add(s.employeeName);
-          const isDouble = (counts.get(s.employeeName) || 0) >= 2;
-          const isSaturday = new Date(dateStr).getDay() === 6;
+      // Employees list preserving duplicate entries for double-shift days (e.g. Eghbal, Eghbal, Shaikh)
+      const employeeNames = rawShifts.map((s) => s.employeeName);
 
-          let start = "04:00";
-          let end = "07:00";
+      let startTimes: string[] = [];
+      let endTimes: string[] = [];
 
-          if (isSaturday) {
-            start = "05:30";
-            end = "08:30";
-          } else if (isDouble) {
-            start = "01:00";
-            end = "07:00";
-          }
-
-          employees.push({ name: s.employeeName, start, end });
-        }
-      });
+      if (isSaturday) {
+        startTimes = ["05:30"];
+        endTimes = ["08:30"];
+      } else if (hasDoubleShift) {
+        startTimes = ["01:00", "04:00"];
+        endTimes = ["07:00"];
+      } else {
+        startTimes = ["04:00"];
+        endTimes = ["07:00"];
+      }
 
       const dateFormatted = formatDateDDMMYYYY(dateStr);
       const wochentag = getGermanWochentag(dateStr);
 
-      const namesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.name}</div>`).join("");
-      const startTimesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.start}</div>`).join("");
-      const endTimesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.end}</div>`).join("");
+      const namesHtml = employeeNames.map((n) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${n}</div>`).join("");
+      const startTimesHtml = startTimes.map((t) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${t}</div>`).join("");
+      const endTimesHtml = endTimes.map((t) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${t}</div>`).join("");
 
       return `
         <tr>
