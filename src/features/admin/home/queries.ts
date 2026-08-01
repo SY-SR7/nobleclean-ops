@@ -117,7 +117,7 @@ const ClientRowSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   address: z.string().nullable(),
-  contact_info: z.record(z.unknown()).nullable(),
+  contact_info: z.record(z.string(), z.unknown()).nullable(),
   is_active: z.boolean(),
 });
 
