@@ -666,8 +666,14 @@ export function ReportsInteractiveMain({
       p.completedItems, p.totalItems, `${p.totalItems > 0 ? Math.round((p.completedItems / p.totalItems) * 100) : 0}%`,
     ]);
     const hdr = [c.csvEmployee, c.csvDate, c.csvStatus, c.csvDone, c.csvTotal, c.csvProgress];
-    exportToPDF(`Leistungs- & Qualitätsbericht (${period.label})`, "Detaillierte Übersicht aller Tagespläne und Fortschritte", hdr, rows, `nobleclean_berichte_${period.label.replace(/\s/g, "_")}.pdf`);
-  }, [filteredPlans, period.label, c]);
+    const kpiCards = [
+      { label: "Gesamt Pläne", value: totalPlans },
+      { label: "Erledigte Pläne", value: completedPlansCount },
+      { label: "Ausführungsrate", value: `${completionRate}%`, sub: completionRate >= 90 ? "Exzellent" : "Gut" },
+      { label: "Eskalationen", value: escalations.length },
+    ];
+    exportToPDF(`Leistungs- & Qualitätsbericht (${period.label})`, "Detaillierte Übersicht aller Tagespläne und Fortschritte", hdr, rows, `nobleclean_berichte_${period.label.replace(/\s/g, "_")}.pdf`, kpiCards);
+  }, [filteredPlans, period.label, totalPlans, completedPlansCount, completionRate, escalations.length, c]);
 
   const subTabs: { id: ActiveSubTab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: c.tabOverview, icon: BarChart3 },

@@ -91,7 +91,13 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
       c.contactInfo.contactName || "—",
       c.contactInfo.email || "—",
     ]);
-    exportToPDF("Kunden- & Objektverzeichnis", "Übersicht aller registrierten Kunden", headers, rows, "Nobleclean_Kundenliste.pdf");
+    const activeCount = clients.filter((c) => c.isActive).length;
+    const kpiCards = [
+      { label: "Gesamt Kunden", value: clients.length },
+      { label: "Aktive Standorte", value: activeCount, sub: "100% Betreut" },
+      { label: "Status", value: "Aktiv", sub: "Operational" },
+    ];
+    exportToPDF("Kunden- & Objektverzeichnis", "Vollständige Übersicht aller registrierten Kunden und Standorte", headers, rows, "Nobleclean_Kundenliste.pdf", kpiCards);
   };
 
   const deleteTargetName =

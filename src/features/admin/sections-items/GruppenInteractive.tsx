@@ -507,14 +507,23 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
     const headers = ["Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer"];
     const rows: (string | number)[][] = [];
 
+    let totalMins = 0;
     activePlan.groups.forEach((g) => {
       const groupItems = leafItems.filter((i) => g.assignedItemIds.includes(i.id));
       groupItems.forEach((item) => {
+        totalMins += item.estimatedMinutes;
         rows.push([g.name, item.name, `${item.estimatedMinutes} Min.`]);
       });
     });
 
-    exportToPDF(`Arbeitsplan: ${activePlan.name}`, activePlan.description, headers, rows, `Nobleclean_Plan_${activePlan.name}.pdf`);
+    const kpiCards = [
+      { label: "Plan Name", value: activePlan.name },
+      { label: "Gruppen Anzahl", value: `${activePlan.groups.length} Gruppen` },
+      { label: "Gesamte Aufgaben", value: rows.length },
+      { label: "Gesamtdauer", value: `${totalMins} Min.`, sub: `ca. ${(totalMins / 60).toFixed(1)} Std.` },
+    ];
+
+    exportToPDF(`Arbeitsplan: ${activePlan.name}`, activePlan.description, headers, rows, `Nobleclean_Plan_${activePlan.name}.pdf`, kpiCards);
   };
 
   return (

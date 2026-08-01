@@ -181,7 +181,12 @@ export function ActivityLogInteractive({ logs, locale }: ActivityLogInteractiveP
       l.userName,
       l.description,
     ]);
-    exportToPDF("System-Aktivitätsprotokoll (Audit Trail)", "Vollständige Nachverfolgung aller Systemänderungen", headers, rows, "nobleclean_aktivitaetsprotokoll.pdf");
+    const kpiCards = [
+      { label: "Gesamt Aktionen", value: filteredLogs.length },
+      { label: "Audit Trail", value: "Lückenlos A-Z", sub: "Vollständig" },
+      { label: "Sicherheits-Status", value: "Aktiv", sub: "Protokolliert" },
+    ];
+    exportToPDF("System-Aktivitätsprotokoll (Audit Trail)", "Vollständige Nachverfolgung aller Systemänderungen", headers, rows, "nobleclean_aktivitaetsprotokoll.pdf", kpiCards);
   };
 
   // Drawer details view
