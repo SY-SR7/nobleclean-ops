@@ -355,7 +355,7 @@ export function EmployeeAvailabilityCalendar({
         </div>
       ) : (
         /* Clean List View */
-        <div className="border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm divide-y divide-outline-variant/60">
+        <div className="border-outline-variant bg-surface-container-lowest max-h-[60vh] overflow-y-auto rounded-3xl border p-4 sm:p-6 shadow-sm divide-y divide-outline-variant/60">
           {filteredListDays.map((day) => (
             <div key={day.dateStr} className="flex items-center justify-between py-3.5 hover:bg-surface-container-low/40 px-3 rounded-2xl transition">
               <div className="flex items-center gap-3">

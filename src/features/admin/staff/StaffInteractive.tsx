@@ -397,9 +397,9 @@ export function StaffInteractive({
 
       {/* Full Availability & Shift Calendar Modal */}
       {selectedCalendarEmployee && (
-        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-md duration-200">
-          <div className="bg-surface-container-lowest border-outline-variant my-8 w-full max-w-5xl space-y-4 rounded-3xl border p-6 shadow-2xl">
-            <div className="border-outline-variant/60 flex items-center justify-between border-b pb-4">
+        <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-6 backdrop-blur-md duration-200">
+          <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[90vh] w-full max-w-5xl rounded-3xl border shadow-2xl overflow-hidden">
+            <div className="border-outline-variant/60 flex items-center justify-between border-b px-6 py-4 shrink-0 bg-surface-container-low/50">
               <div className="flex items-center gap-2">
                 <Sparkles className="text-secondary size-5" />
                 <h2 className="font-heading text-primary-container text-xl font-bold">
@@ -409,18 +409,20 @@ export function StaffInteractive({
               <button
                 type="button"
                 onClick={() => setSelectedCalendarEmployee(null)}
-                className="bg-surface-container-low hover:bg-surface-container text-on-surface cursor-pointer rounded-full p-2 text-sm font-bold transition"
+                className="bg-surface-container-low hover:bg-surface-container text-on-surface cursor-pointer rounded-full h-9 w-9 flex items-center justify-center text-sm font-bold transition border border-outline-variant/60 shadow-sm"
               >
                 ✕
               </button>
             </div>
 
-            <EmployeeAvailabilityCalendar
-              employeeId={selectedCalendarEmployee.id}
-              employeeName={selectedCalendarEmployee.name}
-              clients={clients}
-              locale={locale}
-            />
+            <div className="flex-1 overflow-y-auto p-6">
+              <EmployeeAvailabilityCalendar
+                employeeId={selectedCalendarEmployee.id}
+                employeeName={selectedCalendarEmployee.name}
+                clients={clients}
+                locale={locale}
+              />
+            </div>
           </div>
         </div>
       )}
