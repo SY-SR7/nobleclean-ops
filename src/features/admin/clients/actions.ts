@@ -197,3 +197,55 @@ export async function setClientActiveAction(
   revalidatePath(`/${dto.locale}/admin`);
   return { code: "STATUS_UPDATED", status: "success" };
 }
+
+export async function purgeSportCityClientAction(locale: "de" | "en" = "de"): Promise<ClientActionState> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: clients } = await supabase
+      .from("clients")
+      .select("id, name")
+      .ilike("name", "%SportCity%");
+
+    if (!clients || clients.length === 0) {
+      return { code: "NOT_FOUND", status: "success" };
+    }
+
+    for (const client of clients) {
+      const { data: sections } = await supabase
+        .from("sections")
+        .select("id")
+        .eq("client_id", client.id);
+
+      const sectionIds = (sections || []).map((s) => s.id);
+
+      if (sectionIds.length > 0) {
+        const { data: leafItems } = await supabase
+          .from("leaf_items")
+          .select("id")
+          .in("section_id", sectionIds);
+
+        const leafItemIds = (leafItems || []).map((l) => l.id);
+
+        if (leafItemIds.length > 0) {
+          await supabase.from("cleaning_tool_steps").delete().in("leaf_item_id", leafItemIds);
+          await supabase.from("leaf_item_last_cleaned").delete().in("leaf_item_id", leafItemIds);
+          await supabase.from("daily_plan_items").delete().in("leaf_item_id", leafItemIds);
+          await supabase.from("leaf_items").delete().in("section_id", sectionIds);
+        }
+
+        await supabase.from("sections").delete().eq("client_id", client.id);
+      }
+
+      await supabase.from("work_schedule").delete().eq("client_id", client.id);
+      await supabase.from("employee_client_assignments").delete().eq("client_id", client.id);
+      await supabase.from("daily_plans").delete().eq("client_id", client.id);
+      await supabase.from("clients").delete().eq("id", client.id);
+    }
+
+    revalidatePath(`/${locale}/admin/clients`);
+    revalidatePath(`/${locale}/admin`);
+    return { code: "CLIENT_PURGED", status: "success" };
+  } catch {
+    return { code: "PURGE_FAILED", status: "error" };
+  }
+}
