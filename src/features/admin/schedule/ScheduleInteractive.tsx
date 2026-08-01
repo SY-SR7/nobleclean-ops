@@ -199,6 +199,32 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
     deleteScheduleAction(initialState, fd).catch(() => {});
   };
 
+  const handleExportScheduleExcel = () => {
+    const headers = ["Datum", "Mitarbeiter Name", "Objekt / Kunde", "Schicht-Startzeit", "Schicht-Endzeit", "Stundenanzahl"];
+    const rows = schedulesList.map((s) => [
+      s.workDate,
+      s.employeeName,
+      s.clientName,
+      s.startTime || "04:00",
+      s.endTime || "07:00",
+      `${s.allocatedHours} Std.`,
+    ]);
+    exportToCSV(`Nobleclean_Schichtplan_${selectedMonth}.csv`, headers, rows);
+    toast(`Schichtplan für ${selectedMonth} als Excel (CSV) exportiert!`, "success");
+  };
+
+  const handleExportSchedulePDF = () => {
+    const headers = ["Datum", "Mitarbeiter Name", "Objekt / Kunde", "Uhrzeit", "Stunden"];
+    const rows = schedulesList.map((s) => [
+      s.workDate,
+      s.employeeName,
+      s.clientName,
+      `${s.startTime || "04:00"} - ${s.endTime || "07:00"}`,
+      `${s.allocatedHours} Std.`,
+    ]);
+    exportToPDF(`Monats-Schichtplan (${selectedMonth})`, `Vollständige Schichtübersicht aller Mitarbeiter`, headers, rows, `Nobleclean_Schichtplan_${selectedMonth}.pdf`);
+  };
+
   const dayModalSchedules = useMemo(() => {
     if (!selectedDayModal) return [];
     return schedulesList.filter((s) => s.workDate === selectedDayModal.dateStr);
@@ -206,44 +232,65 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
 
   return (
     <div className="grid gap-6">
-      {/* Client Filter Bar & View Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-outline-variant/60 pb-4">
-        {/* Client Filter Chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-on-surface-variant text-xs font-bold flex items-center gap-1 mr-1">
-            <Filter className="size-3.5 text-secondary" /> Kunde:
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedClientId("all")}
-            className={[
-              "rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer",
-              selectedClientId === "all"
-                ? "bg-secondary text-on-secondary shadow-sm"
-                : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/60",
-            ].join(" ")}
-          >
-            Alle Kunden ({schedulesList.length})
-          </button>
-          {clientsList.map((client) => {
-            const count = schedulesList.filter((s) => s.clientId === client.id).length;
-            return (
-              <button
-                key={client.id}
-                type="button"
-                onClick={() => setSelectedClientId(client.id)}
-                className={[
-                  "rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer flex items-center gap-1.5",
-                  selectedClientId === client.id
-                    ? "bg-secondary text-on-secondary shadow-sm"
-                    : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/60",
-                ].join(" ")}
-              >
-                <Building2 className="size-3.5" />
-                {client.name} ({count})
-              </button>
-            );
-          })}
+      {/* TOOLBAR & CLIENT FILTER BAR */}
+      <div className="flex flex-col gap-3 bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/60 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-on-surface-variant text-xs font-bold flex items-center gap-1 mr-1">
+              <Filter className="size-3.5 text-secondary" /> Kunde:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedClientId("all")}
+              className={[
+                "rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer",
+                selectedClientId === "all"
+                  ? "bg-secondary text-on-secondary shadow-sm"
+                  : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/60",
+              ].join(" ")}
+            >
+              Alle Kunden ({schedulesList.length})
+            </button>
+            {clientsList.map((client) => {
+              const count = schedulesList.filter((s) => s.clientId === client.id).length;
+              return (
+                <button
+                  key={client.id}
+                  type="button"
+                  onClick={() => setSelectedClientId(client.id)}
+                  className={[
+                    "rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer flex items-center gap-1.5",
+                    selectedClientId === client.id
+                      ? "bg-secondary text-on-secondary shadow-sm"
+                      : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/60",
+                  ].join(" ")}
+                >
+                  <Building2 className="size-3.5" />
+                  {client.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Excel & PDF Exports */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleExportScheduleExcel}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              title="Schichtplan als Excel (CSV) exportieren"
+            >
+              <FileSpreadsheet className="size-3.5 text-emerald-600" /> Excel (.csv)
+            </button>
+            <button
+              type="button"
+              onClick={handleExportSchedulePDF}
+              className="px-3.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-800 border border-blue-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+              title="Schichtplan als PDF Bericht drucken"
+            >
+              <Printer className="size-3.5 text-blue-600" /> PDF Drucken
+            </button>
+          </div>
         </div>
 
         <span className="text-xs text-on-surface-variant font-bold">

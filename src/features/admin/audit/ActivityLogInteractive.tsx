@@ -148,33 +148,23 @@ export function ActivityLogInteractive({ logs, locale }: ActivityLogInteractiveP
     });
   }, [logs, selectedActionFilter, searchQuery]);
 
-  // Export CSV Action
-  const handleExportCSV = () => {
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { FileSpreadsheet, Printer } from "lucide-react";
+
+  const handleExportPDF = () => {
     if (filteredLogs.length === 0) {
-      toast("Keine Daten zum Exportieren vorhanden!", "error");
+      toast("Keine Daten zum Drucken vorhanden!", "error");
       return;
     }
-
-    const headers = ["ID", "Datum & Zeit", "Aktion", "Tabelle / Bereich", "Benutzer", "Beschreibung"];
+    const headers = ["Datum & Zeit", "Aktion", "Bereich", "Benutzer", "Beschreibung"];
     const rows = filteredLogs.map((l) => [
-      l.id,
       formatDateLabel(l.createdAt, locale),
       l.action,
       l.tableLabel,
-      l.userEmail,
-      `"${l.description.replace(/"/g, '""')}"`,
+      l.userName,
+      l.description,
     ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `nobleclean_activity_log_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast("Aktivitätsprotokoll als CSV exportiert!", "success");
+    exportToPDF("System-Aktivitätsprotokoll (Audit Trail)", "Vollständige Nachverfolgung aller Systemänderungen", headers, rows, "nobleclean_aktivitaetsprotokoll.pdf");
   };
 
   // Drawer details view

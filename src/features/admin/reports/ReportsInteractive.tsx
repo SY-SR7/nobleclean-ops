@@ -27,7 +27,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useCallback, useActionState, useMemo, useState, useEffect, useRef } from "react";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { Printer } from "lucide-react";
 
 import { useDetailDrawer, type DrawerConfig, InfoGrid } from "@/components/ui/detail-drawer";
 import { Button } from "@/components/ui";
@@ -648,19 +649,23 @@ export function ReportsInteractiveMain({
     return list.slice(0, 4);
   }, [completionRate, escalations.length, byStaff, incompletePlansCount, totalPlans, c]);
 
-  // ── CSV Export ─────────────────────────────────────────────────────────────
+  // ── CSV & PDF Export ───────────────────────────────────────────────────────
   const exportCSV = useCallback(() => {
     const rows = filteredPlans.map(p => [
       p.employeeName, p.workDate, p.isComplete ? c.statusComplete : c.statusInProgress,
       p.completedItems, p.totalItems, `${p.totalItems > 0 ? Math.round((p.completedItems / p.totalItems) * 100) : 0}%`,
     ]);
     const hdr = [c.csvEmployee, c.csvDate, c.csvStatus, c.csvDone, c.csvTotal, c.csvProgress];
-    const csv = [hdr, ...rows].map(r => r.map(col => `"${String(col).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `nobleclean_${period.label.replace(/\s/g, "_")}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    exportToCSV(`nobleclean_${period.label.replace(/\s/g, "_")}.csv`, hdr, rows);
+  }, [filteredPlans, period.label, c]);
+
+  const exportPDF = useCallback(() => {
+    const rows = filteredPlans.map(p => [
+      p.employeeName, p.workDate, p.isComplete ? c.statusComplete : c.statusInProgress,
+      p.completedItems, p.totalItems, `${p.totalItems > 0 ? Math.round((p.completedItems / p.totalItems) * 100) : 0}%`,
+    ]);
+    const hdr = [c.csvEmployee, c.csvDate, c.csvStatus, c.csvDone, c.csvTotal, c.csvProgress];
+    exportToPDF(`Leistungs- & Qualitätsbericht (${period.label})`, "Detaillierte Übersicht aller Tagespläne und Fortschritte", hdr, rows, `nobleclean_berichte_${period.label.replace(/\s/g, "_")}.pdf`);
   }, [filteredPlans, period.label, c]);
 
   const subTabs: { id: ActiveSubTab; label: string; icon: React.ElementType }[] = [
@@ -693,10 +698,16 @@ export function ReportsInteractiveMain({
               <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">{c.filterComplete}</button>
               <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">{c.filterOpen}</button>
             </div>
-            <button type="button" onClick={exportCSV}
-              className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-lowest border border-outline-variant/60 text-on-surface-variant rounded-xl text-xs font-bold hover:bg-surface-container transition cursor-pointer">
-              <Download size={12} /> {c.exportCsv}
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={exportCSV}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition cursor-pointer">
+                <Download size={12} className="text-emerald-600" /> Excel (.csv)
+              </button>
+              <button type="button" onClick={exportPDF}
+                className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-800 rounded-xl text-xs font-bold hover:bg-blue-500/20 transition cursor-pointer">
+                <Printer size={12} className="text-blue-600" /> PDF Bericht
+              </button>
+            </div>
           </div>
         </div>
         <PeriodPicker period={period} onChange={setPeriod} locale={locale} c={c} />
