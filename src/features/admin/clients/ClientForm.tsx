@@ -212,90 +212,144 @@ export function ClientForm({
   }
 
   return (
-    <form action={formAction} className="grid gap-4" noValidate>
+    <form action={formAction} className="space-y-4" noValidate>
       <input name="locale" type="hidden" value={locale} />
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading text-primary-container text-lg font-bold">
-          {copy.createTitle}
-        </h2>
+      
+      <p className="text-xs text-on-surface-variant font-medium -mt-1 mb-3">
+        Erstellen Sie ein neues Objekt mit Ansprechpartner und Standortdaten.
+      </p>
+
+      {/* Field 1: Client Name */}
+      <div>
+        <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+          <Building2 className="size-3.5 text-secondary" /> {copy.nameLabel} *
+        </label>
+        <input
+          type="text"
+          name="name"
+          required
+          maxLength={120}
+          autoComplete="organization"
+          placeholder="z.B. Fitness First Hamburg"
+          className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+        />
+        {fieldError(state, "name", copy) && (
+          <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "name", copy)}</p>
+        )}
       </div>
 
-      <FormInput
-        autoComplete="organization"
-        error={fieldError(state, "name", copy)}
-        id={`${formIdPrefix}-name`}
-        label={copy.nameLabel}
-        maxLength={120}
-        name="name"
-        required
-        type="text"
-      />
-      <FormInput
-        autoComplete="street-address"
-        error={fieldError(state, "address", copy)}
-        id={`${formIdPrefix}-address`}
-        label={copy.addressLabel}
-        maxLength={500}
-        name="address"
-        type="text"
-      />
-      <FormInput
-        autoComplete="name"
-        error={fieldError(state, "contactName", copy)}
-        id={`${formIdPrefix}-contact-name`}
-        label={copy.contactNameLabel}
-        maxLength={160}
-        name="contactName"
-        type="text"
-      />
-      <FormInput
-        autoComplete="email"
-        error={fieldError(state, "contactEmail", copy)}
-        id={`${formIdPrefix}-contact-email`}
-        inputMode="email"
-        label={copy.contactEmailLabel}
-        maxLength={254}
-        name="contactEmail"
-        type="email"
-      />
-      <FormInput
-        autoComplete="tel"
-        error={fieldError(state, "contactPhone", copy)}
-        id={`${formIdPrefix}-contact-phone`}
-        inputMode="tel"
-        label={copy.contactPhoneLabel}
-        maxLength={80}
-        name="contactPhone"
-        type="tel"
-      />
-      <FormInput
-        error={fieldError(state, "contactNotes", copy)}
-        id={`${formIdPrefix}-contact-notes`}
-        label={copy.contactNotesLabel}
-        maxLength={500}
-        name="contactNotes"
-        type="text"
-      />
+      {/* Field 2: Contact Name */}
+      <div>
+        <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+          <User className="size-3.5 text-secondary" /> {copy.contactNameLabel}
+        </label>
+        <input
+          type="text"
+          name="contactName"
+          maxLength={160}
+          autoComplete="name"
+          placeholder="z.B. Michael Schmidt"
+          className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+        />
+        {fieldError(state, "contactName", copy) && (
+          <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "contactName", copy)}</p>
+        )}
+      </div>
+
+      {/* Field 3 & 4: Email & Phone Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+            <Mail className="size-3.5 text-secondary" /> {copy.contactEmailLabel}
+          </label>
+          <input
+            type="email"
+            name="contactEmail"
+            maxLength={254}
+            autoComplete="email"
+            placeholder="kontakt@objekt.de"
+            className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+          />
+          {fieldError(state, "contactEmail", copy) && (
+            <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "contactEmail", copy)}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+            <Phone className="size-3.5 text-secondary" /> {copy.contactPhoneLabel}
+          </label>
+          <input
+            type="tel"
+            name="contactPhone"
+            maxLength={80}
+            autoComplete="tel"
+            placeholder="+49 40 123456"
+            className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+          />
+          {fieldError(state, "contactPhone", copy) && (
+            <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "contactPhone", copy)}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Field 5: Address */}
+      <div>
+        <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+          <MapPin className="size-3.5 text-secondary" /> {copy.addressLabel}
+        </label>
+        <input
+          type="text"
+          name="address"
+          maxLength={500}
+          autoComplete="street-address"
+          placeholder="Mönckebergstraße 10, 20095 Hamburg"
+          className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+        />
+        {fieldError(state, "address", copy) && (
+          <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "address", copy)}</p>
+        )}
+      </div>
+
+      {/* Field 6: Contact Notes */}
+      <div>
+        <label className="text-[10px] font-extrabold uppercase text-on-surface-variant flex items-center gap-1.5 mb-1">
+          <FileText className="size-3.5 text-secondary" /> {copy.contactNotesLabel}
+        </label>
+        <input
+          type="text"
+          name="contactNotes"
+          maxLength={500}
+          placeholder="Zusätzliche Notizen zum Objekt..."
+          className="w-full h-11 px-3.5 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none shadow-sm transition"
+        />
+        {fieldError(state, "contactNotes", copy) && (
+          <p className="text-error mt-1 text-xs font-semibold">{fieldError(state, "contactNotes", copy)}</p>
+        )}
+      </div>
 
       {message ? (
         <p
           className={
             state.status === "success"
-              ? "border-secondary bg-secondary-container text-on-secondary-container rounded px-3 py-2 text-sm"
-              : "border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm"
+              ? "bg-emerald-500/10 text-emerald-800 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-xs font-bold"
+              : "bg-red-500/10 text-red-800 border border-red-500/20 rounded-xl px-4 py-2.5 text-xs font-bold"
           }
         >
           {message}
         </p>
       ) : null}
 
-      <Button
-        icon={<Save aria-hidden="true" />}
-        isLoading={isPending}
-        type="submit"
-      >
-        {copy.createSubmit}
-      </Button>
+      <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/60">
+        <Button
+          icon={<Save className="size-4" aria-hidden="true" />}
+          isLoading={isPending}
+          type="submit"
+          className="px-6 py-2.5 rounded-xl bg-secondary text-on-secondary text-xs font-extrabold shadow-md hover:opacity-90 transition cursor-pointer"
+        >
+          Kunden anlegen & Speichern
+        </Button>
+      </div>
     </form>
   );
 }
