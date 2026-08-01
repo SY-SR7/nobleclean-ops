@@ -1043,3 +1043,83 @@ export async function quickRenameLeafItemAction(
   return { ok: true };
 }
 
+/**
+ * Deletes a section (and its cascade child items).
+ */
+export async function quickDeleteSectionAction(
+  formData: FormData,
+): Promise<QuickRenameResult> {
+  if (!(await hasSameOriginRequest())) return { ok: false, error: "AUTH_FAILED" };
+
+  const sectionId = formData.get("sectionId");
+  const clientId  = formData.get("clientId");
+  const locale    = formData.get("locale");
+
+  if (
+    typeof sectionId !== "string" ||
+    typeof clientId  !== "string" ||
+    typeof locale    !== "string"
+  ) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  try {
+    await requireRole(locale as "de" | "en", "admin");
+  } catch {
+    return { ok: false, error: "AUTH_FAILED" };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: leafItems } = await supabase.from("leaf_items").select("id").eq("section_id", sectionId);
+  if (leafItems && leafItems.length > 0) {
+    const leafIds = leafItems.map((l) => l.id);
+    await supabase.from("daily_plan_items").delete().in("leaf_item_id", leafIds);
+    await supabase.from("cleaning_tool_steps").delete().in("leaf_item_id", leafIds);
+    await supabase.from("leaf_items").delete().eq("section_id", sectionId);
+  }
+  const { error } = await supabase.from("sections").delete().eq("id", sectionId).eq("client_id", clientId);
+
+  if (error) return { ok: false, error: "SAVE_FAILED" };
+
+  revalidateSectionsItems(locale as "de" | "en", clientId);
+  return { ok: true };
+}
+
+/**
+ * Deletes a leaf item.
+ */
+export async function quickDeleteLeafItemAction(
+  formData: FormData,
+): Promise<QuickRenameResult> {
+  if (!(await hasSameOriginRequest())) return { ok: false, error: "AUTH_FAILED" };
+
+  const leafItemId = formData.get("leafItemId");
+  const clientId   = formData.get("clientId");
+  const locale     = formData.get("locale");
+
+  if (
+    typeof leafItemId !== "string" ||
+    typeof clientId   !== "string" ||
+    typeof locale     !== "string"
+  ) {
+    return { ok: false, error: "VALIDATION_FAILED" };
+  }
+
+  try {
+    await requireRole(locale as "de" | "en", "admin");
+  } catch {
+    return { ok: false, error: "AUTH_FAILED" };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  await supabase.from("daily_plan_items").delete().eq("leaf_item_id", leafItemId);
+  await supabase.from("cleaning_tool_steps").delete().eq("leaf_item_id", leafItemId);
+  const { error } = await supabase.from("leaf_items").delete().eq("id", leafItemId);
+
+  if (error) return { ok: false, error: "SAVE_FAILED" };
+
+  revalidateSectionsItems(locale as "de" | "en", clientId);
+  return { ok: true };
+}
+
+

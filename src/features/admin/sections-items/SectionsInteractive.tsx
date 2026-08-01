@@ -12,6 +12,7 @@ import {
   History,
   Edit3,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useMemo } from "react";
@@ -24,6 +25,8 @@ import { getSectionMedia } from "@/lib/media-helper";
 import {
   quickRenameSectionAction,
   quickRenameLeafItemAction,
+  quickDeleteSectionAction,
+  quickDeleteLeafItemAction,
 } from "./actions";
 import type { SectionTreeNode, LeafItemListItem, CleaningToolStepListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -90,6 +93,36 @@ export function SectionsInteractive({
     if (result.ok) { toast("Gespeichert", "success"); return null; }
     toast("Fehler beim Speichern", "error");
     return "Fehler";
+  }
+
+  /** Quick delete helper for sections */
+  async function deleteSectionInline(sectionId: string, name: string) {
+    if (!confirm(`Möchten Sie den Bereich "${name}" wirklich löschen?`)) return;
+    const fd = new FormData();
+    fd.append("sectionId", sectionId);
+    fd.append("clientId", clientId);
+    fd.append("locale", locale);
+    const result = await quickDeleteSectionAction(fd);
+    if (result.ok) {
+      toast("Bereich gelöscht", "success");
+    } else {
+      toast("Fehler beim Löschen", "error");
+    }
+  }
+
+  /** Quick delete helper for leaf items */
+  async function deleteLeafItemInline(leafItemId: string, name: string) {
+    if (!confirm(`Möchten Sie die Aufgabe "${name}" wirklich löschen?`)) return;
+    const fd = new FormData();
+    fd.append("leafItemId", leafItemId);
+    fd.append("clientId", clientId);
+    fd.append("locale", locale);
+    const result = await quickDeleteLeafItemAction(fd);
+    if (result.ok) {
+      toast("Aufgabe gelöscht", "success");
+    } else {
+      toast("Fehler beim Löschen", "error");
+    }
   }
 
   // Build parent -> children map for nested sections
@@ -221,7 +254,13 @@ export function SectionsInteractive({
                   <span className="text-[10px] font-extrabold uppercase text-on-surface-variant tracking-wider flex items-center gap-1">
                     <Edit3 className="size-3 text-secondary" /> Direkt-Bearbeitung
                   </span>
-                  <span className="text-xs text-on-surface-variant">1-Klick Inline Edit</span>
+                  <button
+                    type="button"
+                    onClick={() => deleteLeafItemInline(item.id, item.name)}
+                    className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <Trash2 className="size-3" /> Löschen
+                  </button>
                 </div>
                 <InlineEditField
                   value={item.name}
@@ -433,7 +472,13 @@ export function SectionsInteractive({
                   <span className="text-[10px] font-extrabold uppercase text-on-surface-variant tracking-wider flex items-center gap-1">
                     <Edit3 className="size-3 text-secondary" /> Direkt-Bearbeitung
                   </span>
-                  <span className="text-xs text-on-surface-variant">1-Klick Inline Edit</span>
+                  <button
+                    type="button"
+                    onClick={() => deleteSectionInline(section.id, section.name)}
+                    className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <Trash2 className="size-3" /> Bereich löschen
+                  </button>
                 </div>
                 <InlineEditField
                   value={section.name}
