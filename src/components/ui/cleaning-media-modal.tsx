@@ -21,6 +21,7 @@ export function CleaningMediaModal({
   onClose,
   title,
   videoTitle,
+  videoSteps = [],
 }: CleaningMediaModalProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 

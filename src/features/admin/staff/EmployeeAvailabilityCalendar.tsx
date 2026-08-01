@@ -171,6 +171,34 @@ export function EmployeeAvailabilityCalendar({
     setSelectedDayDetail(null);
   };
 
+  const handleDayDetailBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+
+    const clickX = e.clientX;
+    const clickY = e.clientY;
+
+    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
+    let clickedInsideParentCard = false;
+
+    modalPanels.forEach((panel) => {
+      if (e.currentTarget.contains(panel)) return;
+      const rect = panel.getBoundingClientRect();
+      if (
+        clickX >= rect.left &&
+        clickX <= rect.right &&
+        clickY >= rect.top &&
+        clickY <= rect.bottom
+      ) {
+        clickedInsideParentCard = true;
+      }
+    });
+
+    setSelectedDayDetail(null);
+    if (!clickedInsideParentCard) {
+      window.dispatchEvent(new CustomEvent("nc-tab-change"));
+    }
+  };
+
   const weekDayHeaders = locale === "de"
     ? ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
     : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -404,39 +432,6 @@ export function EmployeeAvailabilityCalendar({
           ))}
         </div>
       )}
-
-  const handleDayDetailBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target !== e.currentTarget) return;
-
-    const clickX = e.clientX;
-    const clickY = e.clientY;
-
-    const modalPanels = document.querySelectorAll<HTMLElement>("[data-modal-panel='true']");
-    let clickedInsideParentCard = false;
-
-    modalPanels.forEach((panel) => {
-      if (e.currentTarget.contains(panel)) return;
-      const rect = panel.getBoundingClientRect();
-      if (
-        clickX >= rect.left &&
-        clickX <= rect.right &&
-        clickY >= rect.top &&
-        clickY <= rect.bottom
-      ) {
-        clickedInsideParentCard = true;
-      }
-    });
-
-    setSelectedDayDetail(null);
-    if (!clickedInsideParentCard) {
-      window.dispatchEvent(new CustomEvent("nc-tab-change"));
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Rest of calendar JSX */}
-
       {/* Clean Interactive Day Sheet / Popover Modal */}
       {selectedDayDetail && (
         <div
