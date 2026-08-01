@@ -1,24 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Image as ImageIcon, Layers, Plus, Edit2, CheckSquare } from "lucide-react";
+import { Image as ImageIcon, Layers, Plus, Edit2, Package, Building2 } from "lucide-react";
 
-import { Button, PriorityStatusBadge, TaskItemCard, ToolStepCard, InlineEditField, useToast } from "@/components/ui";
+import { Button, PriorityStatusBadge, TaskItemCard, InlineEditField, useToast } from "@/components/ui";
 import { SectionPortalTabs } from "@/components/ui/section-portal-tabs";
+import { ModalDialog } from "@/components/ui/modal-dialog";
 import {
-  DeleteToolStepForm,
   DeleteEntityForm,
   LeafItemForm,
   ReferenceImageForm,
   SectionForm,
-  ToolStepForm,
   type SectionsItemsFormCopy,
 } from "./SectionsItemsForms";
 import { SectionsInteractive } from "./SectionsInteractive";
+import { GruppenInteractive } from "./GruppenInteractive";
 import { quickRenameLeafItemAction } from "./actions";
 import type {
   SectionsItemsData,
-  LeafItemListItem,
   SectionTreeNode,
 } from "./queries";
 import type { Locale } from "@/i18n/routing";
@@ -77,7 +76,9 @@ function descendantIds(sections: readonly SectionTreeNode[], sectionId: string) 
 
 export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClientProps) {
   const { selectedClientId: spaClientId, selectedSectionId: spaSectionId, setSelectedSectionId, setActiveTab } = useAdminSpa();
-  const [activePortal, setActivePortal] = useState("overview");
+  const [activePortal, setActivePortal] = useState("fixed-sections");
+  const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const { toast } = useToast();
 
   const selectedClientId = spaClientId || data.selectedClientId || data.clients[0]?.id || "";
@@ -110,7 +111,14 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
 
   return (
     <div className="grid gap-6">
-      <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-primary-container text-2xl font-bold">{copy.title}</h1>
+          <p className="text-xs text-on-surface-variant mt-0.5">
+            Verwalten Sie die festen Bereiche des Objekts und definieren Sie tagesaktuelle Arbeitsgruppen (Gruppen).
+          </p>
+        </div>
+      </div>
 
       {!data.ok && (
         <p className="border-error bg-error-container text-on-error-container rounded-xl border px-4 py-3 text-sm">
@@ -126,7 +134,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
 
       {selectedClientId ? (
         <div className="grid gap-6">
-          {/* Client Selector */}
+          {/* Client Selector Bar */}
           <form className="flex flex-col gap-3 sm:flex-row sm:items-end" onSubmit={(e) => e.preventDefault()}>
             <input type="hidden" name="tab" value="sections" />
             <div className="grid gap-2 sm:min-w-80">
@@ -159,9 +167,9 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
             onChange={setActivePortal}
             tabs={[
               {
-                id: "overview",
-                label: `Bereiche & Übersicht (${data.sections.length})`,
-                icon: <Layers className="size-4" />,
+                id: "fixed-sections",
+                label: `🏢 Feste Bereiche & Objekte (${data.sections.length})`,
+                icon: <Building2 className="size-4" />,
                 content: (
                   <div className="grid gap-8 w-full">
                     {/* Full Width Sections Grid */}
@@ -170,7 +178,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                         <h2 className="font-heading text-primary-container text-xl font-bold">{copy.treeTitle}</h2>
                         <button
                           type="button"
-                          onClick={() => setActivePortal("create-section")}
+                          onClick={() => setIsCreateSectionOpen(true)}
                           className="bg-secondary text-on-secondary flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold shadow-sm transition-all hover:opacity-90 cursor-pointer"
                         >
                           <Plus className="size-4" /> Neuer Bereich
@@ -218,7 +226,7 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                           </h2>
                           <button
                             type="button"
-                            onClick={() => setActivePortal("create-task")}
+                            onClick={() => setIsCreateTaskOpen(true)}
                             className="bg-secondary/10 text-secondary flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all hover:bg-secondary/20 cursor-pointer"
                           >
                             <Plus className="size-4" /> Neue Aufgabe
@@ -268,83 +276,52 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                 ),
               },
               {
-                id: "create-section",
-                label: "Neuer Bereich",
-                icon: <Plus className="size-4" />,
+                id: "work-groups",
+                label: "📦 Arbeitsgruppen & Vorlagen (Gruppen / Plans)",
+                icon: <Package className="size-4" />,
                 content: (
-                  <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm">
-                    <SectionForm
-                      clientId={selectedClientId}
-                      copy={forms}
-                      locale={locale}
-                      mode="create"
-                      sectionOptions={data.sectionOptions}
-                    />
-                  </div>
+                  <GruppenInteractive
+                    sections={data.sections}
+                    leafItems={data.leafItems}
+                    copy={{ minutes: copy.minutes }}
+                  />
                 ),
               },
-              ...(selectedSection
-                ? [
-                    {
-                      id: "edit-section",
-                      label: `Bereich bearbeiten (${selectedSection.name})`,
-                      icon: <Edit2 className="size-4" />,
-                      content: (
-                        <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest grid gap-6 rounded-3xl border p-6 shadow-sm">
-                          <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
-                            <div>
-                              <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wide">{copy.selectedSectionTitle}</p>
-                              <h2 className="font-heading text-primary-container text-xl font-bold mt-0.5">{selectedSection.name}</h2>
-                            </div>
-                            <DeleteEntityForm
-                              clientId={selectedClientId}
-                              copy={forms}
-                              entityId={selectedSection.id}
-                              kind="section"
-                              locale={locale}
-                            />
-                          </div>
-                          <div className="grid gap-6 md:grid-cols-2">
-                            <SectionForm
-                              clientId={selectedClientId}
-                              copy={forms}
-                              locale={locale}
-                              mode="update"
-                              section={selectedSection}
-                              sectionOptions={editSectionOptions}
-                            />
-                            <ReferenceImageForm
-                              clientId={selectedClientId}
-                              copy={forms}
-                              entityId={selectedSection.id}
-                              kind="section"
-                              locale={locale}
-                            />
-                          </div>
-                        </div>
-                      ),
-                    },
-                    {
-                      id: "create-task",
-                      label: "Neue Aufgabe",
-                      icon: <CheckSquare className="size-4" />,
-                      content: (
-                        <div className="w-full max-w-3xl border-outline-variant bg-surface-container-lowest rounded-3xl border p-6 shadow-sm">
-                          <LeafItemForm
-                            clientId={selectedClientId}
-                            copy={forms}
-                            locale={locale}
-                            mode="create"
-                            sectionOptions={data.sectionOptions}
-                            selectedSectionId={selectedSection.id}
-                          />
-                        </div>
-                      ),
-                    },
-                  ]
-                : []),
             ]}
           />
+
+          {/* POPUP MODAL: CREATE NEW SECTION */}
+          <ModalDialog
+            isOpen={isCreateSectionOpen}
+            onClose={() => setIsCreateSectionOpen(false)}
+            title="Neuen Haupt- oder Unterbereich hinzufügen"
+            subtitle="Erstellen Sie einen neuen festen Bereich in der Objekt-Struktur."
+          >
+            <SectionForm
+              clientId={selectedClientId}
+              copy={forms}
+              locale={locale}
+              mode="create"
+              sectionOptions={data.sectionOptions}
+            />
+          </ModalDialog>
+
+          {/* POPUP MODAL: CREATE NEW TASK */}
+          <ModalDialog
+            isOpen={isCreateTaskOpen}
+            onClose={() => setIsCreateTaskOpen(false)}
+            title={`Neue Aufgabe hinzufügen (${selectedSection?.name ?? "Bereich"})`}
+            subtitle="Fügen Sie eine neue Reinigungsaufgabe zum ausgewählten Bereich hinzu."
+          >
+            <LeafItemForm
+              clientId={selectedClientId}
+              copy={forms}
+              locale={locale}
+              mode="create"
+              sectionOptions={data.sectionOptions}
+              selectedSectionId={selectedSection?.id ?? null}
+            />
+          </ModalDialog>
         </div>
       ) : null}
     </div>
