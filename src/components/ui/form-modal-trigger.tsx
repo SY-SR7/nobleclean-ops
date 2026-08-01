@@ -42,7 +42,7 @@ export function FormModalTrigger({
       onClick={handleOpen}
       className={
         className ||
-        "bg-secondary text-on-secondary hover:opacity-90 transition px-5 py-3 rounded-2xl font-extrabold text-sm shadow-sm flex items-center gap-2 cursor-pointer w-fit"
+        "bg-secondary text-white hover:opacity-90 transition px-5 py-3 rounded-2xl font-extrabold text-sm shadow-sm flex items-center gap-2 cursor-pointer w-fit"
       }
     >
       <Plus className="size-4" />

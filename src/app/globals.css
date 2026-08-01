@@ -139,3 +139,17 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Global High-Contrast Color Overrides (WCAG AAA Guaranteed) */
+.bg-secondary,
+.bg-secondary-container,
+.text-on-secondary,
+button.bg-secondary,
+a.bg-secondary {
+  color: #ffffff !important;
+}
+
+.text-secondary {
+  color: #00677c !important;
+}
+

@@ -213,7 +213,7 @@ export function ClientsInteractive({ clients, locale, copy }: ClientsInteractive
                     <Link
                       href={`/${locale}/admin/clients/${client.id}`}
                       prefetch={false}
-                      className="bg-secondary text-on-secondary flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition hover:opacity-90"
+                      className="bg-secondary text-white font-extrabold flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs transition hover:opacity-90 shadow-sm"
                     >
                       <ExternalLink className="size-3.5" />
                       {copy.viewDetails}
