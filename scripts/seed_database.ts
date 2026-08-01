@@ -304,12 +304,25 @@ async function seed() {
     }
   }
 
-  // 6. SEED JULY 2026 SCHEDULE (Random Realistic)
-  console.log("6. Seeding July 2026 Schedule...");
-  const empNames = employees.map(e => e.name);
+  // 6. SEED JULY 2026 SCHEDULE (Varied & Different from August)
+  console.log("6. Seeding July 2026 Schedule (Varied & Random)...");
+  const julyWorkerRotations = [
+    ["Khalid", "Ammar", "Hady"],
+    ["Eghbal", "Mohamad", "Khalid"],
+    ["Shaikh", "Hady", "Ammar"],
+    ["Mohamad", "Khalid", "Shaikh"],
+    ["Eghbal", "Hady", "Ammar"],
+    ["Khalid", "Shaikh", "Mohamad"],
+    ["Ammar", "Eghbal", "Hady"],
+    ["Shaikh", "Khalid", "Eghbal"],
+    ["Hady", "Mohamad", "Ammar"],
+    ["Khalid", "Eghbal", "Shaikh"],
+  ];
+
   for (let day = 1; day <= 31; day++) {
     const work_date = `2026-07-${String(day).padStart(2, "0")}`;
-    const workers = [empNames[(day - 1) % 6], empNames[day % 6], empNames[(day + 1) % 6]];
+    const patternIdx = (day * 7 + 3) % julyWorkerRotations.length;
+    const workers = julyWorkerRotations[patternIdx]!;
 
     for (const empName of workers) {
       const empId = empMap[empName];
