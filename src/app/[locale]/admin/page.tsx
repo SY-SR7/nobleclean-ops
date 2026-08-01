@@ -10,6 +10,7 @@ import {
   TaskItemCard,
   ToolStepCard,
 } from "@/components/ui";
+import { FormModalTrigger } from "@/components/ui/form-modal-trigger";
 import { ClientsInteractive } from "@/features/admin/clients/ClientsInteractive";
 import { listAdminClients } from "@/features/admin/clients/queries";
 import {
@@ -306,17 +307,9 @@ async function ClientsTab({ locale }: { locale: Locale }) {
         </dl>
       </div>
 
-      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
-        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
-          <span className="flex items-center gap-2">
-            <Plus className="size-4" /> {formCopy.createTitle}
-          </span>
-          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
-        </summary>
-        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
-          <ClientForm copy={formCopy} formIdPrefix="new-client" locale={locale} mode="create" />
-        </div>
-      </details>
+      <FormModalTrigger buttonLabel={formCopy.createTitle} modalTitle={formCopy.createTitle}>
+        <ClientForm copy={formCopy} formIdPrefix="new-client" locale={locale} mode="create" />
+      </FormModalTrigger>
 
       <div className="w-full">
         {!result.ok && (
@@ -391,23 +384,15 @@ async function StaffTab({ locale }: { locale: Locale }) {
         </p>
       )}
 
-      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
-        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
-          <span className="flex items-center gap-2">
-            <Plus className="size-4" /> {assignCopy.assignTitle}
-          </span>
-          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
-        </summary>
-        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
-          <StaffAssignmentForm
-            clients={data.clients}
-            copy={assignCopy}
-            employees={data.employees}
-            locale={locale}
-            mode="create"
-          />
-        </div>
-      </details>
+      <FormModalTrigger buttonLabel={assignCopy.assignTitle} modalTitle={assignCopy.assignTitle}>
+        <StaffAssignmentForm
+          clients={data.clients}
+          copy={assignCopy}
+          employees={data.employees}
+          locale={locale}
+          mode="create"
+        />
+      </FormModalTrigger>
 
       <div className="w-full">
         {data.assignments.length === 0 ? (
@@ -578,17 +563,9 @@ async function ScheduleTab({ locale, month }: { locale: Locale; month: string })
         <p className="border-error bg-error-container text-on-error-container rounded border px-3 py-2 text-sm">{t(messages, "schedule.feedback.loadError")}</p>
       )}
 
-      <details className="group border-outline-variant bg-surface-container-lowest rounded-3xl border shadow-sm transition-all">
-        <summary className="flex items-center justify-between px-6 py-4 cursor-pointer font-bold text-sm text-secondary select-none">
-          <span className="flex items-center gap-2">
-            <Plus className="size-4" /> {scheduleCopy.createTitle}
-          </span>
-          <span className="text-xs text-on-surface-variant transition-transform group-open:rotate-180">▼</span>
-        </summary>
-        <div className="border-t border-outline-variant/60 p-6 max-w-3xl">
-          <ScheduleForm clients={data.clients} copy={scheduleCopy} employees={data.employees} locale={locale} mode="create" />
-        </div>
-      </details>
+      <FormModalTrigger buttonLabel={scheduleCopy.createTitle} modalTitle={scheduleCopy.createTitle}>
+        <ScheduleForm clients={data.clients} copy={scheduleCopy} employees={data.employees} locale={locale} mode="create" />
+      </FormModalTrigger>
 
       <div className="w-full">
         {data.schedules.length === 0 ? (

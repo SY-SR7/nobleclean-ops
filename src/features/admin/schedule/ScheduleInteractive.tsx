@@ -431,37 +431,6 @@ export function ScheduleInteractive({ schedules, locale, copy }: ScheduleInterac
         </div>
       )}
 
-      {/* Availability & Shift Calendar Modal */}
-      {selectedCalendarEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest border-outline-variant flex flex-col max-h-[90vh] w-full max-w-5xl rounded-3xl border shadow-2xl overflow-hidden">
-            <div className="border-outline-variant/60 flex items-center justify-between border-b px-6 py-4 shrink-0 bg-surface-container-low/50">
-              <div className="flex items-center gap-2">
-                <Sparkles className="size-5 text-secondary" />
-                <h2 className="font-heading text-primary-container text-xl font-bold">
-                  Mitarbeiter Verfügbarkeit & Schichten
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedCalendarEmployee(null)}
-                className="bg-surface-container-low hover:bg-surface-container text-on-surface rounded-full h-9 w-9 flex items-center justify-center text-sm font-bold cursor-pointer transition border border-outline-variant/60 shadow-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              <EmployeeAvailabilityCalendar
-                employeeId={selectedCalendarEmployee.id}
-                employeeName={selectedCalendarEmployee.name}
-                clients={clientsList}
-                locale={locale}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
