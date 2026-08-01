@@ -634,7 +634,7 @@ async function ReportsTab({
 
   return (
     <ReportsInteractiveMain
-      plans={[...data.completePlans, ...data.incompletePlans]}
+      plans={data.incompletePlans}
       lastCleanedItems={data.lastCleanedItems}
       escalations={data.mandatoryStepEscalations}
       locale={locale}

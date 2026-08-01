@@ -20,6 +20,7 @@ import {
   Sparkles,
   PieChart,
   FileSpreadsheet,
+  Building2,
 } from "lucide-react";
 import { useCallback, useActionState, useMemo, useState } from "react";
 
@@ -183,7 +184,7 @@ export function EscalationInteractiveCard({ step, locale }: { step: MandatorySte
   const openDrawer = useCallback(() => {
     const config: DrawerConfig = {
       title: step.toolName,
-      subtitle: `${step.leafItemName} · ${step.sectionName}`,
+      subtitle: step.leafItemName,
       icon: <AlertTriangle className="size-6 text-rose-600" />,
       accentColor: "critical",
       badge: {
@@ -202,7 +203,6 @@ export function EscalationInteractiveCard({ step, locale }: { step: MandatorySte
               <InfoGrid
                 items={[
                   { icon: <Layers className="size-4" />, label: "Objekt", value: step.leafItemName },
-                  { icon: <Building2 className="size-4" />, label: "Bereich", value: step.sectionName },
                   { icon: <Clock className="size-4" />, label: "Letzte Ausführung", value: formatDate(step.lastPerformedAt, locale, "Nie ausgeführt") },
                 ]}
               />
@@ -233,7 +233,7 @@ export function EscalationInteractiveCard({ step, locale }: { step: MandatorySte
             {step.toolName}
           </p>
           <p className="text-xs text-rose-800 font-medium truncate mt-0.5">
-            {step.leafItemName} ({step.sectionName})
+            {step.leafItemName}
           </p>
         </div>
       </div>
@@ -252,7 +252,7 @@ export function LastCleanedInteractiveCard({ item, locale, copy }: {
 
   const openDrawer = useCallback(() => {
     const config: DrawerConfig = {
-      title: item.leafItemName,
+      title: item.name,
       subtitle: item.sectionName,
       icon: <CheckCircle2 className="size-6 text-emerald-600" />,
       accentColor: "success",
@@ -295,7 +295,7 @@ export function LastCleanedInteractiveCard({ item, locale, copy }: {
         </div>
         <div className="min-w-0">
           <p className="font-extrabold text-sm text-on-surface group-hover:text-secondary transition-colors truncate">
-            {item.leafItemName}
+            {item.name}
           </p>
           <p className="text-xs text-on-surface-variant mt-0.5 truncate">
             {item.sectionName} · {formatDate(item.lastCleanedAt, locale, copy.neverCleaned)}
