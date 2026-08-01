@@ -1,8 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 
 export type AdminTab = "home" | "clients" | "staff" | "sections" | "schedule" | "reports";
+
+const TAB_MAP: Record<string, AdminTab> = {
+  home: "home",
+  clients: "clients",
+  staff: "staff",
+  sections: "sections",
+  schedule: "schedule",
+  reports: "reports",
+};
 
 type AdminSpaContextValue = Readonly<{
   activeTab: AdminTab;
@@ -31,9 +41,30 @@ export function useAdminSpa() {
 }
 
 export function AdminSpaProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTabState] = useState<AdminTab>("home");
-  const [selectedClientId, setSelectedClientIdState] = useState<string | null>(null);
-  const [selectedSectionId, setSelectedSectionIdState] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  // Read initial tab from URL query params ?tab=...
+  const tabFromUrl = searchParams ? searchParams.get("tab") : null;
+  const initialTab: AdminTab = (tabFromUrl && TAB_MAP[tabFromUrl]) || "home";
+
+  const [activeTab, setActiveTabState] = useState<AdminTab>(initialTab);
+  const [selectedClientId, setSelectedClientIdState] = useState<string | null>(
+    searchParams ? searchParams.get("clientId") : null
+  );
+  const [selectedSectionId, setSelectedSectionIdState] = useState<string | null>(
+    searchParams ? searchParams.get("sectionId") : null
+  );
+
+  // Sync state automatically if searchParams in URL change (e.g. browser back/forward or external link)
+  useEffect(() => {
+    if (!searchParams) return;
+    const currentTabParam = searchParams.get("tab");
+    const targetTab = (currentTabParam && TAB_MAP[currentTabParam]) || "home";
+
+    if (targetTab !== activeTab) {
+      setActiveTabState(targetTab);
+    }
+  }, [searchParams, activeTab]);
 
   const setSelectedClientId = useCallback((id: string | null) => {
     setSelectedClientIdState(id);
@@ -46,13 +77,26 @@ export function AdminSpaProvider({ children }: { children: ReactNode }) {
   const setActiveTab = useCallback(
     (tab: AdminTab, clientId?: string, sectionId?: string) => {
       setActiveTabState(tab);
+
       if (clientId !== undefined) {
         setSelectedClientIdState(clientId);
       }
       if (sectionId !== undefined) {
         setSelectedSectionIdState(sectionId);
       }
+
       if (typeof window !== "undefined") {
+        // Synchronize browser address bar URL so router.refresh() or back button keeps exact state
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", tab);
+        if (clientId) {
+          url.searchParams.set("clientId", clientId);
+        }
+        if (sectionId) {
+          url.searchParams.set("sectionId", sectionId);
+        }
+        window.history.pushState(null, "", url.toString());
+
         window.dispatchEvent(new CustomEvent("nc-tab-change", { detail: { tab } }));
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
