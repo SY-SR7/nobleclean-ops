@@ -49,7 +49,7 @@ export function SearchInput({
           aria-describedby={describedBy}
           aria-invalid={error ? true : undefined}
           className={cn(
-            "border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-12 w-full rounded border pr-10 pl-10 text-sm transition outline-none",
+            "border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-9.5 w-full rounded-xl border pr-10 pl-9 text-xs font-semibold transition outline-none",
             error ? "border-error" : undefined,
           )}
           id={id}

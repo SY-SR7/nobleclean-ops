@@ -157,3 +157,9 @@ a.bg-secondary,
   color: #00677c !important;
 }
 
+/* Global Slim Input Directive across entire application A-Z */
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+select {
+  max-height: 42px;
+}
+
