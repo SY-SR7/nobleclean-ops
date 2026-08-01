@@ -22,6 +22,7 @@ import Image from "next/image";
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { useToast } from "@/components/ui/toast";
 import { ModalDialog } from "@/components/ui/modal-dialog";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import type { SectionTreeNode, LeafItemListItem } from "./queries";
 
 export type WorkGroup = {
@@ -484,6 +485,33 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
       ],
     };
     open(config);
+  const handleExportPlanExcel = () => {
+    const headers = ["Plan Name", "Gruppe", "Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer (Minuten)"];
+    const rows: (string | number)[][] = [];
+
+    activePlan.groups.forEach((g) => {
+      const groupItems = leafItems.filter((i) => g.assignedItemIds.includes(i.id));
+      groupItems.forEach((item) => {
+        rows.push([activePlan.name, `Gruppe ${g.groupIndex}`, g.name, item.name, item.estimatedMinutes]);
+      });
+    });
+
+    exportToCSV(`Nobleclean_Reinigungssplan_${activePlan.name.replace(/\s+/g, "_")}.csv`, headers, rows);
+    toast(`Arbeitsplan "${activePlan.name}" als Excel (CSV) exportiert!`, "success");
+  };
+
+  const handleExportPlanPDF = () => {
+    const headers = ["Gruppe", "Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer"];
+    const rows: (string | number)[][] = [];
+
+    activePlan.groups.forEach((g) => {
+      const groupItems = leafItems.filter((i) => g.assignedItemIds.includes(i.id));
+      groupItems.forEach((item) => {
+        rows.push([`Gruppe ${g.groupIndex}`, g.name, item.name, `${item.estimatedMinutes} Min.`]);
+      });
+    });
+
+    exportToPDF(`Arbeitsplan: ${activePlan.name}`, activePlan.description, headers, rows, `Nobleclean_Plan_${activePlan.name}.pdf`);
   };
 
   return (
@@ -504,7 +532,23 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleExportPlanExcel}
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-500/20 px-3.5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer"
+              title="Plan als Excel (CSV) exportieren"
+            >
+              <FileSpreadsheet className="size-4 text-emerald-600" /> Excel (.csv)
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPlanPDF}
+              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-800 border border-blue-500/20 px-3.5 py-2.5 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer"
+              title="Plan als PDF Bericht drucken"
+            >
+              <Printer className="size-4 text-blue-600" /> PDF Drucken
+            </button>
             <button
               type="button"
               onClick={() => setIsPlanModalOpen(true)}
