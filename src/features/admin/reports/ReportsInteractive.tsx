@@ -532,10 +532,25 @@ export function ReportsInteractiveMain({
 }) {
   const c = copy.analytics;
   const now = new Date();
-  const [period, setPeriod] = useState<PeriodState>({
-    mode: "month", year: now.getFullYear(), month: now.getMonth() + 1,
-    label: `${monthShortDE(locale, now.getFullYear(), now.getMonth() + 1)} ${now.getFullYear()}`,
-  });
+
+  // ── Smart default: find the most recent month that has real data ────────────
+  const smartDefault = useMemo((): PeriodState => {
+    if (plans.length === 0) {
+      // No data at all → show "all" so at least the empty state is visible
+      return { mode: "all", year: now.getFullYear(), month: now.getMonth() + 1, label: c.allTime };
+    }
+    // Find the most recent workDate in the plans array
+    const latestDate = plans.reduce((best, p) => (p.workDate > best ? p.workDate : best), plans[0].workDate);
+    const y = parseInt(latestDate.slice(0, 4), 10);
+    const m = parseInt(latestDate.slice(5, 7), 10);
+    return {
+      mode: "month", year: y, month: m,
+      label: `${monthShortDE(locale, y, m)} ${y}`,
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally static — only computed once on mount from server-passed props
+
+  const [period, setPeriod] = useState<PeriodState>(smartDefault);
   const [activeTab, setActiveTab] = useState<ActiveSubTab>("overview");
   const [planSearch, setPlanSearch] = useState("");
   const [planSortUp, setPlanSortUp] = useState(false);
@@ -553,6 +568,7 @@ export function ReportsInteractiveMain({
       return true;
     });
   }, [plans, period]);
+
 
   // ── Stats ──────────────────────────────────────────────────────────────────
   const totalPlans = periodPlans.length;
