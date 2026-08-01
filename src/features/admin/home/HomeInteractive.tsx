@@ -24,6 +24,8 @@ import {
 import { useCallback, useState } from "react";
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
+import { ModalDialog } from "@/components/ui/modal-dialog";
+import { useToast } from "@/components/ui/toast";
 import { MetricCard } from "@/components/ui";
 import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 import type {
@@ -87,6 +89,48 @@ function formatDate(value: string | null, locale: Locale) {
 export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
   const { setActiveTab } = useAdminSpa();
   const { open, close } = useDetailDrawer();
+  const { toast } = useToast();
+
+  // Pop-up Modal States for Hero Buttons
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+  const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
+
+  // Shift Modal Fields State
+  const [shiftEmpId, setShiftEmpId] = useState(data.staffList[0]?.id || "");
+  const [shiftClientId, setShiftClientId] = useState(data.clientsList[0]?.id || "");
+  const [shiftDate, setShiftDate] = useState(new Date().toISOString().slice(0, 10));
+  const [shiftTimeWindow, setShiftTimeWindow] = useState("04:00 - 07:00 (3.0h)");
+
+  // Client Modal Fields State
+  const [clientName, setClientName] = useState("");
+  const [clientContactName, setClientContactName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+
+  const handleCreateShiftSubmit = () => {
+    if (!shiftEmpId || !shiftClientId || !shiftDate) {
+      toast("Bitte füllen Sie alle Pflichtfelder aus!", "error");
+      return;
+    }
+    const emp = data.staffList.find((s) => s.id === shiftEmpId);
+    setIsCreateShiftOpen(false);
+    toast(`Neue Schicht für ${emp?.fullName || "Mitarbeiter"} am ${shiftDate} (${shiftTimeWindow}) angelegt!`, "success");
+  };
+
+  const handleCreateClientSubmit = () => {
+    if (!clientName.trim()) {
+      toast("Bitte geben Sie einen Kunden- / Objektnamen ein!", "error");
+      return;
+    }
+    setIsCreateClientOpen(false);
+    toast(`Neuer Kunde "${clientName}" erfolgreich angelegt!`, "success");
+    setClientName("");
+    setClientContactName("");
+    setClientEmail("");
+    setClientPhone("");
+    setClientAddress("");
+  };
 
   // Sub-Modal States for Nested Interactivity
   const [selectedSubClient, setSelectedSubClient] = useState<DetailClientItem | null>(null);
@@ -534,14 +578,14 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={() => setActiveTab("schedule")}
+              onClick={() => setIsCreateShiftOpen(true)}
               className="bg-white text-secondary hover:bg-white/90 transition px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-md flex items-center gap-2 cursor-pointer"
             >
               <Plus className="size-4" /> Schicht anlegen
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab("clients")}
+              onClick={() => setIsCreateClientOpen(true)}
               className="bg-white/15 hover:bg-white/25 text-white border border-white/30 backdrop-blur-md transition px-4 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 cursor-pointer"
             >
               <Building2 className="size-4" /> Kunde hinzufügen
@@ -957,6 +1001,191 @@ export function HomeInteractive({ data, locale, copy }: HomeInteractiveProps) {
           </div>
         </div>
       )}
+      {/* ── DEDICATED MODAL: CREATE SHIFT ── */}
+      <ModalDialog
+        isOpen={isCreateShiftOpen}
+        onClose={() => setIsCreateShiftOpen(false)}
+        title="Neue Schicht anlegen (Schichtplan)"
+        subtitle="Weisen Sie einem Mitarbeiter eine neue Arbeitszeit in einem Objekt zu."
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+              Mitarbeiter wählen *
+            </label>
+            <select
+              value={shiftEmpId}
+              onChange={(e) => setShiftEmpId(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+            >
+              {data.staffList.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+              Kunde / Objekt wählen *
+            </label>
+            <select
+              value={shiftClientId}
+              onChange={(e) => setShiftClientId(e.target.value)}
+              className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+            >
+              {data.clientsList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+                Arbeitstag *
+              </label>
+              <input
+                type="date"
+                value={shiftDate}
+                onChange={(e) => setShiftDate(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+                Schichtfenster (Uhrzeit)
+              </label>
+              <select
+                value={shiftTimeWindow}
+                onChange={(e) => setShiftTimeWindow(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+              >
+                <option value="04:00 - 07:00 (3.0h)">04:00 - 07:00 (3.0 Std.)</option>
+                <option value="05:30 - 08:30 (3.0h)">05:30 - 08:30 (3.0 Std.)</option>
+                <option value="01:00 - 07:00 (6.0h)">01:00 - 07:00 (6.0 Std.)</option>
+                <option value="08:00 - 11:00 (3.0h)">08:00 - 11:00 (3.0 Std.)</option>
+                <option value="14:00 - 17:00 (3.0h)">14:00 - 17:00 (3.0 Std.)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/60">
+            <button
+              type="button"
+              onClick={() => setIsCreateShiftOpen(false)}
+              className="px-4 py-2.5 rounded-xl border border-outline-variant text-xs font-bold text-on-surface-variant hover:bg-surface-container transition"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateShiftSubmit}
+              className="px-5 py-2.5 rounded-xl bg-secondary text-on-secondary text-xs font-bold shadow-md hover:opacity-90 transition"
+            >
+              Schicht anlegen & Speichern
+            </button>
+          </div>
+        </div>
+      </ModalDialog>
+
+      {/* ── DEDICATED MODAL: CREATE CLIENT ── */}
+      <ModalDialog
+        isOpen={isCreateClientOpen}
+        onClose={() => setIsCreateClientOpen(false)}
+        title="Neuen Kunden / Objekt anlegen"
+        subtitle="Erstellen Sie ein neues Objekt mit Ansprechpartner und Standortdaten."
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+              Kunden- / Objektname *
+            </label>
+            <input
+              type="text"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="z.B. Fitness First Hamburg"
+              className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+              Ansprechpartner Name
+            </label>
+            <input
+              type="text"
+              value={clientContactName}
+              onChange={(e) => setClientContactName(e.target.value)}
+              placeholder="z.B. Michael Schmidt"
+              className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+                E-Mail-Adresse
+              </label>
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={(e) => setClientEmail(e.target.value)}
+                placeholder="kontakt@objekt.de"
+                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+                Telefonnummer
+              </label>
+              <input
+                type="tel"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="+49 40 123456"
+                className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-extrabold uppercase text-on-surface-variant block mb-1">
+              Adresse / Standort
+            </label>
+            <input
+              type="text"
+              value={clientAddress}
+              onChange={(e) => setClientAddress(e.target.value)}
+              placeholder="Mönckebergstraße 10, 20095 Hamburg"
+              className="w-full h-11 px-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface text-sm font-bold focus:border-secondary outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/60">
+            <button
+              type="button"
+              onClick={() => setIsCreateClientOpen(false)}
+              className="px-4 py-2.5 rounded-xl border border-outline-variant text-xs font-bold text-on-surface-variant hover:bg-surface-container transition"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateClientSubmit}
+              className="px-5 py-2.5 rounded-xl bg-secondary text-on-secondary text-xs font-bold shadow-md hover:opacity-90 transition"
+            >
+              Kunden anlegen & Speichern
+            </button>
+          </div>
+        </div>
+      </ModalDialog>
     </div>
   );
 }
