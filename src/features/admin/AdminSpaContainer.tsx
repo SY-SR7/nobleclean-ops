@@ -11,6 +11,7 @@ type AdminSpaContainerProps = Readonly<{
   sectionsTab: ReactNode;
   scheduleTab: ReactNode;
   reportsTab: ReactNode;
+  auditTab?: ReactNode;
 }>;
 
 export function AdminSpaContainer({
@@ -20,12 +21,13 @@ export function AdminSpaContainer({
   sectionsTab,
   scheduleTab,
   reportsTab,
+  auditTab,
 }: AdminSpaContainerProps) {
   const { activeTab } = useAdminSpa();
 
   return (
     <div>
-      {/* Render active tab content instantly without redundant top tab bar */}
+      {/* Render active tab content instantly */}
       <div>
         {activeTab === "home" && homeTab}
         {activeTab === "clients" && clientsTab}
@@ -33,6 +35,7 @@ export function AdminSpaContainer({
         {activeTab === "sections" && sectionsTab}
         {activeTab === "schedule" && scheduleTab}
         {activeTab === "reports" && reportsTab}
+        {activeTab === "audit" && auditTab}
       </div>
     </div>
   );
