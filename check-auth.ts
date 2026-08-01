@@ -6,8 +6,13 @@ const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJ
 const supabase = createClient(supabaseUrl, anonKey);
 
 async function check() {
-  const { data: profiles, error } = await supabase.from("profiles").select("*");
-  console.log("All profiles:", profiles, "Error:", error?.message);
+  await supabase.auth.signInWithPassword({
+    email: "nobleclean.private@gmail.com",
+    password: "NobleClean2026!",
+  });
+
+  const claimsRes = await (supabase.auth as any).getClaims();
+  console.log("getClaims result:", JSON.stringify(claimsRes));
 }
 
 check();
