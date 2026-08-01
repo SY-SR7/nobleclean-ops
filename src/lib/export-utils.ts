@@ -1,6 +1,6 @@
 /**
- * Unified Executive Export Utilities for NoblecleanOps
- * Generates Excel-compatible CSVs (with UTF-8 BOM) and high-end printable PDFs across all Admin tabs.
+ * Unified Ultra-Compact Single-Page Export Utilities for NoblecleanOps
+ * Generates Excel-compatible CSVs (with UTF-8 BOM) and single-page print-optimized PDFs across all Admin tabs.
  */
 
 export function exportToCSV(
@@ -41,7 +41,7 @@ export type PdfKpiCard = Readonly<{
 }>;
 
 /**
- * Standard Executive PDF Export with KPI Summary Header and Styled Tables
+ * Single-Page Compact Executive PDF Export with Dense Table Layout
  */
 export function exportToPDF(
   title: string,
@@ -57,30 +57,30 @@ export function exportToPDF(
   const nowStr = new Date().toLocaleDateString("de-DE") + " " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
   const kpisHtml = kpiCards && kpiCards.length > 0 ? `
-    <div style="display: grid; grid-template-columns: repeat(${Math.min(kpiCards.length, 4)}, 1fr); gap: 12px; margin-bottom: 20px;">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
       ${kpiCards.map(k => `
-        <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px;">
-          <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; tracking-wide: 0.5px;">${k.label}</div>
-          <div style="font-size: 18px; font-weight: 800; color: #025669; margin-top: 2px;">${k.value}</div>
-          ${k.sub ? `<div style="font-size: 9px; color: #475569; font-weight: 600;">${k.sub}</div>` : ""}
+        <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: #64748b;">${k.label}:</span>
+          <span style="font-size: 11px; font-weight: 900; color: #025669;">${k.value}</span>
+          ${k.sub ? `<span style="font-size: 8.5px; color: #475569; font-weight: 600;">(${k.sub})</span>` : ""}
         </div>
       `).join("")}
     </div>
   ` : "";
 
-  const tableHeaders = headers.map((h) => `<th style="padding: 10px 12px; background-color: #025669; color: #ffffff; font-weight: 800; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">${h}</th>`).join("");
+  const tableHeaders = headers.map((h) => `<th style="padding: 5px 8px; background-color: #025669; color: #ffffff; font-weight: 800; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px;">${h}</th>`).join("");
 
   const formatCell = (val: unknown) => {
     if (val === null || val === undefined || val === "") return `<span style="color: #94a3b8;">—</span>`;
     const str = String(val);
     if (str === "Aktiv" || str === "Erledigt" || str === "Zugewiesen") {
-      return `<span style="background-color: #dcfce7; color: #166534; font-weight: 700; padding: 3px 8px; border-radius: 9999px; font-size: 10px; border: 1px solid #bbf7d0;">${str}</span>`;
+      return `<span style="background-color: #dcfce7; color: #166534; font-weight: 800; padding: 1px 6px; border-radius: 4px; font-size: 8.5px; border: 1px solid #bbf7d0;">${str}</span>`;
     }
     if (str === "In Bearbeitung" || str === "Laufend") {
-      return `<span style="background-color: #e0f2fe; color: #0369a1; font-weight: 700; padding: 3px 8px; border-radius: 9999px; font-size: 10px; border: 1px solid #bae6fd;">${str}</span>`;
+      return `<span style="background-color: #e0f2fe; color: #0369a1; font-weight: 800; padding: 1px 6px; border-radius: 4px; font-size: 8.5px; border: 1px solid #bae6fd;">${str}</span>`;
     }
     if (str === "Beendet" || str === "Offen" || str === "Inaktiv") {
-      return `<span style="background-color: #fef2f2; color: #991b1b; font-weight: 700; padding: 3px 8px; border-radius: 9999px; font-size: 10px; border: 1px solid #fecaca;">${str}</span>`;
+      return `<span style="background-color: #fef2f2; color: #991b1b; font-weight: 800; padding: 1px 6px; border-radius: 4px; font-size: 8.5px; border: 1px solid #fecaca;">${str}</span>`;
     }
     return str;
   };
@@ -89,7 +89,7 @@ export function exportToPDF(
     .map(
       (r, idx) =>
         `<tr style="background-color: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"}; border-bottom: 1px solid #e2e8f0;">
-          ${r.map((cell) => `<td style="padding: 10px 12px; text-align: left; color: #1e293b; font-size: 11px;">${formatCell(cell)}</td>`).join("")}
+          ${r.map((cell) => `<td style="padding: 4px 8px; text-align: left; color: #1e293b; font-size: 9px;">${formatCell(cell)}</td>`).join("")}
         </tr>`
     )
     .join("");
@@ -101,26 +101,26 @@ export function exportToPDF(
       <meta charset="UTF-8">
       <title>${title}</title>
       <style>
-        @page { size: A4 landscape; margin: 12mm; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 15px; color: #0f172a; background-color: #ffffff; }
-        .header { border-bottom: 3px solid #025669; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .brand { font-size: 20px; font-weight: 900; color: #025669; letter-spacing: -0.5px; }
-        .title { font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 3px; }
-        .subtitle { font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 500; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-        .footer { margin-top: 20px; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: space-between; }
+        @page { size: A4 landscape; margin: 6mm 8mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 6px; color: #0f172a; background-color: #ffffff; margin: 0; }
+        .header { border-bottom: 2px solid #025669; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .brand { font-size: 15px; font-weight: 900; color: #025669; letter-spacing: -0.3px; }
+        .title { font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 1px; }
+        .subtitle { font-size: 9px; color: #64748b; margin-top: 1px; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .footer { margin-top: 8px; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 4px; display: flex; justify-content: space-between; }
       </style>
     </head>
     <body>
       <div class="header">
         <div>
-          <div class="brand">NOBLECLEAN <span style="font-size: 12px; color: #c8a951; font-weight: 700; margin-left: 6px;">MANAGEMENT SYSTEM</span></div>
+          <div class="brand">NOBLECLEAN <span style="font-size: 9px; color: #c8a951; font-weight: 800; margin-left: 4px;">MANAGEMENT SYSTEM</span></div>
           <div class="title">${title}</div>
           <div class="subtitle">${subtitle}</div>
         </div>
-        <div style="font-size: 10px; font-weight: 700; color: #64748b; text-align: right;">
-          <div>Exportiert am: ${nowStr}</div>
-          <div style="color: #025669; margin-top: 2px;">Gesamt: ${rows.length} Einträge</div>
+        <div style="font-size: 8.5px; font-weight: 700; color: #64748b; text-align: right;">
+          <div>Export: ${nowStr}</div>
+          <div style="color: #025669;">Einträge: ${rows.length}</div>
         </div>
       </div>
 
@@ -141,7 +141,7 @@ export function exportToPDF(
       </div>
       <script>
         window.onload = function() {
-          setTimeout(function() { window.print(); }, 200);
+          setTimeout(function() { window.print(); }, 150);
         };
       </script>
     </body>
@@ -162,8 +162,9 @@ export type ScheduleExportItem = Readonly<{
 }>;
 
 /**
- * High-End Day-by-Day Grouped Schedule PDF Export
- * Groups worker shifts day-by-day with clean daily cards, staffing count, total daily hours, and worker pills.
+ * Ultra-Compact Single-Page Monthly Schedule PDF Exporter
+ * Fits an entire 31-day month schedule onto EXACTLY 1 A4 Landscape page.
+ * Groups working employees inline for each day with shift times and hours.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -189,89 +190,64 @@ export function exportSchedulePDF(
   const uniqueWorkers = new Set(schedules.map((s) => s.employeeName)).size;
   const uniqueClients = new Set(schedules.map((s) => s.clientName)).size;
 
-  const formatDayTitle = (dateStr: string) => {
+  const formatShortDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      return date.toLocaleDateString("de-DE", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
+      const dayNum = String(date.getDate()).padStart(2, "0");
+      const monthNum = String(date.getMonth() + 1).padStart(2, "0");
+      const weekDay = date.toLocaleDateString("de-DE", { weekday: "short" });
+      return `${dayNum}.${monthNum} (${weekDay})`;
     } catch {
       return dateStr;
     }
   };
 
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
+  const isWeekend = (dateStr: string) => {
+    try {
+      const day = new Date(dateStr).getDay();
+      return day === 0 || day === 6; // Sunday or Saturday
+    } catch {
+      return false;
+    }
+  };
 
-  const daysHtml = sortedDates
-    .map((dateStr) => {
+  const rowsHtml = sortedDates
+    .map((dateStr, idx) => {
       const dayShifts = map.get(dateStr)!;
       const dayTotalHours = dayShifts.reduce((sum, s) => sum + s.allocatedHours, 0);
-      const dayTitle = formatDayTitle(dateStr);
+      const weekend = isWeekend(dateStr);
+      const dateFormatted = formatShortDate(dateStr);
 
-      const rowsHtml = dayShifts
+      const chipsHtml = dayShifts
         .map(
-          (s, idx) => `
-        <tr style="background-color: ${idx % 2 === 0 ? "#ffffff" : "#f8fafc"}; border-bottom: 1px solid #f1f5f9;">
-          <td style="padding: 8px 12px; font-weight: 700; color: #0f172a;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 9999px; background-color: #025669; color: white; font-size: 10px; font-weight: 800; margin-right: 8px;">${getInitials(s.employeeName)}</span>
-            ${s.employeeName}
-          </td>
-          <td style="padding: 8px 12px; font-weight: 600; color: #334155;">
-            🏢 ${s.clientName}
-          </td>
-          <td style="padding: 8px 12px; font-weight: 600; color: #475569;">
-            ⏰ ${s.startTime || "04:00"} – ${s.endTime || "07:00"}
-          </td>
-          <td style="padding: 8px 12px; text-align: right;">
-            <span style="background-color: #ecfdf5; color: #047857; font-weight: 800; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0; font-size: 11px;">
-              ${s.allocatedHours} Std.
-            </span>
-          </td>
-        </tr>
-      `
+          (s) => `
+          <span style="display: inline-flex; align-items: center; gap: 4px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 1px 6px; font-size: 8.5px; font-weight: 600; margin: 1px 2px;">
+            <strong style="color: #0f172a;">${s.employeeName}</strong>
+            <span style="color: #025669; font-weight: 700;">(${s.startTime || "04:00"}-${s.endTime || "07:00"})</span>
+            <span style="color: #047857; font-weight: 800; background-color: #d1fae5; padding: 0 4px; border-radius: 3px;">${s.allocatedHours}h</span>
+          </span>
+        `
         )
         .join("");
 
       return `
-      <div style="background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); break-inside: avoid;">
-        <div style="background: linear-gradient(to right, #025669, #0f766e); padding: 10px 16px; color: white; display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 13px; font-weight: 800; letter-spacing: -0.2px;">
-            📅 ${dayTitle}
-          </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span style="background-color: rgba(255,255,255,0.2); font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">
-              👥 ${dayShifts.length} Mitarbeiter
-            </span>
-            <span style="background-color: #c8a951; color: #0f172a; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 9999px;">
-              ⚡ ${dayTotalHours} Std. Gesamt
-            </span>
-          </div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-          <thead>
-            <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; font-size: 10px; color: #64748b; font-weight: 800;">
-              <th style="padding: 8px 12px; text-align: left;">Mitarbeiter</th>
-              <th style="padding: 8px 12px; text-align: left;">Objekt / Kunde</th>
-              <th style="padding: 8px 12px; text-align: left;">Schicht-Zeitraum</th>
-              <th style="padding: 8px 12px; text-align: right;">Stunden</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
-      </div>
-    `;
+        <tr style="background-color: ${weekend ? "#fffbeb" : idx % 2 === 0 ? "#ffffff" : "#f8fafc"}; border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 3px 6px; font-weight: 800; color: ${weekend ? "#b45309" : "#0f172a"}; font-size: 9px; white-space: nowrap;">
+            ${weekend ? "⭐ " : ""}${dateFormatted}
+          </td>
+          <td style="padding: 3px 6px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 2px;">
+              ${chipsHtml}
+            </div>
+          </td>
+          <td style="padding: 3px 6px; text-align: center; font-weight: 800; color: #025669; font-size: 9px;">
+            ${dayShifts.length}
+          </td>
+          <td style="padding: 3px 6px; text-align: right; font-weight: 900; color: #047857; font-size: 9px; white-space: nowrap;">
+            ${dayTotalHours} Std.
+          </td>
+        </tr>
+      `;
     })
     .join("");
 
@@ -282,51 +258,54 @@ export function exportSchedulePDF(
       <meta charset="UTF-8">
       <title>Monats-Schichtplan (${monthLabel})</title>
       <style>
-        @page { size: A4 landscape; margin: 12mm; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 15px; color: #0f172a; background-color: #f8fafc; }
-        .header { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .brand { font-size: 22px; font-weight: 900; color: #025669; letter-spacing: -0.5px; }
-        .title { font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 2px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
-        .stat-card { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 10px 14px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-        .stat-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
-        .stat-value { font-size: 20px; font-weight: 900; color: #025669; margin-top: 2px; }
-        .footer { margin-top: 20px; font-size: 9px; color: #94a3b8; border-top: 1px solid #cbd5e1; padding-top: 8px; display: flex; justify-content: space-between; }
+        @page { size: A4 landscape; margin: 6mm 8mm; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 4px; color: #0f172a; background-color: #ffffff; margin: 0; }
+        .header { border-bottom: 2px solid #025669; padding-bottom: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .brand { font-size: 15px; font-weight: 900; color: #025669; letter-spacing: -0.3px; }
+        .title { font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 1px; }
+        
+        .stats-bar { display: flex; gap: 10px; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; margin-bottom: 4px; font-size: 8.5px; font-weight: 700; align-items: center; justify-content: space-around; }
+        .stat-item { display: flex; gap: 4px; align-items: center; }
+        .stat-val { font-size: 11px; font-weight: 900; color: #025669; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 9px; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; }
+        th { background-color: #025669; color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 8.5px; padding: 4px 6px; letter-spacing: 0.3px; }
+
+        .footer { margin-top: 6px; font-size: 8px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 3px; display: flex; justify-content: space-between; }
       </style>
     </head>
     <body>
       <div class="header">
         <div>
-          <div class="brand">NOBLECLEAN <span style="font-size: 11px; color: #c8a951; font-weight: 800; margin-left: 6px;">MANAGEMENT SYSTEM</span></div>
+          <div class="brand">NOBLECLEAN <span style="font-size: 9px; color: #c8a951; font-weight: 800; margin-left: 4px;">OPERATIONAL MANAGEMENT</span></div>
           <div class="title">Monats-Schichtplan — ${monthLabel}</div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 500;">Tagesgenaue Übersicht aller zugewiesenen Schichten und Arbeitszeiten</div>
         </div>
-        <div style="font-size: 10px; font-weight: 700; color: #64748b; text-align: right;">
-          <div>Gedruckt am: ${nowStr}</div>
-          <div style="color: #025669; margin-top: 2px; font-weight: 800;">Status: Freigegebener Einsatzplan</div>
-        </div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Gesamte Schichten</div>
-          <div class="stat-value">${totalShifts}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Gesamtstunden</div>
-          <div class="stat-value" style="color: #047857;">${totalHours} Std.</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Eingesetzte Mitarbeiter</div>
-          <div class="stat-value" style="color: #4f46e5;">${uniqueWorkers}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Betreute Kunden/Objekte</div>
-          <div class="stat-value" style="color: #d97706;">${uniqueClients}</div>
+        <div style="font-size: 8.5px; font-weight: 700; color: #64748b; text-align: right;">
+          <div>Exportiert: ${nowStr}</div>
+          <div style="color: #025669; font-weight: 800;">Kompakt-Druckansicht (1 Seite A4)</div>
         </div>
       </div>
 
-      ${daysHtml}
+      <div class="stats-bar">
+        <div class="stat-item"><span>Gesamte Schichten:</span> <span class="stat-val">${totalShifts}</span></div>
+        <div class="stat-item"><span>Gesamtstunden:</span> <span class="stat-val" style="color: #047857;">${totalHours} Std.</span></div>
+        <div class="stat-item"><span>Eingesetzte Mitarbeiter:</span> <span class="stat-val" style="color: #4f46e5;">${uniqueWorkers}</span></div>
+        <div class="stat-item"><span>Betreute Objekte/Kunden:</span> <span class="stat-val" style="color: #d97706;">${uniqueClients}</span></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 85px; text-align: left;">Datum & Tag</th>
+            <th style="text-align: left;">Eingesetzte Mitarbeiter & Schichten (Zeiten & Stunden)</th>
+            <th style="width: 65px; text-align: center;">Mitarbeiter</th>
+            <th style="width: 75px; text-align: right;">Gesamt Std.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
 
       <div class="footer">
         <span>Erstellt durch NoblecleanOps Management Platform</span>
@@ -335,7 +314,7 @@ export function exportSchedulePDF(
 
       <script>
         window.onload = function() {
-          setTimeout(function() { window.print(); }, 200);
+          setTimeout(function() { window.print(); }, 150);
         };
       </script>
     </body>
