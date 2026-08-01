@@ -15,6 +15,7 @@ import {
 } from "./SectionsItemsForms";
 import { SectionsInteractive } from "./SectionsInteractive";
 import { GruppenInteractive } from "./GruppenInteractive";
+import { SmartClientSelector } from "./SmartClientSelector";
 import { quickRenameLeafItemAction } from "./actions";
 import type {
   SectionsItemsData,
