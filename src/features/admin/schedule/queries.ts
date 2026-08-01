@@ -110,7 +110,8 @@ export async function getScheduleData(
       return initialData();
     }
 
-    const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+    const sanitizeName = (name: string) => name;
+
 
     const employeeMap = new Map(
       employees.data.map((employee) => [employee.id, sanitizeName(employee.full_name)]),

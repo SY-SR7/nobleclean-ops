@@ -185,7 +185,7 @@ function countValue(value: number | null) {
   return value ?? 0;
 }
 
-const sanitizeName = (name: string) => (name === "Sarah Koch" ? "Stefan Schmidt" : name);
+const sanitizeName = (name: string) => name;
 
 export async function getAdminHomeData(locale: Locale): Promise<AdminHomeData> {
   await requireRole(locale, "admin");

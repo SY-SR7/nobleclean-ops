@@ -228,6 +228,20 @@ export function SectionsInteractive({
                   displayClassName="text-base font-extrabold text-on-surface hover:text-secondary cursor-pointer"
                   onSave={(next) => renameLeafItemInline(item.id, next)}
                 />
+                {item.referenceImagePath && (
+                  <div className="relative w-full h-44 rounded-2xl overflow-hidden shadow-sm my-2">
+                    <Image
+                      src={item.referenceImagePath.startsWith("/") ? item.referenceImagePath : `/${item.referenceImagePath}`}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <span className="absolute bottom-3 left-4 text-white text-xs font-bold bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-md">
+                      Referenz-Foto Standard
+                    </span>
+                  </div>
+                )}
                 <InfoGrid
                   items={[
                     {
@@ -281,11 +295,26 @@ export function SectionsInteractive({
                             value: copy.hasImage,
                             onClick: () =>
                               open({
-                                title: "Referenz-Foto",
+                                title: "Referenz-Foto Standard",
                                 subtitle: "Visueller Standard für die Reinigung",
                                 icon: <ImageIcon className="size-6 text-purple-600" />,
                                 accentColor: "primary",
-                                sections: [{ content: <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Foto-Referenz für Qualitäts-Check.</p> }],
+                                sections: [
+                                  {
+                                    content: item.referenceImagePath ? (
+                                      <div className="relative w-full h-56 rounded-2xl overflow-hidden">
+                                        <Image
+                                          src={item.referenceImagePath.startsWith("/") ? item.referenceImagePath : `/${item.referenceImagePath}`}
+                                          alt={item.name}
+                                          fill
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs text-on-surface p-4 bg-surface-container-low rounded-2xl">Foto-Referenz für Qualitäts-Check.</p>
+                                    ),
+                                  },
+                                ],
                               }),
                           },
                         ]
@@ -325,9 +354,9 @@ export function SectionsInteractive({
             content: (
               <div className="grid gap-2">
                 {[
-                  { name: "Thomas Müller", date: "31.07.2026 - 14:30", status: "Erfolgreich" },
-                  { name: "Stefan Schmidt", date: "30.07.2026 - 11:15", status: "Erfolgreich" },
-                  { name: "Marcel Braun", date: "29.07.2026 - 09:00", status: "Erfolgreich" },
+                  { name: "Mohamad", date: "31.07.2026 - 14:30", status: "Erfolgreich" },
+                  { name: "Eghbal", date: "30.07.2026 - 11:15", status: "Erfolgreich" },
+                  { name: "Khalid", date: "29.07.2026 - 09:00", status: "Erfolgreich" },
                 ].map((log, idx) => (
                   <button
                     key={idx}
