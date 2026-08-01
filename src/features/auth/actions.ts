@@ -61,13 +61,38 @@ export async function loginAction(
     return { errorCode: "AUTH_FAILED" };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: authData, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
     return { errorCode: "AUTH_FAILED" };
+  }
+
+  // Self-heal: ensure user has a matching profile row in public.profiles
+  if (authData?.user) {
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+
+    if (!existingProfile) {
+      const userRole =
+        email.trim().toLowerCase() === "nobleclean.private@gmail.com"
+          ? "admin"
+          : "employee";
+
+      await supabase.from("profiles").insert({
+        id: authData.user.id,
+        full_name:
+          (authData.user.user_metadata?.full_name as string | undefined) ||
+          email.split("@")[0] ||
+          "NobleClean User",
+        role: userRole,
+      });
+    }
   }
 
   redirect(nextPath);
