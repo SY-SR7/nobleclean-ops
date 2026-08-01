@@ -54,13 +54,13 @@ export function exportToPDF(
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
 
-  const tableHeaders = headers.map((h) => `<th style="padding: 6px 8px; border: 1px solid #000000; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 10px;">${h}</th>`).join("");
+  const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #000000; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 9px;">${h}</th>`).join("");
 
   const tableRows = rows
     .map(
       (r) =>
         `<tr>
-          ${r.map((cell) => `<td style="padding: 4px 8px; border: 1px solid #000000; text-align: left; color: #000000; font-size: 9.5px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
+          ${r.map((cell) => `<td style="padding: 2px 6px; border: 1px solid #000000; text-align: left; color: #000000; font-size: 8.5px; vertical-align: top;">${cell ?? "—"}</td>`).join("")}
         </tr>`
     )
     .join("");
@@ -74,10 +74,10 @@ export function exportToPDF(
       <style>
         @page { size: A4 portrait; margin: 8mm; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #000000; background-color: #ffffff; }
-        .table-container { width: 100%; margin: 0 auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 9.5px; border: 1.5px solid #000000; }
-        th { border: 1px solid #000000; padding: 5px 8px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 10px; }
-        td { border: 1px solid #000000; padding: 4px 8px; vertical-align: top; }
+        .table-container { width: 78%; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 8.5px; line-height: 1.1; border: 1.5px solid #000000; }
+        th { border: 1px solid #000000; padding: 4px 6px; background-color: #ffffff; color: #000000; font-weight: 700; text-align: left; font-size: 9px; }
+        td { border: 1px solid #000000; padding: 2px 6px; vertical-align: top; }
       </style>
     </head>
     <body>
@@ -114,9 +114,9 @@ export type ScheduleExportItem = Readonly<{
 }>;
 
 /**
- * Minimal Clean A4 Portrait Schedule PDF Exporter
+ * Minimal Clean Ultra-Compact Centered A4 Portrait Schedule PDF Exporter
  * 5 Columns: Datum | Wochentag | Mitarbeiter | Beginn | Ende
- * Matches exact dimensions, centered alignment, and single-page A4 printing.
+ * Ultra-tight vertical height and narrower column width.
  */
 export function exportSchedulePDF(
   monthLabel: string,
@@ -193,17 +193,17 @@ export function exportSchedulePDF(
       const dateFormatted = formatDateDDMMYYYY(dateStr);
       const wochentag = getGermanWochentag(dateStr);
 
-      const namesHtml = employees.map((e) => `<div>${e.name}</div>`).join("");
-      const startTimesHtml = employees.map((e) => `<div>${e.start}</div>`).join("");
-      const endTimesHtml = employees.map((e) => `<div>${e.end}</div>`).join("");
+      const namesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.name}</div>`).join("");
+      const startTimesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.start}</div>`).join("");
+      const endTimesHtml = employees.map((e) => `<div style="line-height: 1.15; margin: 0; padding: 0;">${e.end}</div>`).join("");
 
       return `
         <tr>
-          <td style="padding: 4px 8px; border: 1px solid #000000; font-size: 9.5px; font-weight: 500;">${dateFormatted}</td>
-          <td style="padding: 4px 8px; border: 1px solid #000000; font-size: 9.5px; font-weight: 500;">${wochentag}</td>
-          <td style="padding: 4px 8px; border: 1px solid #000000; font-size: 9.5px; font-weight: 500;">${namesHtml}</td>
-          <td style="padding: 4px 8px; border: 1px solid #000000; font-size: 9.5px; font-weight: 500; text-align: center;">${startTimesHtml}</td>
-          <td style="padding: 4px 8px; border: 1px solid #000000; font-size: 9.5px; font-weight: 500; text-align: center;">${endTimesHtml}</td>
+          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${dateFormatted}</td>
+          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${wochentag}</td>
+          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; line-height: 1.15;">${namesHtml}</td>
+          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.15;">${startTimesHtml}</td>
+          <td style="padding: 2px 6px; border: 1px solid #000000; font-size: 8.5px; font-weight: 500; text-align: center; line-height: 1.15;">${endTimesHtml}</td>
         </tr>
       `;
     })
@@ -228,27 +228,28 @@ export function exportSchedulePDF(
           color: #000000;
         }
         .table-container {
-          width: 100%;
+          width: 78%;
           margin: 0 auto;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 9.5px;
+          font-size: 8.5px;
+          line-height: 1.15;
           border: 1.5px solid #000000;
         }
         th {
           border: 1px solid #000000;
-          padding: 5px 8px;
+          padding: 4px 6px;
           background-color: #ffffff;
           color: #000000;
           font-weight: 700;
           text-align: left;
-          font-size: 10px;
+          font-size: 9px;
         }
         td {
           border: 1px solid #000000;
-          padding: 4px 8px;
+          padding: 2px 6px;
           vertical-align: top;
         }
       </style>
