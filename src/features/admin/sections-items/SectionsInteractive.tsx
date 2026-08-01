@@ -58,13 +58,20 @@ type SectionsInteractiveProps = Readonly<{
 /** Maps section name keywords to a section image path */
 function getSectionImage(name: string): string | null {
   const n = name.toLowerCase();
-  if (n.includes("cardio") || n.includes("ausdauer") || n.includes("cycling")) return "/images/sections/cardio.jpg";
-  if (n.includes("eingang") || n.includes("entrance") || n.includes("lobby") || n.includes("empfang")) return "/images/sections/entrance.jpg";
-  if (n.includes("sanitar") || n.includes("sanitär") || n.includes("toilette") || n.includes("wc") || n.includes("dusche") || n.includes("umkleide")) return "/images/sections/sanitary.jpg";
-  if (n.includes("sauna") || n.includes("dampf") || n.includes("wellness")) return "/images/sections/sauna.jpg";
-  if (n.includes("kraft") || n.includes("weight") || n.includes("gym") || n.includes("freih") || n.includes("gerät")) return "/images/sections/strength.jpg";
+  const v = "?v=20260801";
+  if (n.includes("cardio") || n.includes("ausdauer") || n.includes("cycling")) return `/images/sections/cardio.jpg${v}`;
+  if (n.includes("eingang") || n.includes("entrance") || n.includes("lobby") || n.includes("empfang")) return `/images/sections/entrance.jpg${v}`;
+  if (n.includes("sanitar") || n.includes("sanitär") || n.includes("toilette") || n.includes("wc") || n.includes("dusche") || n.includes("umkleide")) return `/images/sections/sanitary.jpg${v}`;
+  if (n.includes("sauna") || n.includes("dampf") || n.includes("wellness")) return `/images/sections/sauna.jpg${v}`;
+  if (n.includes("kraft") || n.includes("weight") || n.includes("gym") || n.includes("freih") || n.includes("gerät")) return `/images/sections/strength.jpg${v}`;
   // fallback — cycle through available images based on name hash
-  const images = ["/images/sections/entrance.jpg", "/images/sections/strength.jpg", "/images/sections/cardio.jpg", "/images/sections/sanitary.jpg", "/images/sections/sauna.jpg"];
+  const images = [
+    `/images/sections/entrance.jpg${v}`,
+    `/images/sections/strength.jpg${v}`,
+    `/images/sections/cardio.jpg${v}`,
+    `/images/sections/sanitary.jpg${v}`,
+    `/images/sections/sauna.jpg${v}`,
+  ];
   const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return images[hash % images.length];
 }
