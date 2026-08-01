@@ -200,6 +200,7 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
   };
 
   const handleExportScheduleExcel = () => {
+    const currentMonth = schedulesList[0]?.workDate?.slice(0, 7) || "2026-07";
     const headers = ["Datum", "Mitarbeiter Name", "Objekt / Kunde", "Schicht-Startzeit", "Schicht-Endzeit", "Stundenanzahl"];
     const rows = schedulesList.map((s) => [
       s.workDate,
@@ -209,11 +210,12 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
       s.endTime || "07:00",
       `${s.allocatedHours} Std.`,
     ]);
-    exportToCSV(`Nobleclean_Schichtplan_${selectedMonth}.csv`, headers, rows);
-    toast(`Schichtplan für ${selectedMonth} als Excel (CSV) exportiert!`, "success");
+    exportToCSV(`Nobleclean_Schichtplan_${currentMonth}.csv`, headers, rows);
+    toast(`Schichtplan für ${currentMonth} als Excel (CSV) exportiert!`, "success");
   };
 
   const handleExportSchedulePDF = () => {
+    const currentMonth = schedulesList[0]?.workDate?.slice(0, 7) || "2026-07";
     const headers = ["Datum", "Mitarbeiter Name", "Objekt / Kunde", "Uhrzeit", "Stunden"];
     const rows = schedulesList.map((s) => [
       s.workDate,
@@ -222,7 +224,7 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
       `${s.startTime || "04:00"} - ${s.endTime || "07:00"}`,
       `${s.allocatedHours} Std.`,
     ]);
-    exportToPDF(`Monats-Schichtplan (${selectedMonth})`, `Vollständige Schichtübersicht aller Mitarbeiter`, headers, rows, `Nobleclean_Schichtplan_${selectedMonth}.pdf`);
+    exportToPDF(`Monats-Schichtplan (${currentMonth})`, `Vollständige Schichtübersicht aller Mitarbeiter`, headers, rows, `Nobleclean_Schichtplan_${currentMonth}.pdf`);
   };
 
   const dayModalSchedules = useMemo(() => {

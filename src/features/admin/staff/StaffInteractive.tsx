@@ -86,7 +86,7 @@ export function StaffInteractive({
     const rows = assignments.map((a) => [
       a.employeeName,
       a.clientName,
-      a.role || "Reinigungskraft",
+      "Reinigungsfachkraft",
       a.startDate,
       a.endDate || "Laufend",
       a.isActive ? "Aktiv" : "Beendet",
@@ -100,7 +100,7 @@ export function StaffInteractive({
     const rows = assignments.map((a) => [
       a.employeeName,
       a.clientName,
-      a.role || "Reinigungskraft",
+      "Reinigungsfachkraft",
       a.startDate,
       a.endDate || "Laufend",
       a.isActive ? "Aktiv" : "Beendet",

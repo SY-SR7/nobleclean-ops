@@ -15,6 +15,7 @@ import {
   Trash2,
   FolderPlus,
   FileSpreadsheet,
+  Printer,
   Edit2,
 } from "lucide-react";
 import Image from "next/image";
@@ -488,12 +489,13 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
   };
 
   const handleExportPlanExcel = () => {
+    const headers = ["Plan Name", "Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer (Minuten)"];
     const rows: (string | number)[][] = [];
 
     activePlan.groups.forEach((g) => {
       const groupItems = leafItems.filter((i) => g.assignedItemIds.includes(i.id));
       groupItems.forEach((item) => {
-        rows.push([activePlan.name, `Gruppe ${g.groupIndex}`, g.name, item.name, item.estimatedMinutes]);
+        rows.push([activePlan.name, g.name, item.name, item.estimatedMinutes]);
       });
     });
 
@@ -502,13 +504,13 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
   };
 
   const handleExportPlanPDF = () => {
-    const headers = ["Gruppe", "Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer"];
+    const headers = ["Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer"];
     const rows: (string | number)[][] = [];
 
     activePlan.groups.forEach((g) => {
       const groupItems = leafItems.filter((i) => g.assignedItemIds.includes(i.id));
       groupItems.forEach((item) => {
-        rows.push([`Gruppe ${g.groupIndex}`, g.name, item.name, `${item.estimatedMinutes} Min.`]);
+        rows.push([g.name, item.name, `${item.estimatedMinutes} Min.`]);
       });
     });
 
