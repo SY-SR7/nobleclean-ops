@@ -485,8 +485,9 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
       ],
     };
     open(config);
+  }, [open, activePlan, leafItems]);
+
   const handleExportPlanExcel = () => {
-    const headers = ["Plan Name", "Gruppe", "Gruppe Name", "Reinigungsobjekt / Aufgabe", "Geschätzte Dauer (Minuten)"];
     const rows: (string | number)[][] = [];
 
     activePlan.groups.forEach((g) => {

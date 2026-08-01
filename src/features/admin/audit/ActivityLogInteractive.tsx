@@ -23,6 +23,8 @@ import {
 
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { useToast } from "@/components/ui/toast";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { Printer } from "lucide-react";
 import type { AuditLogItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
@@ -148,8 +150,23 @@ export function ActivityLogInteractive({ logs, locale }: ActivityLogInteractiveP
     });
   }, [logs, selectedActionFilter, searchQuery]);
 
-import { exportToCSV, exportToPDF } from "@/lib/export-utils";
-import { FileSpreadsheet, Printer } from "lucide-react";
+  const handleExportCSV = () => {
+    if (filteredLogs.length === 0) {
+      toast("Keine Daten zum Exportieren vorhanden!", "error");
+      return;
+    }
+    const headers = ["ID", "Datum & Zeit", "Aktion", "Tabelle / Bereich", "Benutzer", "Beschreibung"];
+    const rows = filteredLogs.map((l) => [
+      l.id,
+      formatDateLabel(l.createdAt, locale),
+      l.action,
+      l.tableLabel,
+      l.userEmail,
+      l.description,
+    ]);
+    exportToCSV("nobleclean_aktivitaetsprotokoll.csv", headers, rows);
+    toast("Aktivitätsprotokoll als CSV exportiert!", "success");
+  };
 
   const handleExportPDF = () => {
     if (filteredLogs.length === 0) {
@@ -255,13 +272,24 @@ import { FileSpreadsheet, Printer } from "lucide-react";
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleExportCSV}
-          className="bg-surface-container-low text-on-surface hover:bg-surface-container border border-outline-variant/70 px-4 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm shrink-0"
-        >
-          <Download className="size-4 text-secondary" /> Tabelle als CSV exportieren
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 border border-emerald-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Protokoll als Excel (CSV) exportieren"
+          >
+            <FileSpreadsheet className="size-4 text-emerald-600" /> Excel (.csv)
+          </button>
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            className="px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-800 border border-blue-500/20 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title="Protokoll als PDF Bericht drucken"
+          >
+            <Printer className="size-4 text-blue-600" /> PDF Drucken
+          </button>
+        </div>
       </div>
 
       {/* Action Filter Pills Bar */}
