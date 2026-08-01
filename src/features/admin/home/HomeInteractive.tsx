@@ -27,6 +27,7 @@ import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawe
 import { ModalDialog } from "@/components/ui/modal-dialog";
 import { useToast } from "@/components/ui/toast";
 import { MetricCard } from "@/components/ui";
+import { exportToCSV, exportToPDF } from "@/lib/export-utils";
 import { useAdminSpa, type AdminTab } from "@/context/admin-spa-context";
 import type {
   AdminHomeData,
