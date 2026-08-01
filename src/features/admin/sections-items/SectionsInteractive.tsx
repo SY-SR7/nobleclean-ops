@@ -10,23 +10,22 @@ import {
   Image as ImageIcon,
   User,
   History,
-  Video,
-  Sparkles,
   Edit3,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useDetailDrawer, InfoGrid, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { ViewToggle, useViewMode } from "@/components/ui/view-toggle";
 import { InlineEditField } from "@/components/ui/inline-edit-field";
 import { useToast } from "@/components/ui/toast";
-import { getSectionImage } from "@/lib/media-helper";
+import { getSectionMedia } from "@/lib/media-helper";
 import {
   quickRenameSectionAction,
   quickRenameLeafItemAction,
 } from "./actions";
-import type { SectionTreeNode, LeafItemListItem, ToolStepListItem } from "./queries";
+import type { SectionTreeNode, LeafItemListItem, CleaningToolStepListItem } from "./queries";
 import type { Locale } from "@/i18n/routing";
 
 type SectionsInteractiveProps = Readonly<{
@@ -34,18 +33,14 @@ type SectionsInteractiveProps = Readonly<{
   leafItems: readonly LeafItemListItem[];
   locale: Locale;
   clientId: string;
-  selectedSectionId?: string;
+  selectedSectionId?: string | null;
   onSelectSection?: (id: string) => void;
   copy: {
-    sectionTitle: string;
-    objectTitle: string;
     leafCount: string;
     minutes: string;
     quantity: string;
     recurrenceDays: string;
     hasImage: string;
-    noSections: string;
-    noObjects: string;
     toolStepsTitle: string;
     stepEstimateTotal: string;
     noToolSteps: string;
@@ -97,15 +92,20 @@ export function SectionsInteractive({
     return "Fehler";
   }
 
-  // Flatten section tree for easy parent/child lookups
-  const flatSections = useMemo(() => {
-    const list: SectionTreeNode[] = [];
-    function traverse(node: SectionTreeNode) {
-      list.push(node);
-      node.children.forEach(traverse);
-    }
-    sections.forEach(traverse);
-    return list;
+  // Build parent -> children map for nested sections
+  const childSectionsMap = useMemo(() => {
+    const map = new Map<string | null, SectionTreeNode[]>();
+    sections.forEach((s) => {
+      const parentId = s.parentSectionId;
+      const list = map.get(parentId) || [];
+      list.push(s);
+      map.set(parentId, list);
+    });
+    return map;
+  }, [sections]);
+
+  const rootSections = useMemo(() => {
+    return sections.filter((s) => s.parentSectionId === null);
   }, [sections]);
 
   // Leaf Item Drawer with full nested drill-down and inline editing
@@ -173,12 +173,12 @@ export function SectionsInteractive({
                     <div key={step.id} className="p-3.5 rounded-2xl border border-outline-variant/60 bg-surface-container-low/50 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-sm text-on-surface flex items-center gap-2">
-                          <Wrench className="size-4 text-secondary" /> Step {step.stepOrder}: {step.toolName || "Werkzeug"}
+                          <Wrench className="size-4 text-secondary" /> Schritt {step.sequenceOrder}: {step.toolName || "Werkzeug"}
                         </span>
                         <span className="text-xs font-semibold text-on-surface-variant">{step.estimatedMinutes} Min.</span>
                       </div>
-                      {step.stepDescription && (
-                        <p className="text-xs text-on-surface-variant leading-relaxed">{step.stepDescription}</p>
+                      {step.notes && (
+                        <p className="text-xs text-on-surface-variant leading-relaxed">{step.notes}</p>
                       )}
                     </div>
                   ))}
@@ -248,7 +248,8 @@ export function SectionsInteractive({
   const openSectionDrawer = useCallback(
     (section: SectionTreeNode) => {
       const sectionItems = leafItems.filter((item) => item.sectionId === section.id);
-      const sectionImg = getSectionImage(section.name);
+      const sectionImg = getSectionMedia(section.name).imageUrl;
+      const children = childSectionsMap.get(section.id) || [];
 
       const config: DrawerConfig = {
         title: section.name,
@@ -295,13 +296,13 @@ export function SectionsInteractive({
               </div>
             ),
           },
-          ...(section.children.length > 0
+          ...(children.length > 0
             ? [
                 {
-                  label: `Unterbereiche (${section.children.length}) — Klicken für Unter-Bereichs-Details`,
+                  label: `Unterbereiche (${children.length}) — Klicken für Unter-Bereichs-Details`,
                   content: (
                     <div className="grid gap-2">
-                      {section.children.map((child) => (
+                      {children.map((child) => (
                         <button
                           key={child.id}
                           type="button"
@@ -370,29 +371,31 @@ export function SectionsInteractive({
       };
       open(config);
     },
-    [open, leafItems, copy, openLeafItemDrawer],
+    [open, leafItems, copy, childSectionsMap, openLeafItemDrawer],
   );
+
+  const displaySections = rootSections.length > 0 ? rootSections : sections;
 
   return (
     <div className="grid gap-4">
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3">
         <p className="text-on-surface-variant text-sm">
-          {sections.length} Hauptbereiche · {leafItems.length} Objekte
+          {displaySections.length} Hauptbereiche · {leafItems.length} Objekte
         </p>
         <ViewToggle mode={viewMode} onChange={setViewMode} />
       </div>
 
       {sections.length === 0 ? (
         <p className="border-outline-variant bg-surface-container-lowest text-on-surface-variant rounded-2xl border px-5 py-8 text-sm">
-          {copy.noSections}
+          Keine Bereiche vorhanden
         </p>
       ) : viewMode === "grid" ? (
         /* 3-Column Luxury Section Cards Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {sections.map((root) => {
-            const rootImg = getSectionImage(root.name);
-            const rootItems = leafItems.filter((i) => i.sectionId === root.id);
+          {displaySections.map((root) => {
+            const rootImg = getSectionMedia(root.name).imageUrl;
+            const children = childSectionsMap.get(root.id) || [];
 
             return (
               <div
@@ -434,9 +437,9 @@ export function SectionsInteractive({
 
                 {/* Sub-Section Pills & Actions */}
                 <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                  {root.children.length > 0 ? (
+                  {children.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
-                      {root.children.slice(0, 3).map((child) => (
+                      {children.slice(0, 3).map((child) => (
                         <span
                           key={child.id}
                           className="bg-surface-container-low border border-outline-variant/60 text-on-surface-variant text-[11px] font-bold px-2.5 py-1 rounded-xl"
@@ -444,9 +447,9 @@ export function SectionsInteractive({
                           {child.name} ({child.leafCount})
                         </span>
                       ))}
-                      {root.children.length > 3 && (
+                      {children.length > 3 && (
                         <span className="bg-surface-container-low border border-outline-variant/60 text-on-surface-variant text-[11px] font-bold px-2.5 py-1 rounded-xl">
-                          +{root.children.length - 3} weitere
+                          +{children.length - 3} weitere
                         </span>
                       )}
                     </div>
@@ -468,7 +471,7 @@ export function SectionsInteractive({
       ) : (
         /* List View */
         <div className="grid gap-3">
-          {sections.map((root) => (
+          {displaySections.map((root) => (
             <div
               key={root.id}
               onClick={() => openSectionDrawer(root)}

@@ -190,7 +190,6 @@ export function SectionsTabClient({ data, forms, copy, locale }: SectionsTabClie
                             lastPerformed: copy.lastPerformed,
                             neverPerformed: copy.neverPerformed,
                             recurrenceDays: copy.recurrenceDays,
-                            optional: copy.optional,
                             quantity: copy.quantity,
                             toolStepsTitle: copy.toolStepsTitle,
                             stepEstimateTotal: copy.stepEstimateTotal,
