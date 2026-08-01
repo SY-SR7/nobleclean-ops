@@ -28,6 +28,17 @@ function getAdjacentMonth(monthStr: string, deltaMonths: number): string {
   return `${y}-${m}`;
 }
 
+const MONTH_OPTIONS = [
+  { value: "2026-05", label: "Mai 2026" },
+  { value: "2026-06", label: "Juni 2026" },
+  { value: "2026-07", label: "Juli 2026" },
+  { value: "2026-08", label: "August 2026" },
+  { value: "2026-09", label: "September 2026" },
+  { value: "2026-10", label: "Oktober 2026" },
+  { value: "2026-11", label: "November 2026" },
+  { value: "2026-12", label: "Dezember 2026" },
+];
+
 export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
   const router = useRouter();
 
@@ -42,9 +53,9 @@ export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
   const nextMonth = getAdjacentMonth(currentMonth, 1);
 
   return (
-    <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-low/60 border border-outline-variant/60">
-      {/* Month Navigator Control */}
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3.5 rounded-2xl bg-surface-container-low/60 border border-outline-variant/60">
+      {/* Month Navigator Controls */}
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           onClick={() => handleSelectMonth(prevMonth)}
@@ -69,18 +80,20 @@ export function MonthSelector({ currentMonth, locale }: MonthSelectorProps) {
           <ChevronRight className="size-5" />
         </button>
 
-        {/* Hidden DatePicker with Auto-Submit on Change */}
+        {/* Clean Styled Month Dropdown */}
         <div className="relative ml-1">
-          <input
-            type="month"
+          <select
             value={currentMonth}
-            onChange={(e) => {
-              if (e.target.value) handleSelectMonth(e.target.value);
-            }}
-            className="w-10 h-10 rounded-xl border border-outline-variant/60 bg-surface-container-lowest text-transparent cursor-pointer focus:outline-none text-xs"
-            title="Datum-Auswahl öffnen"
-          />
-          <CalendarDays className="size-4 text-on-surface-variant absolute top-3 left-3 pointer-events-none" />
+            onChange={(e) => handleSelectMonth(e.target.value)}
+            className="h-10 px-3 pl-9 rounded-xl border border-outline-variant/70 bg-surface-container-lowest text-on-surface font-extrabold text-xs cursor-pointer focus:border-secondary outline-none transition shadow-sm"
+          >
+            {MONTH_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <CalendarDays className="size-4 text-secondary absolute top-3 left-3 pointer-events-none" />
         </div>
       </div>
 
