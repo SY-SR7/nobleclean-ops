@@ -71,30 +71,38 @@ const IMAGES = {
   mop: "tool_mop_1785431708083.jpg",
 };
 
-// 3 Groups Sections
+// Fixed Gym Sections Hierarchy (Clean Physical Sections Tree)
 const rawSections = [
-  // MAIN SECTIONS
-  { key: "sec-g1-main", parent_key: null, name: "Gruppe 1 — Vorne, KidsClub, Herren Dusche, Mitte", image: IMAGES.reception, order: 1 },
-  { key: "sec-g2-main", parent_key: null, name: "Gruppe 2 — Hinten, Herren WC, Herren Umkleide, Wege", image: IMAGES.strength, order: 2 },
-  { key: "sec-g3-main", parent_key: null, name: "Gruppe 3 — Frauen komplett, Wellness, Cycling, Kursraum", image: IMAGES.sauna, order: 3 },
+  // MAIN PHYSICAL SECTIONS
+  { key: "sec-eingang-main", parent_key: null, name: "Eingangsbereich & Rezeption", image: IMAGES.reception, order: 1 },
+  { key: "sec-cardio-main",  parent_key: null, name: "Cardio-Zone & Lounge", image: IMAGES.cardio, order: 2 },
+  { key: "sec-kraft-main",   parent_key: null, name: "Kraftbereich & Freie Gewichte", image: IMAGES.freeweights, order: 3 },
+  { key: "sec-herren-main",  parent_key: null, name: "Herrenbereich (Sanitär, Duschen & Umkleide)", image: IMAGES.sanitary, order: 4 },
+  { key: "sec-damen-main",   parent_key: null, name: "Damenbereich (Sanitär, Duschen & Umkleide)", image: IMAGES.lockers, order: 5 },
+  { key: "sec-wellness-main",parent_key: null, name: "Wellness & Sauna", image: IMAGES.sauna, order: 6 },
+  { key: "sec-studios-main", parent_key: null, name: "Studios (Cycling & Kursraum)", image: IMAGES.strength, order: 7 },
+  { key: "sec-wege-main",    parent_key: null, name: "Hauptkorridore & Wege", image: IMAGES.scrubber, order: 8 },
 
-  // SUB SECTIONS G1
-  { key: "sec-g1-vorne", parent_key: "sec-g1-main", name: "Vorne (Empfang & Rezeption)", image: IMAGES.reception, order: 1 },
-  { key: "sec-g1-kids", parent_key: "sec-g1-main", name: "KidsClub (Kinderbereich)", image: IMAGES.entrance, order: 2 },
-  { key: "sec-g1-hdusche", parent_key: "sec-g1-main", name: "Herren Dusche (Sanitär & Duschen)", image: IMAGES.sanitary, order: 3 },
-  { key: "sec-g1-mitte", parent_key: "sec-g1-main", name: "Mitte (Cardio & Lounge)", image: IMAGES.cardio, order: 4 },
+  // SUB SECTIONS
+  { key: "sec-g1-vorne",     parent_key: "sec-eingang-main", name: "Vorne (Empfang & Rezeption)", image: IMAGES.reception, order: 1 },
+  { key: "sec-g1-kids",      parent_key: "sec-eingang-main", name: "KidsClub (Kinderbereich)", image: IMAGES.entrance, order: 2 },
 
-  // SUB SECTIONS G2
-  { key: "sec-g2-hinten", parent_key: "sec-g2-main", name: "Hinten (Kraftbereich & Freie Gewichte)", image: IMAGES.freeweights, order: 1 },
-  { key: "sec-g2-hwc", parent_key: "sec-g2-main", name: "Herren WC (Toiletten & Waschtische)", image: IMAGES.sanitary, order: 2 },
-  { key: "sec-g2-humkleide", parent_key: "sec-g2-main", name: "Herren Umkleide (Locker Room)", image: IMAGES.lockers, order: 3 },
-  { key: "sec-g2-wege", parent_key: "sec-g2-main", name: "alle Wege mit Maschine (Hauptkorridore)", image: IMAGES.scrubber, order: 4 },
+  { key: "sec-g1-mitte",     parent_key: "sec-cardio-main",  name: "Mitte (Cardio & Lounge)", image: IMAGES.cardio, order: 1 },
 
-  // SUB SECTIONS G3
-  { key: "sec-g3-frauen", parent_key: "sec-g3-main", name: "Frauen komplett (Umkleide & WC Damen)", image: IMAGES.lockers, order: 1 },
-  { key: "sec-g3-wellness", parent_key: "sec-g3-main", name: "Wellness & Sauna (Ruhebereich)", image: IMAGES.sauna, order: 2 },
-  { key: "sec-g3-cycling", parent_key: "sec-g3-main", name: "Cyclingraum (Studio B)", image: IMAGES.cardio, order: 3 },
-  { key: "sec-g3-kursraum", parent_key: "sec-g3-main", name: "Kursraum (Studio A & C)", image: IMAGES.strength, order: 4 },
+  { key: "sec-g2-hinten",    parent_key: "sec-kraft-main",   name: "Hinten (Kraftbereich & Freie Gewichte)", image: IMAGES.freeweights, order: 1 },
+
+  { key: "sec-g1-hdusche",   parent_key: "sec-herren-main",  name: "Herren Dusche (Sanitär & Duschen)", image: IMAGES.sanitary, order: 1 },
+  { key: "sec-g2-hwc",       parent_key: "sec-herren-main",  name: "Herren WC (Toiletten & Waschtische)", image: IMAGES.sanitary, order: 2 },
+  { key: "sec-g2-humkleide", parent_key: "sec-herren-main",  name: "Herren Umkleide (Locker Room)", image: IMAGES.lockers, order: 3 },
+
+  { key: "sec-g3-frauen",    parent_key: "sec-damen-main",   name: "Frauen komplett (Umkleide & WC Damen)", image: IMAGES.lockers, order: 1 },
+
+  { key: "sec-g3-wellness",  parent_key: "sec-wellness-main",name: "Wellness & Sauna (Ruhebereich)", image: IMAGES.sauna, order: 1 },
+
+  { key: "sec-g3-cycling",   parent_key: "sec-studios-main", name: "Cyclingraum (Studio B)", image: IMAGES.cardio, order: 1 },
+  { key: "sec-g3-kursraum",  parent_key: "sec-studios-main", name: "Kursraum (Studio A & C)", image: IMAGES.strength, order: 2 },
+
+  { key: "sec-g2-wege",      parent_key: "sec-wege-main",    name: "alle Wege mit Maschine (Hauptkorridore)", image: IMAGES.scrubber, order: 1 },
 ];
 
 const sectionsData = rawSections.map(s => ({
