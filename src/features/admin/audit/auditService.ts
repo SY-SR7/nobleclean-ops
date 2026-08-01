@@ -1,4 +1,4 @@
-import { createClient } from "@/server/db/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type AuditActionType =
   | "INSERT"
@@ -47,7 +47,7 @@ export function computeDiff(
 
 export async function logAudit(input: LogAuditInput): Promise<void> {
   try {
-    const supabase = await createClient();
+    const supabase = await createSupabaseServerClient();
     const { data: userData } = await supabase.auth.getUser();
     const user = userData?.user;
 
