@@ -347,4 +347,4 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
   );
 }
 
-const initialState = { status: "idle" };
+const initialState = { status: "idle" as const, code: null };
