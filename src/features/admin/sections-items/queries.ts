@@ -22,6 +22,7 @@ export type SectionTreeNode = Readonly<{
   clientId: string;
   depth: number;
   hasReferenceImage: boolean;
+  referenceImagePath: string | null;
   id: string;
   leafCount: number;
   name: string;
@@ -33,6 +34,7 @@ export type SectionTreeNode = Readonly<{
 export type LeafItemListItem = Readonly<{
   estimatedMinutes: number;
   hasReferenceImage: boolean;
+  referenceImagePath: string | null;
   id: string;
   name: string;
   notes: string | null;
@@ -154,6 +156,7 @@ function flattenSections(
         clientId: row.client_id,
         depth,
         hasReferenceImage: Boolean(row.reference_image_path),
+        referenceImagePath: row.reference_image_path,
         id: row.id,
         leafCount: total?.descendant_leaf_count ?? 0,
         name: row.name,
@@ -204,6 +207,7 @@ function toLeafItem(
   return {
     estimatedMinutes: row.estimated_minutes,
     hasReferenceImage: Boolean(row.reference_image_path),
+    referenceImagePath: row.reference_image_path,
     id: row.id,
     name: row.name,
     notes: row.notes,
