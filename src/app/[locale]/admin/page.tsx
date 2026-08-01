@@ -23,10 +23,9 @@ import {
   type RecentAdminPlan,
 } from "@/features/admin/home/queries";
 import {
-  EscalationInteractiveCard,
-  LastCleanedInteractiveCard,
   ReportsInteractiveMain,
 } from "@/features/admin/reports/ReportsInteractive";
+
 
 import { getReportsData } from "@/features/admin/reports/queries";
 import { ScheduleInteractive } from "@/features/admin/schedule/ScheduleInteractive";
