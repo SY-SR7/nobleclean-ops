@@ -66,7 +66,7 @@ export default async function AdminLayout({
     {
       href: `/${locale}/admin?tab=audit`,
       id: "audit",
-      label: "سجل النشاط (Audit)",
+      label: "Aktivitätsprotokoll",
     },
   ] satisfies readonly AdminNavigationItem[];
 

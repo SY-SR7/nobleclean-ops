@@ -258,7 +258,7 @@ export function ActivityLogInteractive({ logs, locale }: ActivityLogInteractiveP
             <Activity className="size-4" /> Audit Trail & System-Protokoll
           </span>
           <h2 className="text-2xl font-extrabold text-on-surface">
-            Aktivitätsprotokoll & سجل النشاط
+            Aktivitätsprotokoll
           </h2>
           <p className="text-xs text-on-surface-variant mt-0.5">
             Lückenlose Nachverfolgung aller Änderungen, Termine, Zuweisungen und Aktionen im System.

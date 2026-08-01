@@ -734,8 +734,8 @@ export default async function AdminPage({ params, searchParams }: AdminPageProps
     staff: t(messages, "navigation.admin.staff"),
     sections: t(messages, "navigation.admin.sectionsItems"),
     schedule: t(messages, "navigation.admin.schedule"),
-    reports: "التقارير والإحصائيات",
-    audit: "سجل النشاط (Audit)",
+    reports: "Berichte & Analysen",
+    audit: "Aktivitätsprotokoll",
   };
 
   return (
