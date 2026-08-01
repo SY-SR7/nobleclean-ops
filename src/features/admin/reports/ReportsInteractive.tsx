@@ -259,8 +259,7 @@ function StatCard({ label, value, sub, icon: Icon, iconColor, bg, border, growth
 }) {
   return (
     <div onClick={onClick}
-      className={`rounded-2xl border p-4 ${bg} ${border} ${onClick ? "cursor-pointer hover:-translate-y-0.5 transition-transform duration-200" : ""} relative overflow-hidden`}>
-      <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full opacity-40" style={{ background: "currentColor" }} />
+      className={`rounded-2xl border p-4 ${bg} ${border} ${onClick ? "cursor-pointer hover:-translate-y-0.5 transition-transform duration-200" : ""} relative overflow-hidden shadow-sm`}>
       <div className="relative">
         <div className="flex items-start justify-between mb-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${bg} border ${border}`}>
