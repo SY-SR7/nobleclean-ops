@@ -169,41 +169,38 @@ export async function getScheduleData(
         const counts = new Map<string, number>();
         empNames.forEach((name) => counts.set(name, (counts.get(name) || 0) + 1));
 
-        const seenCounts = new Map<string, number>();
+        const seenNames = new Set<string>();
         empNames.forEach((empName, index) => {
-          const seen = (seenCounts.get(empName) || 0) + 1;
-          seenCounts.set(empName, seen);
+          if (!seenNames.has(empName)) {
+            seenNames.add(empName);
+            const isDouble = (counts.get(empName) || 0) >= 2;
 
-          const isDouble = (counts.get(empName) || 0) >= 2;
-          let startTime = "04:00";
-          let endTime = "07:00";
+            let startTime = "04:00";
+            let endTime = "07:00";
+            let hours = isDouble ? 6.0 : 3.0;
 
-          if (isSaturday) {
-            startTime = "05:30";
-            endTime = "08:30";
-          } else if (isDouble) {
-            if (seen === 1) {
+            if (isSaturday) {
+              startTime = "05:30";
+              endTime = "08:30";
+            } else if (isDouble) {
               startTime = "01:00";
-              endTime = "04:00";
-            } else {
-              startTime = "04:00";
               endTime = "07:00";
             }
+
+            const empId = empNameToId.get(empName) || employees.data[index % employees.data.length]?.id || "e1a00000-0001-4000-8001-000000000001";
+
+            scheduleItems.push({
+              allocatedHours: hours,
+              clientId: defaultClientId,
+              clientName: defaultClientName,
+              employeeId: empId,
+              employeeName: empName,
+              id: `aug-${workDate}-${empName}`,
+              workDate,
+              startTime,
+              endTime,
+            });
           }
-
-          const empId = empNameToId.get(empName) || employees.data[index % employees.data.length]?.id || "e1a00000-0001-4000-8001-000000000001";
-
-          scheduleItems.push({
-            allocatedHours: 3.0,
-            clientId: defaultClientId,
-            clientName: defaultClientName,
-            employeeId: empId,
-            employeeName: empName,
-            id: `aug-${workDate}-${empName}-${seen}`,
-            workDate,
-            startTime,
-            endTime,
-          });
         });
       });
     } else {
@@ -215,37 +212,31 @@ export async function getScheduleData(
         groupedMap.get(key)!.push(item);
       });
 
-      schedules.data.forEach((item) => {
-        const key = `${item.work_date}_${item.employee_id}`;
-        const group = groupedMap.get(key) || [];
+      groupedMap.forEach((group) => {
+        const first = group[0];
         const isDouble = group.length >= 2;
-        const isSaturday = new Date(item.work_date).getDay() === 6;
+        const isSaturday = new Date(first.work_date).getDay() === 6;
 
         let startTime = "04:00";
         let endTime = "07:00";
+        let hours = isDouble ? 6.0 : 3.0;
 
         if (isSaturday) {
           startTime = "05:30";
           endTime = "08:30";
         } else if (isDouble) {
-          const itemIdx = group.findIndex((g) => g.id === item.id);
-          if (itemIdx === 0) {
-            startTime = "01:00";
-            endTime = "04:00";
-          } else {
-            startTime = "04:00";
-            endTime = "07:00";
-          }
+          startTime = "01:00";
+          endTime = "07:00";
         }
 
         scheduleItems.push({
-          allocatedHours: item.allocated_hours || 3.0,
-          clientId: item.client_id,
-          clientName: clientMap.get(item.client_id) ?? "",
-          employeeId: item.employee_id,
-          employeeName: employeeMap.get(item.employee_id) ?? "",
-          id: item.id,
-          workDate: item.work_date,
+          allocatedHours: hours,
+          clientId: first.client_id,
+          clientName: clientMap.get(first.client_id) ?? "",
+          employeeId: first.employee_id,
+          employeeName: employeeMap.get(first.employee_id) ?? "",
+          id: first.id,
+          workDate: first.work_date,
           startTime,
           endTime,
         });
