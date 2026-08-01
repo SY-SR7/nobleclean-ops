@@ -19,15 +19,13 @@ import {
   Zap,
   PieChart,
   Users,
-  Building2,
-  ChevronLeft,
-  ChevronRight,
   Target,
   Award,
-  Filter,
   Search,
   SortAsc,
   SortDesc,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useCallback, useActionState, useMemo, useState, useEffect, useRef } from "react";
 
@@ -43,11 +41,52 @@ import type {
 import type { Locale } from "@/i18n/routing";
 
 // ─────────────────────────────────────────────────────────────────────────────
+// COPY TYPE
+// ─────────────────────────────────────────────────────────────────────────────
+export type AnalyticsCopy = {
+  title: string; tabOverview: string; tabPlans: string; tabItems: string; tabStaff: string;
+  periodMonth: string; periodYear: string; periodAll: string; allTime: string; yearLabel: string;
+  kpiPlansTotal: string; kpiCompletionRate: string; kpiEscalations: string; kpiItemRate: string;
+  chartEvolution: string; chartRateTrend: string; ratesTitle: string;
+  plansCompleted: string; itemsCompleted: string; mandatoryCompleted: string;
+  distributionTitle: string; insightsTitle: string; topStaffTitle: string;
+  escalationsTitle: string; noEscalationsTitle: string; noEscalationsBody: string;
+  completedLabel: string; openLabel: string; compareLastMonth: string; plansGrowth: string;
+  chartLabelCompleted: string; chartLabelTotal: string; chartLabelRate: string;
+  insightExcellent: string; insightLow: string; insightEscalations: string;
+  insightTopStaff: string; insightOpenPlans: string;
+  plansBadgeComplete: string; plansBadgeInProgress: string;
+  drawerProgress: string; drawerCompleted: string; drawerStatusSection: string;
+  drawerEditSection: string; drawerEmployee: string; drawerDate: string; drawerObject: string;
+  drawerLastPerformed: string; drawerMarkDoneSection: string; drawerPerformedDate: string;
+  drawerMarkDone: string; drawerSaving: string; drawerSave: string; drawerOverdueLabel: string;
+  drawerTurnus: string; drawerDuration: string; drawerCleaned: string; drawerSection: string;
+  searchPlaceholder: string; itemSearchPlaceholder: string; sortDate: string; sortCompletions: string;
+  noPlans: string; noItems: string; noStaff: string;
+  staffPlansCompleted: string; staffItemsDone: string; subLabelEmployee: string;
+  exportCsv: string; filterAll: string; filterComplete: string; filterOpen: string;
+  csvEmployee: string; csvDate: string; csvStatus: string; csvDone: string; csvTotal: string;
+  csvProgress: string; statusComplete: string; statusInProgress: string;
+};
+
+export type ReportsMainCopy = {
+  employee: string; workDate: string; statusInProgress: string; statusSubmitted: string;
+  items: string; lastCleaned: string; neverCleaned: string; minutes: string;
+  recurrenceDays: string; section: string;
+  analytics: AnalyticsCopy;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const fmtN = (n: number) => n.toLocaleString("de-DE", { maximumFractionDigits: 0 });
-const monthShortDE = (y: number, m: number) =>
-  new Intl.DateTimeFormat("de-DE", { month: "short" }).format(new Date(y, m - 1, 1));
+
+/** Simple template interpolation: "Hello {name}" + {name:"World"} → "Hello World" */
+const interpolate = (tpl: string, vars: Record<string, string | number>) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, String(v)), tpl);
+
+const monthShortDE = (locale: Locale, y: number, m: number) =>
+  new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", { month: "short" }).format(new Date(y, m - 1, 1));
 
 function formatDate(value: string | null, locale: Locale, fallback: string) {
   if (!value) return fallback;
@@ -88,12 +127,12 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SVG LINE AREA CHART (Khabiaa-style)
+// SVG LINE AREA CHART
 // ─────────────────────────────────────────────────────────────────────────────
 function LineAreaChart({
-  dataA, dataB = [], labelA = "Erledigt", labelB = "Gesamt", labels, height = 110,
+  dataA, dataB = [], labelA, labelB, labels, height = 110,
 }: {
-  dataA: number[]; dataB?: number[]; labelA?: string; labelB?: string; labels: string[]; height?: number;
+  dataA: number[]; dataB?: number[]; labelA: string; labelB?: string; labels: string[]; height?: number;
 }) {
   const W = 500, H = height;
   const allVals = [...dataA, ...dataB];
@@ -153,7 +192,7 @@ function LineAreaChart({
           <div className="w-4 h-0.5 bg-secondary rounded" />
           <span className="text-[10px] text-on-surface-variant">{labelA}</span>
         </div>
-        {dataB.some(v => v > 0) && (
+        {labelB && dataB.some(v => v > 0) && (
           <div className="flex items-center gap-1.5">
             <div className="w-4 h-0.5 bg-violet-500 rounded border-t-2 border-dashed border-violet-500" />
             <span className="text-[10px] text-on-surface-variant">{labelB}</span>
@@ -172,33 +211,15 @@ function DonutChart({ segments, size = 80 }: { segments: { value: number; color:
   const vis = segments.filter(s => s.value > 0);
   const total = vis.reduce((s, d) => s + d.value, 0);
   if (total === 0) return <div style={{ width: size, height: size }} className="flex items-center justify-center text-xs text-on-surface-variant">—</div>;
-
-  const ptAt = (angle: number) => {
-    const rad = (angle * Math.PI) / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  };
-  const arc = (start: number, end: number) => {
-    const s = ptAt(start), e = ptAt(end);
-    const lg = end - start > 180 ? 1 : 0;
-    return `M ${s.x} ${s.y} A ${r} ${r} 0 ${lg} 1 ${e.x} ${e.y}`;
-  };
-
+  const ptAt = (a: number) => ({ x: cx + r * Math.cos(a * Math.PI / 180), y: cy + r * Math.sin(a * Math.PI / 180) });
+  const arc = (s: number, e: number) => { const p = ptAt(s), q = ptAt(e); return `M ${p.x} ${p.y} A ${r} ${r} 0 ${e - s > 180 ? 1 : 0} 1 ${q.x} ${q.y}`; };
   let startAngle = -90;
   const firstPct = Math.round((vis[0]?.value / total) * 100);
-
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
-      {vis.map((s, i) => {
-        const pct = s.value / total;
-        const end = startAngle + pct * 360;
-        const d = arc(startAngle, end);
-        startAngle = end;
-        return <path key={i} d={d} fill="none" stroke={s.color} strokeWidth={stroke} strokeLinecap="butt" />;
-      })}
-      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize="9" fill="#374151" fontWeight="bold">
-        {firstPct}%
-      </text>
+      {vis.map((s, i) => { const end = startAngle + (s.value / total) * 360; const d = arc(startAngle, end); startAngle = end; return <path key={i} d={d} fill="none" stroke={s.color} strokeWidth={stroke} strokeLinecap="butt" />; })}
+      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize="9" fill="#374151" fontWeight="bold">{firstPct}%</text>
     </svg>
   );
 }
@@ -206,9 +227,7 @@ function DonutChart({ segments, size = 80 }: { segments: { value: number; color:
 // ─────────────────────────────────────────────────────────────────────────────
 // HORIZONTAL BAR ROW
 // ─────────────────────────────────────────────────────────────────────────────
-function HBarRow({
-  label, sub, valueA, maxA, colorA = "#00677c", onClick,
-}: {
+function HBarRow({ label, sub, valueA, maxA, colorA = "#00677c", onClick }: {
   label: string; sub?: string; valueA: number; maxA: number; colorA?: string; onClick?: () => void;
 }) {
   const pctA = maxA > 0 ? (valueA / maxA) * 100 : 0;
@@ -216,8 +235,7 @@ function HBarRow({
     <button type="button" onClick={onClick}
       className="w-full text-left px-4 py-3 hover:bg-surface-container/60 transition-colors group cursor-pointer">
       <div className="flex items-center justify-between mb-1.5">
-        <div>
-          <span className="text-xs font-bold text-on-surface">{label}</span>
+        <div><span className="text-xs font-bold text-on-surface">{label}</span>
           {sub && <span className="text-[10px] text-on-surface-variant ml-2">{sub}</span>}
         </div>
         <div className="flex items-center gap-2">
@@ -226,8 +244,7 @@ function HBarRow({
         </div>
       </div>
       <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pctA}%`, background: colorA }} />
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pctA}%`, background: colorA }} />
       </div>
     </button>
   );
@@ -236,17 +253,14 @@ function HBarRow({
 // ─────────────────────────────────────────────────────────────────────────────
 // STAT CARD
 // ─────────────────────────────────────────────────────────────────────────────
-function StatCard({
-  label, value, sub, icon: Icon, iconColor, bg, border, growth, onClick,
-}: {
+function StatCard({ label, value, sub, icon: Icon, iconColor, bg, border, growth, onClick }: {
   label: string; value: number; sub?: string; icon: React.ElementType;
-  iconColor: string; bg: string; border: string;
-  growth?: GrowthResult; onClick?: () => void;
+  iconColor: string; bg: string; border: string; growth?: GrowthResult; onClick?: () => void;
 }) {
   return (
     <div onClick={onClick}
       className={`rounded-2xl border p-4 ${bg} ${border} ${onClick ? "cursor-pointer hover:-translate-y-0.5 transition-transform duration-200" : ""} relative overflow-hidden`}>
-      <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full opacity-40" style={{ background: bg }} />
+      <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full opacity-40" style={{ background: "currentColor" }} />
       <div className="relative">
         <div className="flex items-start justify-between mb-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${bg} border ${border}`}>
@@ -259,9 +273,7 @@ function StatCard({
           )}
         </div>
         <p className="text-[10px] text-on-surface-variant font-medium mb-1">{label}</p>
-        <p className={`text-2xl font-extrabold ${iconColor} leading-tight`}>
-          <CountUp value={value} />
-        </p>
+        <p className={`text-2xl font-extrabold ${iconColor} leading-tight`}><CountUp value={value} /></p>
         {sub && <p className="text-[10px] text-on-surface-variant mt-1">{sub}</p>}
       </div>
     </div>
@@ -285,21 +297,23 @@ function InsightChip({ icon: Icon, text, color }: { icon: React.ElementType; tex
 type PeriodMode = "month" | "year" | "all";
 type PeriodState = { mode: PeriodMode; year: number; month: number; label: string };
 
-function PeriodPicker({ period, onChange }: { period: PeriodState; onChange: (p: PeriodState) => void }) {
+function PeriodPicker({ period, onChange, locale, c }: {
+  period: PeriodState; onChange: (p: PeriodState) => void; locale: Locale; c: AnalyticsCopy;
+}) {
   const { year, month, mode } = period;
-  const gLabel = (y: number, m: number) => `${monthShortDE(y, m)} ${y}`;
+  const gLabel = (y: number, m: number) => `${monthShortDE(locale, y, m)} ${y}`;
   const goMonth = (y: number, m: number) => onChange({ mode: "month", year: y, month: m, label: gLabel(y, m) });
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="flex bg-surface-container rounded-xl p-0.5 gap-0.5">
-        {([["month", "Monat"], ["year", "Jahr"], ["all", "Gesamt"]] as [PeriodMode, string][]).map(([m, l]) => (
+        {([["month", c.periodMonth], ["year", c.periodYear], ["all", c.periodAll]] as [PeriodMode, string][]).map(([m, l]) => (
           <button key={m} type="button"
             onClick={() => {
               const n = new Date(); const y = n.getFullYear(), mo = n.getMonth() + 1;
               if (m === "month") goMonth(y, mo);
-              else if (m === "year") onChange({ mode: "year", year: y, month: mo, label: `Jahr ${y}` });
-              else onChange({ mode: "all", year: y, month: mo, label: "Gesamter Zeitraum" });
+              else if (m === "year") onChange({ mode: "year", year: y, month: mo, label: `${c.yearLabel} ${y}` });
+              else onChange({ mode: "all", year: y, month: mo, label: c.allTime });
             }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${mode === m ? "bg-secondary text-white shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
             {l}
@@ -310,23 +324,19 @@ function PeriodPicker({ period, onChange }: { period: PeriodState; onChange: (p:
       {mode === "month" && (
         <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/60 rounded-xl px-2 py-1.5">
           <button type="button" onClick={() => month === 1 ? goMonth(year - 1, 12) : goMonth(year, month - 1)}
-            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer">
-            <ChevronRight size={14} />
-          </button>
+            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"><ChevronRight size={14} /></button>
           <span className="text-xs font-bold text-on-surface min-w-[100px] text-center">{gLabel(year, month)}</span>
           <button type="button" onClick={() => month === 12 ? goMonth(year + 1, 1) : goMonth(year, month + 1)}
-            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer">
-            <ChevronLeft size={14} />
-          </button>
+            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"><ChevronLeft size={14} /></button>
         </div>
       )}
       {mode === "year" && (
         <div className="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant/60 rounded-xl px-2 py-1.5">
-          <button type="button" onClick={() => onChange({ ...period, year: year - 1, label: `Jahr ${year - 1}` })}
-            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"><ChevronRight size={14} /></button>
+          <button type="button" onClick={() => onChange({ ...period, year: year - 1, label: `${c.yearLabel} ${year - 1}` })}
+            className="text-on-surface-variant hover:text-secondary cursor-pointer"><ChevronRight size={14} /></button>
           <span className="text-xs font-bold text-on-surface min-w-[60px] text-center">{year}</span>
-          <button type="button" onClick={() => onChange({ ...period, year: year + 1, label: `Jahr ${year + 1}` })}
-            className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer"><ChevronLeft size={14} /></button>
+          <button type="button" onClick={() => onChange({ ...period, year: year + 1, label: `${c.yearLabel} ${year + 1}` })}
+            className="text-on-surface-variant hover:text-secondary cursor-pointer"><ChevronLeft size={14} /></button>
         </div>
       )}
     </div>
@@ -336,16 +346,14 @@ function PeriodPicker({ period, onChange }: { period: PeriodState; onChange: (p:
 // ─────────────────────────────────────────────────────────────────────────────
 // SEARCH + SORT BAR
 // ─────────────────────────────────────────────────────────────────────────────
-function SearchSortBar({
-  search, onSearch, sortLabel, onSort, sortUp,
-}: {
-  search: string; onSearch: (v: string) => void; sortLabel: string; onSort: () => void; sortUp: boolean;
+function SearchSortBar({ search, onSearch, sortLabel, onSort, sortUp, placeholder }: {
+  search: string; onSearch: (v: string) => void; sortLabel: string; onSort: () => void; sortUp: boolean; placeholder: string;
 }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2 border-b border-outline-variant/40">
       <div className="flex-1 flex items-center gap-2 bg-surface-container rounded-xl px-3 py-2">
         <Search size={11} className="text-on-surface-variant" />
-        <input value={search} onChange={e => onSearch(e.target.value)} placeholder="Suchen..."
+        <input value={search} onChange={e => onSearch(e.target.value)} placeholder={placeholder}
           className="flex-1 bg-transparent text-xs text-on-surface outline-none placeholder:text-on-surface-variant" />
       </div>
       <button type="button" onClick={onSort}
@@ -359,7 +367,7 @@ function SearchSortBar({
 // ─────────────────────────────────────────────────────────────────────────────
 // INLINE FORMS
 // ─────────────────────────────────────────────────────────────────────────────
-function InlinePlanEditForm({ plan, locale }: { plan: CompletionPlanSummary; locale: Locale }) {
+function InlinePlanEditForm({ plan, locale, c }: { plan: CompletionPlanSummary; locale: Locale; c: AnalyticsCopy }) {
   const [state, formAction, isPending] = useActionState(updatePlanProgressAction, { ok: false, message: "" });
   return (
     <form action={formAction} className="border-outline-variant bg-surface-container-low grid gap-3.5 rounded-2xl border p-4">
@@ -374,23 +382,25 @@ function InlinePlanEditForm({ plan, locale }: { plan: CompletionPlanSummary; loc
         <label className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant block mb-1.5">Status</label>
         <select name="status" defaultValue={plan.status}
           className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-xl border px-3 text-sm outline-none">
-          <option value="in_progress">In Bearbeitung</option>
-          <option value="submitted">Abgeschlossen</option>
+          <option value="in_progress">{c.statusInProgress}</option>
+          <option value="submitted">{c.statusComplete}</option>
         </select>
       </div>
       <div>
-        <label className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant block mb-1.5">Abgeschlossen ({plan.completedItems} / {plan.totalItems})</label>
+        <label className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant block mb-1.5">
+          {c.drawerCompleted} ({plan.completedItems} / {plan.totalItems})
+        </label>
         <input type="number" name="completedItems" min={0} max={plan.totalItems} defaultValue={plan.completedItems}
           className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-xl border px-3 text-sm outline-none" />
       </div>
       <Button type="submit" disabled={isPending} icon={<Save className="size-4" />} className="w-full justify-center">
-        {isPending ? "Speichere..." : "Aktualisieren"}
+        {isPending ? c.drawerSaving : c.drawerSave}
       </Button>
     </form>
   );
 }
 
-function InlineStepMarkForm({ stepId, locale }: { stepId: string; locale: Locale }) {
+function InlineStepMarkForm({ stepId, locale, c }: { stepId: string; locale: Locale; c: AnalyticsCopy }) {
   const [state, formAction, isPending] = useActionState(markToolStepPerformedAction, { ok: false, message: "" });
   return (
     <form action={formAction} className="border-outline-variant bg-surface-container-low grid gap-3 rounded-2xl border p-4">
@@ -402,105 +412,48 @@ function InlineStepMarkForm({ stepId, locale }: { stepId: string; locale: Locale
         </div>
       )}
       <div>
-        <label className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant block mb-1.5">Ausführungsdatum</label>
+        <label className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant block mb-1.5">{c.drawerPerformedDate}</label>
         <input type="date" name="performedAt" defaultValue={new Date().toISOString().slice(0, 10)}
           className="border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary h-10 w-full rounded-xl border px-3 text-sm outline-none" />
       </div>
       <Button type="submit" disabled={isPending} icon={<Check className="size-4" />} className="w-full justify-center">
-        {isPending ? "Speichere..." : "Als ausgeführt markieren"}
+        {isPending ? c.drawerSaving : c.drawerMarkDone}
       </Button>
     </form>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTERACTIVE CARDS (still exported for optional use)
+// EXPORTED STANDALONE CARDS (kept for backward compat)
 // ─────────────────────────────────────────────────────────────────────────────
-export function PlanInteractiveCard({ plan, locale, copy }: {
-  plan: CompletionPlanSummary; locale: Locale;
-  copy: { employee: string; workDate: string; statusInProgress: string; statusSubmitted: string; items: string };
+export function EscalationInteractiveCard({ step, locale, c }: {
+  step: MandatoryStepEscalation; locale: Locale; c: AnalyticsCopy;
 }) {
-  const { open } = useDetailDrawer();
-  const pct = plan.totalItems > 0 ? Math.round((plan.completedItems / plan.totalItems) * 100) : 0;
-
-  const openDrawer = useCallback(() => {
-    const config: DrawerConfig = {
-      title: plan.employeeName, subtitle: formatDate(plan.workDate, locale, ""),
-      icon: <BarChart3 className="size-6 text-secondary" />,
-      accentColor: plan.status === "submitted" ? "success" : "warning",
-      badge: { label: plan.status === "submitted" ? copy.statusSubmitted : copy.statusInProgress, variant: plan.status === "submitted" ? "success" : "warning" },
-      kpis: [
-        { label: "Fortschritt", value: `${pct}%`, color: "text-secondary" },
-        { label: "Erledigt", value: `${plan.completedItems}/${plan.totalItems}`, color: "text-emerald-600" },
-      ],
-      sections: [
-        {
-          label: "Status & Fortschritt", content: (
-            <div className="grid gap-3">
-              <div className="w-full bg-surface-container-low h-3 rounded-full overflow-hidden p-0.5">
-                <div className="bg-secondary h-full rounded-full" style={{ width: `${pct}%` }} />
-              </div>
-              <InfoGrid items={[
-                { icon: <User className="size-4" />, label: copy.employee, value: plan.employeeName },
-                { icon: <CalendarDays className="size-4" />, label: copy.workDate, value: formatDate(plan.workDate, locale, "—") },
-              ]} />
-            </div>
-          ),
-        },
-        { label: "Bearbeiten", content: <InlinePlanEditForm plan={plan} locale={locale} /> },
-      ],
-    };
-    open(config);
-  }, [open, plan, locale, copy, pct]);
-
-  return (
-    <button type="button" onClick={openDrawer}
-      className="border-outline-variant/60 bg-surface-container-lowest hover:border-secondary group block w-full text-left rounded-3xl border p-4 shadow-sm transition-all hover:shadow-md cursor-pointer">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
-            {plan.employeeName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-extrabold text-on-surface group-hover:text-secondary transition-colors truncate">{plan.employeeName}</p>
-            <p className="text-xs text-on-surface-variant mt-0.5 truncate">{formatDate(plan.workDate, locale, "—")}</p>
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-secondary text-lg font-extrabold">{pct}%</p>
-          <p className="text-on-surface-variant text-xs">{plan.completedItems}/{plan.totalItems}</p>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-export function EscalationInteractiveCard({ step, locale }: { step: MandatoryStepEscalation; locale: Locale }) {
   const { open } = useDetailDrawer();
   const openDrawer = useCallback(() => {
     const config: DrawerConfig = {
       title: step.toolName, subtitle: step.leafItemName,
       icon: <AlertTriangle className="size-6 text-rose-600" />,
       accentColor: "critical",
-      badge: { label: "Pflicht-Schritt Überfällig", variant: "critical" },
+      badge: { label: c.drawerOverdueLabel, variant: "critical" },
       kpis: [
-        { label: "Turnus", value: `${step.recurrenceDays}T`, color: "text-amber-600" },
-        { label: "Dauer", value: `${step.estimatedMinutes}m`, color: "text-blue-600" },
+        { label: c.drawerTurnus, value: `${step.recurrenceDays}d`, color: "text-amber-600" },
+        { label: c.drawerDuration, value: `${step.estimatedMinutes}m`, color: "text-blue-600" },
       ],
       sections: [
         {
-          label: "Details", content: (
+          label: c.drawerStatusSection, content: (
             <InfoGrid items={[
-              { icon: <Layers className="size-4" />, label: "Objekt", value: step.leafItemName },
-              { icon: <Clock className="size-4" />, label: "Letzte Ausführung", value: formatDate(step.lastPerformedAt, locale, "Nie") },
+              { icon: <Layers className="size-4" />, label: c.drawerObject, value: step.leafItemName },
+              { icon: <Clock className="size-4" />, label: c.drawerLastPerformed, value: formatDate(step.lastPerformedAt, locale, c.drawerLastPerformed) },
             ]} />
           ),
         },
-        { label: "Als ausgeführt markieren", content: <InlineStepMarkForm stepId={step.id} locale={locale} /> },
+        { label: c.drawerMarkDoneSection, content: <InlineStepMarkForm stepId={step.id} locale={locale} c={c} /> },
       ],
     };
     open(config);
-  }, [open, step, locale]);
+  }, [open, step, locale, c]);
 
   return (
     <button type="button" onClick={openDrawer}
@@ -529,13 +482,13 @@ export function LastCleanedInteractiveCard({ item, locale, copy }: {
       title: item.name, subtitle: item.sectionName,
       icon: <CheckCircle2 className="size-6 text-emerald-600" />,
       accentColor: "success",
-      badge: { label: item.lastCleanedAt ? "Gereinigt" : copy.neverCleaned, variant: item.lastCleanedAt ? "success" : "warning" },
+      badge: { label: item.lastCleanedAt ? copy.lastCleaned : copy.neverCleaned, variant: item.lastCleanedAt ? "success" : "warning" },
       kpis: [
-        { label: "Dauer", value: `${item.estimatedMinutes}m`, color: "text-emerald-600" },
-        { label: "Turnus", value: item.recurrenceDays ? `${item.recurrenceDays}d` : "—", color: "text-blue-600" },
+        { label: copy.minutes, value: `${item.estimatedMinutes}m`, color: "text-emerald-600" },
+        { label: copy.recurrenceDays, value: item.recurrenceDays ? `${item.recurrenceDays}d` : "—", color: "text-blue-600" },
       ],
       sections: [{
-        label: "Reinigungs-Status", content: (
+        label: copy.lastCleaned, content: (
           <InfoGrid items={[
             { icon: <Clock className="size-4" />, label: copy.lastCleaned, value: formatDate(item.lastCleanedAt, locale, copy.neverCleaned) },
             { icon: <Layers className="size-4" />, label: copy.section, value: item.sectionName },
@@ -564,43 +517,7 @@ export function LastCleanedInteractiveCard({ item, locale, copy }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GRID CONTAINERS (exported for backward compatibility)
-// ─────────────────────────────────────────────────────────────────────────────
-export function PlansGridContainer({ plans, locale, copy }: {
-  plans: readonly CompletionPlanSummary[]; locale: Locale;
-  copy: { employee: string; workDate: string; statusInProgress: string; statusSubmitted: string; items: string };
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {plans.map(plan => <PlanInteractiveCard key={plan.id} plan={plan} locale={locale} copy={copy} />)}
-    </div>
-  );
-}
-
-export function LastCleanedGridContainer({ items, locale, copy }: {
-  items: readonly LastCleanedItem[]; locale: Locale;
-  copy: { lastCleaned: string; neverCleaned: string; minutes: string; recurrenceDays: string; section: string };
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map(item => <LastCleanedInteractiveCard key={item.id} item={item} locale={locale} copy={copy} />)}
-    </div>
-  );
-}
-
-export function EscalationsGridContainer({ items, locale, copy }: {
-  items: readonly MandatoryStepEscalation[]; locale: Locale;
-  copy: { lastPerformed: string; neverPerformed: string; minutes: string; recurrenceDays: string; mandatory: string };
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map(step => <EscalationInteractiveCard key={step.id} step={step} locale={locale} />)}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ██████  MAIN EXECUTIVE ANALYTICS DASHBOARD  ██████
+// ██████  MAIN ANALYTICS DASHBOARD  ██████
 // ─────────────────────────────────────────────────────────────────────────────
 export function ReportsInteractiveMain({
   plans, lastCleanedItems, escalations, locale, copy, clients, selectedClientId,
@@ -611,15 +528,13 @@ export function ReportsInteractiveMain({
   locale: Locale;
   clients?: readonly ReportsClientOption[];
   selectedClientId?: string | null;
-  copy: {
-    employee: string; workDate: string; statusInProgress: string; statusSubmitted: string; items: string;
-    lastCleaned: string; neverCleaned: string; minutes: string; recurrenceDays: string; section: string;
-  };
+  copy: ReportsMainCopy;
 }) {
+  const c = copy.analytics;
   const now = new Date();
   const [period, setPeriod] = useState<PeriodState>({
     mode: "month", year: now.getFullYear(), month: now.getMonth() + 1,
-    label: `${monthShortDE(now.getFullYear(), now.getMonth() + 1)} ${now.getFullYear()}`,
+    label: `${monthShortDE(locale, now.getFullYear(), now.getMonth() + 1)} ${now.getFullYear()}`,
   });
   const [activeTab, setActiveTab] = useState<ActiveSubTab>("overview");
   const [planSearch, setPlanSearch] = useState("");
@@ -629,49 +544,44 @@ export function ReportsInteractiveMain({
   const [staffSortUp, setStaffSortUp] = useState(false);
   const { open } = useDetailDrawer();
 
-  // ── Period filter ───────────────────────────────────────────────────────────
+  // ── Period filter ──────────────────────────────────────────────────────────
   const periodPlans = useMemo(() => {
     if (period.mode === "all") return plans;
     return plans.filter(p => {
-      const ym = p.workDate.slice(0, 7);
-      if (period.mode === "month") return ym === `${period.year}-${String(period.month).padStart(2, "0")}`;
+      if (period.mode === "month") return p.workDate.slice(0, 7) === `${period.year}-${String(period.month).padStart(2, "0")}`;
       if (period.mode === "year") return p.workDate.startsWith(String(period.year));
       return true;
     });
   }, [plans, period]);
 
-  // ── Statistics ──────────────────────────────────────────────────────────────
+  // ── Stats ──────────────────────────────────────────────────────────────────
   const totalPlans = periodPlans.length;
   const completePlans = periodPlans.filter(p => p.isComplete).length;
-  const incompletePlans = totalPlans - completePlans;
+  const incompletePlansCount = totalPlans - completePlans;
   const completionRate = totalPlans > 0 ? Math.round((completePlans / totalPlans) * 100) : 0;
   const totalItems = periodPlans.reduce((s, p) => s + p.totalItems, 0);
   const completedItems = periodPlans.reduce((s, p) => s + p.completedItems, 0);
   const itemCompletionRate = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-  // ── Previous period growth ──────────────────────────────────────────────────
+  // ── Growth ─────────────────────────────────────────────────────────────────
   const prevGrowth = useMemo(() => {
     if (period.mode !== "month") return null;
-    const prev = period.month === 1
-      ? { year: period.year - 1, month: 12 }
-      : { year: period.year, month: period.month - 1 };
+    const prev = period.month === 1 ? { year: period.year - 1, month: 12 } : { year: period.year, month: period.month - 1 };
     const prevYm = `${prev.year}-${String(prev.month).padStart(2, "0")}`;
     const prevPlans = plans.filter(p => p.workDate.slice(0, 7) === prevYm);
-    const prevComplete = prevPlans.filter(p => p.isComplete).length;
-    return { plans: growthLabel(completePlans, prevComplete) };
+    return { plans: growthLabel(completePlans, prevPlans.filter(p => p.isComplete).length) };
   }, [period, plans, completePlans]);
 
-  // ── 6-month trend ───────────────────────────────────────────────────────────
+  // ── 6-month trend ──────────────────────────────────────────────────────────
   const trend6 = useMemo(() => Array.from({ length: 6 }, (_, i) => {
     const d = new Date(period.year, period.month - 1 - (5 - i), 1);
     const y = d.getFullYear(), m = d.getMonth() + 1;
     const ym = `${y}-${String(m).padStart(2, "0")}`;
     const inM = plans.filter(p => p.workDate.slice(0, 7) === ym);
-    const comp = inM.filter(p => p.isComplete).length;
-    return { label: monthShortDE(y, m), completed: comp, total: inM.length };
-  }), [plans, period]);
+    return { label: monthShortDE(locale, y, m), completed: inM.filter(p => p.isComplete).length, total: inM.length };
+  }), [plans, period, locale]);
 
-  // ── By staff ────────────────────────────────────────────────────────────────
+  // ── By staff ───────────────────────────────────────────────────────────────
   const byStaffRaw = useMemo(() => {
     const map: Record<string, { name: string; total: number; completed: number; items: number }> = {};
     periodPlans.forEach(p => {
@@ -692,7 +602,7 @@ export function ReportsInteractiveMain({
 
   const maxStaffCompleted = Math.max(...byStaff.map(x => x.completed), 1);
 
-  // ── Filtered plans ──────────────────────────────────────────────────────────
+  // ── Filtered plans ─────────────────────────────────────────────────────────
   const filteredPlans = useMemo(() => {
     let r = [...periodPlans];
     if (planSearch) r = r.filter(p => p.employeeName.toLowerCase().includes(planSearch.toLowerCase()));
@@ -703,7 +613,7 @@ export function ReportsInteractiveMain({
     return r;
   }, [periodPlans, planSearch, planSortUp]);
 
-  // ── Filtered items ──────────────────────────────────────────────────────────
+  // ── Filtered items ─────────────────────────────────────────────────────────
   const filteredItems = useMemo(() => {
     if (!itemSearch) return lastCleanedItems;
     return lastCleanedItems.filter(i =>
@@ -712,43 +622,45 @@ export function ReportsInteractiveMain({
     );
   }, [lastCleanedItems, itemSearch]);
 
-  // ── Insights ────────────────────────────────────────────────────────────────
+  // ── Insights ───────────────────────────────────────────────────────────────
   const insights = useMemo(() => {
     const list: { icon: React.ElementType; text: string; color: string }[] = [];
-    if (completionRate >= 90) list.push({ icon: Award, text: `Exzellente Erfüllungsquote: ${completionRate}%`, color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
-    else if (completionRate < 50 && totalPlans > 0) list.push({ icon: AlertTriangle, text: `Niedrige Erfüllungsquote: ${completionRate}%`, color: "bg-red-50 text-red-600 border-red-200" });
-    if (escalations.length > 0) list.push({ icon: ShieldAlert, text: `${escalations.length} überfällige Pflicht-Schritte`, color: "bg-amber-50 text-amber-700 border-amber-200" });
-    if (byStaff[0]) list.push({ icon: Users, text: `Top-Mitarbeiter: ${byStaff[0].name} (${byStaff[0].completed} Pläne)`, color: "bg-blue-50 text-blue-700 border-blue-200" });
-    if (incompletePlans > 0) list.push({ icon: Clock, text: `${incompletePlans} offene Tagespläne`, color: "bg-violet-50 text-violet-700 border-violet-200" });
+    if (completionRate >= 90) list.push({ icon: Award, text: interpolate(c.insightExcellent, { rate: completionRate }), color: "bg-emerald-50 text-emerald-700 border-emerald-200" });
+    else if (completionRate < 50 && totalPlans > 0) list.push({ icon: AlertTriangle, text: interpolate(c.insightLow, { rate: completionRate }), color: "bg-red-50 text-red-600 border-red-200" });
+    if (escalations.length > 0) list.push({ icon: ShieldAlert, text: interpolate(c.insightEscalations, { count: escalations.length }), color: "bg-amber-50 text-amber-700 border-amber-200" });
+    if (byStaff[0]) list.push({ icon: Users, text: interpolate(c.insightTopStaff, { name: byStaff[0].name, count: byStaff[0].completed }), color: "bg-blue-50 text-blue-700 border-blue-200" });
+    if (incompletePlansCount > 0) list.push({ icon: Clock, text: interpolate(c.insightOpenPlans, { count: incompletePlansCount }), color: "bg-violet-50 text-violet-700 border-violet-200" });
     return list.slice(0, 4);
-  }, [completionRate, escalations.length, byStaff, incompletePlans, totalPlans]);
+  }, [completionRate, escalations.length, byStaff, incompletePlansCount, totalPlans, c]);
 
-  // ── CSV Export ──────────────────────────────────────────────────────────────
+  // ── CSV Export ─────────────────────────────────────────────────────────────
   const exportCSV = useCallback(() => {
     const rows = filteredPlans.map(p => [
-      p.employeeName, p.workDate, p.status === "submitted" ? "Abgeschlossen" : "In Bearbeitung",
+      p.employeeName, p.workDate, p.isComplete ? c.statusComplete : c.statusInProgress,
       p.completedItems, p.totalItems, `${p.totalItems > 0 ? Math.round((p.completedItems / p.totalItems) * 100) : 0}%`,
     ]);
-    const hdr = ["Mitarbeiter", "Datum", "Status", "Erledigt", "Gesamt", "Fortschritt"];
-    const csv = [hdr, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const hdr = [c.csvEmployee, c.csvDate, c.csvStatus, c.csvDone, c.csvTotal, c.csvProgress];
+    const csv = [hdr, ...rows].map(r => r.map(col => `"${String(col).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `nobleclean_report_${period.label.replace(" ", "_")}.csv`; a.click();
+    a.href = url; a.download = `nobleclean_${period.label.replace(/\s/g, "_")}.csv`; a.click();
     URL.revokeObjectURL(url);
-  }, [filteredPlans, period.label]);
+  }, [filteredPlans, period.label, c]);
 
   const subTabs: { id: ActiveSubTab; label: string; icon: React.ElementType }[] = [
-    { id: "overview", label: "Übersicht", icon: BarChart3 },
-    { id: "plans", label: `Tagespläne (${totalPlans})`, icon: CalendarDays },
-    { id: "items", label: `Objekte (${lastCleanedItems.length})`, icon: Layers },
-    { id: "staff", label: `Mitarbeiter (${byStaffRaw.length})`, icon: Users },
+    { id: "overview", label: c.tabOverview, icon: BarChart3 },
+    { id: "plans", label: `${c.tabPlans} (${totalPlans})`, icon: CalendarDays },
+    { id: "items", label: `${c.tabItems} (${lastCleanedItems.length})`, icon: Layers },
+    { id: "staff", label: `${c.tabStaff} (${byStaffRaw.length})`, icon: Users },
   ];
+
+  const initials = (name: string) => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <div className="space-y-4">
 
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      {/* ── HEADER ──────────────────────────────────────────────────────────── */}
       <div className="bg-gradient-to-l from-secondary/5 to-transparent rounded-2xl border border-secondary/20 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
@@ -756,39 +668,38 @@ export function ReportsInteractiveMain({
               <BarChart3 size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-base font-extrabold text-on-surface">التقارير والإحصائيات</h1>
+              <h1 className="text-base font-extrabold text-on-surface">{c.title}</h1>
               <p className="text-[10px] text-on-surface-variant">{period.label}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Filter: complete/all */}
             <div className="flex bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-0.5 gap-0.5">
-              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold bg-secondary text-white cursor-pointer">Alle</button>
-              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">Abgeschlossen</button>
-              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">Offen</button>
+              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold bg-secondary text-white cursor-pointer">{c.filterAll}</button>
+              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">{c.filterComplete}</button>
+              <button type="button" className="px-3 py-1 rounded-lg text-[11px] font-bold text-on-surface-variant hover:text-on-surface cursor-pointer">{c.filterOpen}</button>
             </div>
             <button type="button" onClick={exportCSV}
               className="flex items-center gap-1.5 px-3 py-2 bg-surface-container-lowest border border-outline-variant/60 text-on-surface-variant rounded-xl text-xs font-bold hover:bg-surface-container transition cursor-pointer">
-              <Download size={12} /> CSV Exportieren
+              <Download size={12} /> {c.exportCsv}
             </button>
           </div>
         </div>
-        <PeriodPicker period={period} onChange={setPeriod} />
+        <PeriodPicker period={period} onChange={setPeriod} locale={locale} c={c} />
       </div>
 
       {/* ── SUB TABS ─────────────────────────────────────────────────────────── */}
       <div className="flex gap-1 bg-surface-container rounded-2xl p-1">
-        {subTabs.map(t => (
-          <button key={t.id} type="button" onClick={() => setActiveTab(t.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === t.id ? "bg-surface-container-lowest text-secondary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
-            <t.icon size={12} />
-            <span className="hidden sm:inline">{t.label}</span>
+        {subTabs.map(tab => (
+          <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeTab === tab.id ? "bg-surface-container-lowest text-secondary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
+            <tab.icon size={12} />
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* OVERVIEW TAB                                                          */}
+      {/* OVERVIEW                                                              */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "overview" && (
         <div className="space-y-4">
@@ -797,24 +708,24 @@ export function ReportsInteractiveMain({
           {prevGrowth?.plans && (
             <div className="flex flex-wrap gap-2 items-center bg-surface-container-lowest border border-outline-variant/40 rounded-2xl px-4 py-2.5">
               <TrendingUp size={13} className="text-on-surface-variant" />
-              <span className="text-[11px] text-on-surface-variant">Vergleich zum Vormonat:</span>
+              <span className="text-[11px] text-on-surface-variant">{c.compareLastMonth}</span>
               <span className={`flex items-center gap-0.5 text-[11px] font-extrabold ${prevGrowth.plans.up ? "text-emerald-600" : "text-red-500"}`}>
-                Pläne {prevGrowth.plans.up ? "▲" : "▼"}{prevGrowth.plans.pct}%
+                {c.plansGrowth} {prevGrowth.plans.up ? "▲" : "▼"}{prevGrowth.plans.pct}%
               </span>
             </div>
           )}
 
           {/* 4 KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard label="Tagespläne Gesamt" value={totalPlans} sub={`${completePlans} erledigt`}
+            <StatCard label={c.kpiPlansTotal} value={totalPlans} sub={`${completePlans} ${c.completedLabel}`}
               icon={CalendarDays} iconColor="text-secondary" bg="bg-secondary/5" border="border-secondary/20"
               growth={prevGrowth?.plans} onClick={() => setActiveTab("plans")} />
-            <StatCard label="Erfüllungsquote" value={completionRate} sub={`${incompletePlans} offen`}
+            <StatCard label={c.kpiCompletionRate} value={completionRate} sub={`${incompletePlansCount} ${c.openLabel}`}
               icon={Target} iconColor="text-emerald-700" bg="bg-emerald-50" border="border-emerald-100" />
-            <StatCard label="Überfällige Schritte" value={escalations.length} sub="Pflicht-Eskalationen"
+            <StatCard label={c.kpiEscalations} value={escalations.length} sub={c.escalationsTitle}
               icon={ShieldAlert} iconColor={escalations.length > 0 ? "text-rose-700" : "text-emerald-700"}
               bg={escalations.length > 0 ? "bg-rose-50" : "bg-emerald-50"} border={escalations.length > 0 ? "border-rose-100" : "border-emerald-100"} />
-            <StatCard label="Objekt-Abschlussrate" value={itemCompletionRate} sub={`${completedItems}/${totalItems} Obj.`}
+            <StatCard label={c.kpiItemRate} value={itemCompletionRate} sub={`${completedItems}/${totalItems}`}
               icon={Layers} iconColor="text-violet-700" bg="bg-violet-50" border="border-violet-100"
               onClick={() => setActiveTab("items")} />
           </div>
@@ -824,90 +735,65 @@ export function ReportsInteractiveMain({
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp size={13} className="text-secondary" />
-                <span className="text-xs font-extrabold text-on-surface">Entwicklung der letzten 6 Monate</span>
+                <span className="text-xs font-extrabold text-on-surface">{c.chartEvolution}</span>
               </div>
               <LineAreaChart
-                dataA={trend6.map(d => d.completed)}
-                dataB={trend6.map(d => d.total)}
-                labelA="Abgeschlossen"
-                labelB="Gesamt"
-                labels={trend6.map(d => d.label)}
-              />
+                dataA={trend6.map(d => d.completed)} dataB={trend6.map(d => d.total)}
+                labelA={c.chartLabelCompleted} labelB={c.chartLabelTotal}
+                labels={trend6.map(d => d.label)} />
             </div>
-
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Activity size={13} className="text-orange-500" />
-                <span className="text-xs font-extrabold text-on-surface">Abschlussrate — Verlauf</span>
+                <span className="text-xs font-extrabold text-on-surface">{c.chartRateTrend}</span>
               </div>
               <LineAreaChart
                 dataA={trend6.map(d => d.total > 0 ? Math.round((d.completed / d.total) * 100) : 0)}
-                labelA="Erfüllungsrate %"
-                labels={trend6.map(d => d.label)}
-              />
+                labelA={c.chartLabelRate}
+                labels={trend6.map(d => d.label)} />
             </div>
           </div>
 
-          {/* Delivery rate + Donut */}
+          {/* Completion Rates + Donut */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm p-4 sm:col-span-2">
               <div className="flex items-center gap-2 mb-4">
                 <Target size={13} className="text-teal-600" />
-                <span className="text-xs font-extrabold text-on-surface">Abschlussraten nach Plänen & Objekten</span>
+                <span className="text-xs font-extrabold text-on-surface">{c.ratesTitle}</span>
               </div>
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-on-surface-variant font-semibold">Tagespläne abgeschlossen ({completePlans}/{totalPlans})</span>
-                    <span className="font-extrabold text-secondary">{completionRate}%</span>
+                {[
+                  { label: `${c.plansCompleted} (${completePlans}/${totalPlans})`, value: completionRate, color: "from-secondary to-secondary/70" },
+                  { label: `${c.itemsCompleted} (${completedItems}/${totalItems})`, value: itemCompletionRate, color: "from-violet-500 to-violet-400" },
+                  { label: c.mandatoryCompleted, value: escalations.length === 0 ? 100 : Math.max(0, 100 - escalations.length * 10), color: "from-emerald-500 to-emerald-400" },
+                ].map((row, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-on-surface-variant font-semibold">{row.label}</span>
+                      <span className="font-extrabold text-secondary">{row.value}%</span>
+                    </div>
+                    <div className="h-2.5 bg-surface-container rounded-full overflow-hidden">
+                      <div className={`h-full bg-gradient-to-r ${row.color} rounded-full transition-all duration-700`} style={{ width: `${row.value}%` }} />
+                    </div>
                   </div>
-                  <div className="h-2.5 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-secondary to-secondary/70 rounded-full transition-all duration-700"
-                      style={{ width: `${completionRate}%` }} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-on-surface-variant font-semibold">Objekte erledigt ({completedItems}/{totalItems})</span>
-                    <span className="font-extrabold text-violet-600">{itemCompletionRate}%</span>
-                  </div>
-                  <div className="h-2.5 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full transition-all duration-700"
-                      style={{ width: `${itemCompletionRate}%` }} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-on-surface-variant font-semibold">Pflicht-Schritte ausgeführt</span>
-                    <span className="font-extrabold text-emerald-600">{escalations.length === 0 ? "100" : Math.max(0, 100 - escalations.length * 10)}%</span>
-                  </div>
-                  <div className="h-2.5 bg-surface-container rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
-                      style={{ width: `${escalations.length === 0 ? 100 : Math.max(0, 100 - escalations.length * 10)}%` }} />
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
-
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <PieChart size={13} className="text-purple-600" />
-                <span className="text-xs font-extrabold text-on-surface">Plan-Verteilung</span>
+                <span className="text-xs font-extrabold text-on-surface">{c.distributionTitle}</span>
               </div>
               <div className="flex items-center gap-4 justify-center">
                 <DonutChart segments={[
-                  { value: completePlans, color: "#00677c", label: "Abgeschlossen" },
-                  { value: incompletePlans, color: "#e5e7eb", label: "Offen" },
+                  { value: completePlans, color: "#00677c", label: c.completedLabel },
+                  { value: incompletePlansCount, color: "#e5e7eb", label: c.openLabel },
                 ]} size={90} />
                 <div className="space-y-2 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-sm bg-secondary" />
-                    <span className="text-on-surface-variant">Abgeschl.: {completePlans}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-sm bg-surface-container" />
-                    <span className="text-on-surface-variant">Offen: {incompletePlans}</span>
-                  </div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-secondary" />
+                    <span className="text-on-surface-variant">{c.completedLabel}: {completePlans}</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-surface-container" />
+                    <span className="text-on-surface-variant">{c.openLabel}: {incompletePlansCount}</span></div>
                 </div>
               </div>
             </div>
@@ -918,7 +804,7 @@ export function ReportsInteractiveMain({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5">
                 <Zap size={12} className="text-amber-500" />
-                <span className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wide">Automatische Erkenntnisse</span>
+                <span className="text-[11px] font-extrabold text-on-surface-variant uppercase tracking-wide">{c.insightsTitle}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {insights.map((ins, i) => <InsightChip key={i} icon={ins.icon} text={ins.text} color={`${ins.color} border`} />)}
@@ -926,31 +812,30 @@ export function ReportsInteractiveMain({
             </div>
           )}
 
-          {/* Top Staff + Escalations side by side */}
+          {/* Top Staff + Escalations */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {byStaff.length > 0 && (
               <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-outline-variant/40 flex items-center gap-2">
                   <Users size={13} className="text-secondary" />
-                  <span className="text-xs font-extrabold text-on-surface">Top-Mitarbeiter nach Abschlüssen</span>
+                  <span className="text-xs font-extrabold text-on-surface">{c.topStaffTitle}</span>
                 </div>
                 {byStaff.slice(0, 5).map((emp, i) => (
                   <HBarRow key={emp.name + i} label={emp.name}
-                    sub={`${emp.completed}/${emp.total} Pläne · ${emp.items} Obj.`}
+                    sub={interpolate(c.subLabelEmployee, { count: emp.total, items: emp.items })}
                     valueA={emp.completed} maxA={maxStaffCompleted} />
                 ))}
               </div>
             )}
-
             {escalations.length > 0 ? (
               <div className="bg-surface-container-lowest rounded-2xl border border-rose-500/30 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-rose-500/20 flex items-center gap-2">
                   <AlertTriangle size={13} className="text-rose-600" />
-                  <span className="text-xs font-extrabold text-rose-700">Pflicht-Eskalationen ({escalations.length})</span>
+                  <span className="text-xs font-extrabold text-rose-700">{c.escalationsTitle} ({escalations.length})</span>
                 </div>
                 <div className="divide-y divide-rose-500/10">
                   {escalations.slice(0, 5).map(step => (
-                    <EscalationInteractiveCard key={step.id} step={step} locale={locale} />
+                    <EscalationInteractiveCard key={step.id} step={step} locale={locale} c={c} />
                   ))}
                 </div>
               </div>
@@ -959,8 +844,8 @@ export function ReportsInteractiveMain({
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center">
                   <CheckCircle2 className="size-6 text-emerald-600" />
                 </div>
-                <p className="text-xs font-extrabold text-emerald-700 text-center">Keine überfälligen Pflicht-Schritte!</p>
-                <p className="text-[10px] text-emerald-600 text-center">Alle Reinigungs-Standards werden eingehalten.</p>
+                <p className="text-xs font-extrabold text-emerald-700 text-center">{c.noEscalationsTitle}</p>
+                <p className="text-[10px] text-emerald-600 text-center">{c.noEscalationsBody}</p>
               </div>
             )}
           </div>
@@ -971,69 +856,66 @@ export function ReportsInteractiveMain({
       {/* PLANS TAB                                                             */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "plans" && (
-        <div className="space-y-3">
-          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
-            <SearchSortBar
-              search={planSearch} onSearch={setPlanSearch}
-              sortLabel="Datum" onSort={() => setPlanSortUp(v => !v)} sortUp={planSortUp} />
-            <div className="divide-y divide-outline-variant/40">
-              {filteredPlans.length === 0 ? (
-                <p className="text-xs text-on-surface-variant text-center py-8">Keine Pläne gefunden.</p>
-              ) : filteredPlans.map(plan => {
-                const pct = plan.totalItems > 0 ? Math.round((plan.completedItems / plan.totalItems) * 100) : 0;
-                return (
-                  <button key={plan.id} type="button"
-                    onClick={() => {
-                      const config: DrawerConfig = {
-                        title: plan.employeeName, subtitle: formatDate(plan.workDate, locale, ""),
-                        icon: <BarChart3 className="size-6 text-secondary" />,
-                        accentColor: plan.status === "submitted" ? "success" : "warning",
-                        badge: { label: plan.status === "submitted" ? "Abgeschlossen" : "In Bearbeitung", variant: plan.status === "submitted" ? "success" : "warning" },
-                        kpis: [
-                          { label: "Fortschritt", value: `${pct}%`, color: "text-secondary" },
-                          { label: "Erledigt", value: `${plan.completedItems}/${plan.totalItems}`, color: "text-emerald-600" },
-                        ],
-                        sections: [
-                          {
-                            label: "Status & Fortschritt", content: (
-                              <div className="grid gap-3">
-                                <div className="w-full bg-surface-container-low h-3 rounded-full overflow-hidden p-0.5">
-                                  <div className="bg-secondary h-full rounded-full" style={{ width: `${pct}%` }} />
-                                </div>
-                                <InfoGrid items={[
-                                  { icon: <User className="size-4" />, label: "Mitarbeiter", value: plan.employeeName },
-                                  { icon: <CalendarDays className="size-4" />, label: "Datum", value: formatDate(plan.workDate, locale, "—") },
-                                ]} />
+        <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
+          <SearchSortBar search={planSearch} onSearch={setPlanSearch}
+            sortLabel={c.sortDate} onSort={() => setPlanSortUp(v => !v)} sortUp={planSortUp}
+            placeholder={c.searchPlaceholder} />
+          <div className="divide-y divide-outline-variant/40">
+            {filteredPlans.length === 0 ? (
+              <p className="text-xs text-on-surface-variant text-center py-8">{c.noPlans}</p>
+            ) : filteredPlans.map(plan => {
+              const pct = plan.totalItems > 0 ? Math.round((plan.completedItems / plan.totalItems) * 100) : 0;
+              return (
+                <button key={plan.id} type="button"
+                  onClick={() => {
+                    open({
+                      title: plan.employeeName, subtitle: formatDate(plan.workDate, locale, ""),
+                      icon: <BarChart3 className="size-6 text-secondary" />,
+                      accentColor: plan.isComplete ? "success" : "warning",
+                      badge: { label: plan.isComplete ? c.plansBadgeComplete : c.plansBadgeInProgress, variant: plan.isComplete ? "success" : "warning" },
+                      kpis: [
+                        { label: c.drawerProgress, value: `${pct}%`, color: "text-secondary" },
+                        { label: c.drawerCompleted, value: `${plan.completedItems}/${plan.totalItems}`, color: "text-emerald-600" },
+                      ],
+                      sections: [
+                        {
+                          label: c.drawerStatusSection, content: (
+                            <div className="grid gap-3">
+                              <div className="w-full bg-surface-container-low h-3 rounded-full overflow-hidden p-0.5">
+                                <div className="bg-secondary h-full rounded-full" style={{ width: `${pct}%` }} />
                               </div>
-                            ),
-                          },
-                          { label: "Bearbeiten", content: <InlinePlanEditForm plan={plan} locale={locale} /> },
-                        ],
-                      };
-                      open(config);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-colors text-left cursor-pointer group">
-                    <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
-                      {plan.employeeName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                              <InfoGrid items={[
+                                { icon: <User className="size-4" />, label: c.drawerEmployee, value: plan.employeeName },
+                                { icon: <CalendarDays className="size-4" />, label: c.drawerDate, value: formatDate(plan.workDate, locale, "—") },
+                              ]} />
+                            </div>
+                          ),
+                        },
+                        { label: c.drawerEditSection, content: <InlinePlanEditForm plan={plan} locale={locale} c={c} /> },
+                      ],
+                    } as DrawerConfig);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-colors text-left cursor-pointer group">
+                  <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                    {initials(plan.employeeName)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-xs font-extrabold text-on-surface group-hover:text-secondary transition-colors truncate">{plan.employeeName}</span>
+                      <span className="text-xs font-extrabold text-secondary shrink-0 ml-2">{pct}%</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-xs font-extrabold text-on-surface group-hover:text-secondary transition-colors truncate">{plan.employeeName}</span>
-                        <span className="text-xs font-extrabold text-secondary shrink-0 ml-2">{pct}%</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
-                        <span>{formatDate(plan.workDate, locale, "—")}</span>
-                        <span>{plan.completedItems}/{plan.totalItems} Obj.</span>
-                      </div>
-                      <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-secondary rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
-                      </div>
+                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
+                      <span>{formatDate(plan.workDate, locale, "—")}</span>
+                      <span>{plan.completedItems}/{plan.totalItems}</span>
                     </div>
-                    <ArrowRight className="size-4 text-on-surface-variant group-hover:text-secondary transition-colors shrink-0" />
-                  </button>
-                );
-              })}
-            </div>
+                    <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                      <div className="h-full bg-secondary rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <ArrowRight className="size-4 text-on-surface-variant group-hover:text-secondary transition-colors shrink-0" />
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1042,22 +924,20 @@ export function ReportsInteractiveMain({
       {/* ITEMS TAB                                                             */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "items" && (
-        <div className="space-y-3">
-          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-outline-variant/40">
-              <div className="flex-1 flex items-center gap-2 bg-surface-container rounded-xl px-3 py-2">
-                <Search size={11} className="text-on-surface-variant" />
-                <input value={itemSearch} onChange={e => setItemSearch(e.target.value)} placeholder="Objekt oder Bereich suchen..."
-                  className="flex-1 bg-transparent text-xs text-on-surface outline-none placeholder:text-on-surface-variant" />
-              </div>
+        <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-outline-variant/40">
+            <div className="flex-1 flex items-center gap-2 bg-surface-container rounded-xl px-3 py-2">
+              <Search size={11} className="text-on-surface-variant" />
+              <input value={itemSearch} onChange={e => setItemSearch(e.target.value)} placeholder={c.itemSearchPlaceholder}
+                className="flex-1 bg-transparent text-xs text-on-surface outline-none placeholder:text-on-surface-variant" />
             </div>
-            <div className="divide-y divide-outline-variant/40">
-              {filteredItems.length === 0 ? (
-                <p className="text-xs text-on-surface-variant text-center py-8">Keine Objekte gefunden.</p>
-              ) : filteredItems.map(item => (
-                <LastCleanedInteractiveCard key={item.id} item={item} locale={locale} copy={copy} />
-              ))}
-            </div>
+          </div>
+          <div className="divide-y divide-outline-variant/40">
+            {filteredItems.length === 0 ? (
+              <p className="text-xs text-on-surface-variant text-center py-8">{c.noItems}</p>
+            ) : filteredItems.map(item => (
+              <LastCleanedInteractiveCard key={item.id} item={item} locale={locale} copy={copy} />
+            ))}
           </div>
         </div>
       )}
@@ -1066,39 +946,35 @@ export function ReportsInteractiveMain({
       {/* STAFF TAB                                                             */}
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "staff" && (
-        <div className="space-y-3">
-          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
-            <SearchSortBar
-              search={staffSearch} onSearch={setStaffSearch}
-              sortLabel="Abschlüsse" onSort={() => setStaffSortUp(v => !v)} sortUp={staffSortUp} />
-            {byStaff.length === 0 ? (
-              <p className="text-xs text-on-surface-variant text-center py-8">Keine Mitarbeiter-Daten für diesen Zeitraum.</p>
-            ) : (
-              <div>
-                {byStaff.map((emp, i) => (
-                  <div key={emp.name + i} className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/30 last:border-0 hover:bg-surface-container/50 transition-colors">
-                    <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
-                      {emp.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-xs font-extrabold text-on-surface truncate">{emp.name}</span>
-                        <span className="text-[11px] font-bold text-secondary shrink-0 ml-2">{emp.total > 0 ? Math.round((emp.completed / emp.total) * 100) : 0}%</span>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
-                        <span>{emp.completed} / {emp.total} Pläne abgeschlossen</span>
-                        <span>{emp.items} Objekte erledigt</span>
-                      </div>
-                      <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                        <div className="h-full bg-secondary rounded-full transition-all duration-700"
-                          style={{ width: `${maxStaffCompleted > 0 ? (emp.completed / maxStaffCompleted) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/60 shadow-sm overflow-hidden">
+          <SearchSortBar search={staffSearch} onSearch={setStaffSearch}
+            sortLabel={c.sortCompletions} onSort={() => setStaffSortUp(v => !v)} sortUp={staffSortUp}
+            placeholder={c.searchPlaceholder} />
+          {byStaff.length === 0 ? (
+            <p className="text-xs text-on-surface-variant text-center py-8">{c.noStaff}</p>
+          ) : byStaff.map((emp, i) => (
+            <div key={emp.name + i} className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant/30 last:border-0 hover:bg-surface-container/50 transition-colors">
+              <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                {initials(emp.name)}
               </div>
-            )}
-          </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-xs font-extrabold text-on-surface truncate">{emp.name}</span>
+                  <span className="text-[11px] font-bold text-secondary shrink-0 ml-2">
+                    {emp.total > 0 ? Math.round((emp.completed / emp.total) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
+                  <span>{interpolate(c.staffPlansCompleted, { done: emp.completed, total: emp.total })}</span>
+                  <span>{interpolate(c.staffItemsDone, { count: emp.items })}</span>
+                </div>
+                <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                  <div className="h-full bg-secondary rounded-full transition-all duration-700"
+                    style={{ width: `${maxStaffCompleted > 0 ? (emp.completed / maxStaffCompleted) * 100 : 0}%` }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
