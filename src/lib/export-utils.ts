@@ -1,6 +1,6 @@
 /**
  * Unified Minimal Single-Page Export Utilities for NoblecleanOps
- * Generates Excel-compatible CSVs (with UTF-8 BOM) and clean, centered A4 print-optimized PDFs across all Admin tabs.
+ * Generates Excel-compatible CSVs (with UTF-8 BOM) and direct native print/PDF overlays across all Admin tabs.
  */
 
 export function exportToCSV(
@@ -34,6 +34,42 @@ export function exportToCSV(
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Triggers native browser print overlay directly over the current page without opening/redirecting to a new tab.
+ */
+function printHtmlDirectly(htmlContent: string) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
+  iframe.style.visibility = "hidden";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) return;
+
+  doc.open();
+  doc.write(htmlContent);
+  doc.close();
+
+  setTimeout(() => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {
+      // Fallback if print focus fails
+    }
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 2000);
+  }, 250);
+}
+
 export type PdfKpiCard = Readonly<{
   label: string;
   value: string | number;
@@ -51,9 +87,6 @@ export function exportToPDF(
   filename: string,
   kpiCards?: readonly PdfKpiCard[]
 ) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
-
   const tableHeaders = headers.map((h) => `<th style="padding: 4px 6px; border: 1px solid #cbd5e1; background-color: #025669; color: #ffffff; font-weight: 700; text-align: left; font-size: 8.5px;">${h}</th>`).join("");
 
   const tableRows = rows
@@ -100,17 +133,11 @@ export function exportToPDF(
           </tbody>
         </table>
       </div>
-      <script>
-        window.onload = function() {
-          setTimeout(function() { window.print(); }, 150);
-        };
-      </script>
     </body>
     </html>
   `;
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
+  printHtmlDirectly(htmlContent);
 }
 
 export type ScheduleExportItem = Readonly<{
@@ -126,14 +153,12 @@ export type ScheduleExportItem = Readonly<{
  * Graphical Weekly Card Grid PDF Exporter
  * 100% 1-to-1 match with System Web UI Weekly Grid View
  * Renders Week Blocks (WOCHE 1 - WOCHE 5) with 7-day card grids, avatar badges, green hour pills, and shift timings.
+ * Directly triggers device print dialog without tab redirection.
  */
 export function exportSchedulePDF(
   monthLabel: string,
   schedules: readonly ScheduleExportItem[]
 ) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
-
   // Group schedules by workDate dynamically from input data
   const map = new Map<string, ScheduleExportItem[]>();
   schedules.forEach((item) => {
@@ -284,15 +309,9 @@ export function exportSchedulePDF(
         </div>
         ${weeksHtml}
       </div>
-      <script>
-        window.onload = function() {
-          setTimeout(function() { window.print(); }, 150);
-        };
-      </script>
     </body>
     </html>
   `;
 
-  printWindow.document.write(htmlContent);
-  printWindow.document.close();
+  printHtmlDirectly(htmlContent);
 }
