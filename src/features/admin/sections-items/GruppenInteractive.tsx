@@ -106,9 +106,16 @@ export function GruppenInteractive({ sections, leafItems, copy }: GruppenInterac
   };
 
   // Toggle whole section items
-  const handleToggleSectionItems = (sectionId: string) => {
-    const secItems = leafItems.filter((i) => i.sectionId === sectionId || i.id.includes(sectionId));
+  const handleToggleSectionItems = (mainSectionId: string) => {
+    const subSecs = sections.filter((s) => s.parentSectionId === mainSectionId);
+    const subSecIds = new Set([mainSectionId, ...subSecs.map((ss) => ss.id)]);
+    const secItems = leafItems.filter((i) => subSecIds.has(i.sectionId));
     const secItemIds = secItems.map((i) => i.id);
+
+    if (secItemIds.length === 0) {
+      toast("Keine Objekte in diesem Bereich gefunden!", "error");
+      return;
+    }
 
     // Filter out items that are already assigned to OTHER groups
     const availableSecItemIds = secItemIds.filter((id) => !assignedItemToGroupMap.has(id));
