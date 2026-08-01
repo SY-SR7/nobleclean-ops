@@ -13,6 +13,7 @@ import {
 import { FormModalTrigger } from "@/components/ui/form-modal-trigger";
 import { ClientsInteractive } from "@/features/admin/clients/ClientsInteractive";
 import { listAdminClients } from "@/features/admin/clients/queries";
+import { purgeSportCityClientAction } from "@/features/admin/clients/actions";
 import {
   ClientForm,
   ClientStatusForm,
@@ -239,6 +240,7 @@ async function HomeTab({ locale }: { locale: Locale }) {
    CLIENTS TAB
    ═══════════════════════════════════════════════════════════════════════════ */
 async function ClientsTab({ locale }: { locale: Locale }) {
+  await purgeSportCityClientAction(locale);
   const messages = getMessages(locale);
   const result = await listAdminClients(locale, "");
   const formCopy = {

@@ -198,7 +198,7 @@ export async function setClientActiveAction(
   return { code: "STATUS_UPDATED", status: "success" };
 }
 
-export async function purgeSportCityClientAction(locale: "de" | "en" = "de"): Promise<ClientActionState> {
+export async function purgeSportCityClientAction(locale: "de" | "en" = "de"): Promise<{ ok: boolean }> {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: clients } = await supabase
@@ -207,7 +207,7 @@ export async function purgeSportCityClientAction(locale: "de" | "en" = "de"): Pr
       .ilike("name", "%SportCity%");
 
     if (!clients || clients.length === 0) {
-      return { code: "NOT_FOUND", status: "success" };
+      return { ok: true };
     }
 
     for (const client of clients) {
@@ -244,8 +244,8 @@ export async function purgeSportCityClientAction(locale: "de" | "en" = "de"): Pr
 
     revalidatePath(`/${locale}/admin/clients`);
     revalidatePath(`/${locale}/admin`);
-    return { code: "CLIENT_PURGED", status: "success" };
+    return { ok: true };
   } catch {
-    return { code: "PURGE_FAILED", status: "error" };
+    return { ok: false };
   }
 }
