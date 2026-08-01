@@ -485,7 +485,7 @@ export function GruppenInteractive({ sections, leafItems }: GruppenInteractivePr
       ],
     };
     open(config);
-  }, [open, activePlan, leafItems]);
+  };
 
   const handleExportPlanExcel = () => {
     const rows: (string | number)[][] = [];
