@@ -597,9 +597,10 @@ async function ReportsTab({
 }) {
   const messages = getMessages(locale);
   const today = isoDate(new Date());
-  const from = safeDate(fromProp, defaultDateFrom());
-  const to = safeDate(toProp, today);
-  const data = await getReportsData(locale, clientId, from <= to ? from : to, from <= to ? to : from);
+  // Always fetch all historical data — the client-side period picker filters independently
+  const allTimeFrom = `${new Date().getFullYear() - 5}-01-01`;
+  const data = await getReportsData(locale, clientId, allTimeFrom, today);
+
   const copy = {
     clientLabel: t(messages, "reports.clientLabel"),
     completePlans: t(messages, "reports.completePlans"),
