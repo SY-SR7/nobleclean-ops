@@ -414,8 +414,8 @@ export function SectionsInteractive({
       </div>
 
       {viewMode === "grid" ? (
-        /* ── Grid View: root sections with their children grouped below ── */
-        <div className="grid gap-6">
+        /* ── Modern 3-Column Luxury Card Grid View ── */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {sections
             .filter((s) => s.parentSectionId === null)
             .map((root) => {
@@ -423,22 +423,24 @@ export function SectionsInteractive({
               const isRootSelected = root.id === selectedSectionId;
               const rootImg = getSectionImage(root.name);
               return (
-                <div key={root.id} className="grid gap-2">
-                  {/* Root card */}
-                  <button
-                    type="button"
-                    className={[
-                      "group flex flex-col overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-0.5 cursor-pointer",
-                      isRootSelected
-                        ? "border-secondary ring-2 ring-secondary/30"
-                        : "border-outline-variant hover:border-secondary",
-                    ].join(" ")}
-                    onClick={() => {
-                      if (onSelectSection) onSelectSection(root.id);
-                      openSectionDrawer(root);
-                    }}
-                  >
-                    <div className="relative h-36 w-full overflow-hidden bg-surface-container">
+                <div
+                  key={root.id}
+                  className={[
+                    "group flex flex-col justify-between overflow-hidden rounded-3xl border bg-surface-container-lowest text-left shadow-sm transition-all hover:shadow-xl hover:-translate-y-1",
+                    isRootSelected
+                      ? "border-secondary ring-2 ring-secondary/30"
+                      : "border-outline-variant/70 hover:border-secondary/60",
+                  ].join(" ")}
+                >
+                  <div>
+                    {/* Compact Image Card Header (16:9 fixed ratio) */}
+                    <div
+                      className="relative h-44 w-full overflow-hidden bg-surface-container cursor-pointer"
+                      onClick={() => {
+                        if (onSelectSection) onSelectSection(root.id);
+                        openSectionDrawer(root);
+                      }}
+                    >
                       {rootImg && (
                         <Image
                           src={rootImg}
@@ -447,83 +449,74 @@ export function SectionsInteractive({
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      {root.hasReferenceImage && (
-                        <div className="absolute top-2 right-2 bg-secondary/80 text-on-secondary rounded-full p-1 backdrop-blur-sm">
-                          <ImageIcon className="size-3" />
-                        </div>
-                      )}
-                      <p className="absolute bottom-3 left-4 text-white text-base font-extrabold drop-shadow">{root.name}</p>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-surface-container-lowest">
-                      <div className="flex items-center gap-3">
-                        <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                          <CheckCircle2 className="size-3" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                      
+                      {/* Top Badges */}
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                        <span className="bg-surface-container-lowest/90 text-on-surface text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full backdrop-blur-md border border-white/20 shadow-sm">
                           {root.leafCount} {copy.leafCount}
                         </span>
-                        <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                          <Clock className="size-3" />
-                          {root.totalEstimatedMinutes} {copy.minutes}
-                        </span>
+                        {root.hasReferenceImage && (
+                          <span className="bg-secondary text-on-secondary rounded-full p-1.5 shadow-sm">
+                            <ImageIcon className="size-3.5" />
+                          </span>
+                        )}
                       </div>
-                      {children.length > 0 && (
-                        <span className="text-on-surface-variant text-xs">
-                          {children.length} Unterbereiche
-                        </span>
-                      )}
-                    </div>
-                    <div className={["h-1 transition-colors", isRootSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
-                  </button>
 
-                  {/* Children sub-grid */}
-                  {children.length > 0 && (
-                    <div className="ml-4 pl-3 border-l-2 border-secondary/20 grid gap-2 sm:grid-cols-2">
-                      {children.map((child) => {
-                        const isChildSelected = child.id === selectedSectionId;
-                        const childImg = getSectionImage(child.name);
-                        return (
-                          <button
-                            key={child.id}
-                            type="button"
-                            className={[
-                              "group flex flex-col overflow-hidden rounded-xl border text-left shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer",
-                              isChildSelected
-                                ? "border-secondary ring-2 ring-secondary/20"
-                                : "border-outline-variant hover:border-secondary",
-                            ].join(" ")}
-                            onClick={() => {
-                              if (onSelectSection) onSelectSection(child.id);
-                              openSectionDrawer(child);
-                            }}
-                          >
-                            <div className="relative h-24 w-full overflow-hidden bg-surface-container">
-                              {childImg && (
-                                <Image
-                                  src={childImg}
-                                  alt={child.name}
-                                  fill
-                                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                              <p className="absolute bottom-2 left-3 text-white text-sm font-bold drop-shadow">{child.name}</p>
-                            </div>
-                            <div className="flex items-center gap-3 px-3 py-2 bg-surface-container-lowest">
-                              <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                                <CheckCircle2 className="size-3" />
-                                {child.leafCount}
-                              </span>
-                              <span className="text-on-surface-variant text-xs flex items-center gap-1">
-                                <Clock className="size-3" />
-                                {child.totalEstimatedMinutes} {copy.minutes}
-                              </span>
-                            </div>
-                            <div className={["h-0.5 transition-colors", isChildSelected ? "bg-secondary" : "bg-surface-container group-hover:bg-secondary/60"].join(" ")} />
-                          </button>
-                        );
-                      })}
+                      {/* Title & Duration Overlay */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <h3 className="text-white text-lg font-extrabold drop-shadow-md truncate">
+                          {root.name}
+                        </h3>
+                        <p className="text-white/80 text-xs font-semibold flex items-center gap-1.5 mt-0.5">
+                          <Clock className="size-3.5" />
+                          {root.totalEstimatedMinutes} {copy.minutes}
+                        </p>
+                      </div>
                     </div>
-                  )}
+
+                    {/* Sub-sections Pills List */}
+                    {children.length > 0 && (
+                      <div className="p-4 border-t border-outline-variant/40 space-y-2 bg-surface-container-low/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-on-surface-variant">
+                            Unterbereiche ({children.length})
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {children.map((child) => (
+                            <button
+                              key={child.id}
+                              type="button"
+                              onClick={() => {
+                                if (onSelectSection) onSelectSection(child.id);
+                                openSectionDrawer(child);
+                              }}
+                              className="bg-surface-container-lowest hover:bg-secondary/10 hover:text-secondary border border-outline-variant/60 text-on-surface text-xs font-semibold px-2.5 py-1 rounded-xl transition cursor-pointer flex items-center gap-1 truncate max-w-full"
+                            >
+                              <span className="size-1.5 rounded-full bg-secondary/60 shrink-0" />
+                              <span className="truncate">{child.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Bottom Bar */}
+                  <div className="px-4 py-3 border-t border-outline-variant/50 flex items-center justify-between bg-surface-container-lowest">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onSelectSection) onSelectSection(root.id);
+                        openSectionDrawer(root);
+                      }}
+                      className="text-secondary hover:underline text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      Details & Aufgaben
+                      <ChevronRight className="size-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
