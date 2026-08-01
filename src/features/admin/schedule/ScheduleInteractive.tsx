@@ -15,7 +15,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useDetailDrawer, type DrawerConfig } from "@/components/ui/detail-drawer";
 import { useToast } from "@/components/ui/toast";
 import { ModalDialog } from "@/components/ui/modal-dialog";
-import { exportToCSV, exportToPDF } from "@/lib/export-utils";
+import { exportToCSV, exportToPDF, exportSchedulePDF } from "@/lib/export-utils";
 import { FileSpreadsheet, Printer } from "lucide-react";
 import { EmployeeAvailabilityCalendar } from "@/features/admin/staff/EmployeeAvailabilityCalendar";
 import { DeleteScheduleForm } from "./ScheduleForms";
@@ -216,15 +216,7 @@ export function ScheduleInteractive({ schedules: initialSchedules, employees = D
 
   const handleExportSchedulePDF = () => {
     const currentMonth = schedulesList[0]?.workDate?.slice(0, 7) || "2026-07";
-    const headers = ["Datum", "Mitarbeiter Name", "Objekt / Kunde", "Uhrzeit", "Stunden"];
-    const rows = schedulesList.map((s) => [
-      s.workDate,
-      s.employeeName,
-      s.clientName,
-      `${s.startTime || "04:00"} - ${s.endTime || "07:00"}`,
-      `${s.allocatedHours} Std.`,
-    ]);
-    exportToPDF(`Monats-Schichtplan (${currentMonth})`, `Vollständige Schichtübersicht aller Mitarbeiter`, headers, rows, `Nobleclean_Schichtplan_${currentMonth}.pdf`);
+    exportSchedulePDF(currentMonth, schedulesList);
   };
 
   const dayModalSchedules = useMemo(() => {
